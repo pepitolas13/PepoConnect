@@ -1683,6 +1683,24 @@ abstract class AppLocalizations {
   /// **'Vídeo nuevo'**
   String get toastNewVideo;
 
+  /// No description provided for @toastNewItems.
+  ///
+  /// In es, this message translates to:
+  /// **'{count, plural, =1{1 elemento nuevo} other{{count} elementos nuevos}}'**
+  String toastNewItems(int count);
+
+  /// No description provided for @toastNewPhotos.
+  ///
+  /// In es, this message translates to:
+  /// **'{count} fotos nuevas'**
+  String toastNewPhotos(int count);
+
+  /// No description provided for @toastView.
+  ///
+  /// In es, this message translates to:
+  /// **'Ver'**
+  String get toastView;
+
   /// No description provided for @toastSaved.
   ///
   /// In es, this message translates to:

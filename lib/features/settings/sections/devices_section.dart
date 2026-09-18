@@ -193,7 +193,7 @@ class _DeviceTileState extends ConsumerState<DeviceTile> {
                             Text(
                               detail,
                               style: text.caption.copyWith(color: colors.textSecondary),
-                              maxLines: 1,
+                              maxLines: 2,
                               overflow: TextOverflow.ellipsis,
                             ),
                           ],

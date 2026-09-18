@@ -964,6 +964,25 @@ class AppLocalizationsEn extends AppLocalizations {
   String get toastNewVideo => 'New video';
 
   @override
+  String toastNewItems(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count new items',
+      one: '1 new item',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String toastNewPhotos(int count) {
+    return '$count new photos';
+  }
+
+  @override
+  String get toastView => 'View';
+
+  @override
   String get toastSaved => 'Saved to the PC';
 
   @override

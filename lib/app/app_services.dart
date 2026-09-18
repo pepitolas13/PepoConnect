@@ -51,6 +51,14 @@ class AppServices with WidgetsBindingObserver {
   final GoRouter router;
   final List<StreamSubscription<dynamic>> _subs = [];
   ClipboardSync? _clipboard;
+
+  /// New photos arriving in a burst share one toast per device.
+  final Map<String, _PhotoBurst> _bursts = {};
+  static const _burstWindow = Duration(seconds: 8);
+
+  /// Pairing already announces the device; skip the 'connected' toast that
+  /// follows right after (and flapping reconnects).
+  final Map<String, DateTime> _connectedToastAt = {};
   ShareIntake? _share;
   ProviderSubscription<AppSettings>? _settingsSub;
   ProviderSubscription<TransfersState>? _transfersSub;
@@ -206,35 +214,46 @@ class AppServices with WidgetsBindingObserver {
         final id = e.ids.firstOrNull;
         if (id == null) return;
         final name = _deviceName(e.deviceId);
-        final item = engine.gallery.gallery(e.deviceId).byId[id];
-        final title = item?.isVideo == true
-            ? (l?.toastNewVideo ?? 'Vídeo nuevo')
-            : (l?.toastNewPhoto ?? 'Foto nueva');
-        toasts.show(
+        final gallery = engine.gallery.gallery(e.deviceId);
+        final item = gallery.byId[id];
+        final now = DateTime.now();
+        final previous = _bursts[e.deviceId];
+        final inBurst = previous != null && now.difference(previous.at) < _burstWindow;
+        if (inBurst) previous.handle.dismiss();
+        final ids = inBurst ? [...previous.ids, id] : [id];
+        final allPhotos = ids.every((i) => gallery.byId[i]?.isVideo != true);
+        final String title;
+        if (ids.length == 1) {
+          title = item?.isVideo == true
+              ? (l?.toastNewVideo ?? 'Vídeo nuevo')
+              : (l?.toastNewPhoto ?? 'Foto nueva');
+        } else if (allPhotos) {
+          title = l?.toastNewPhotos(ids.length) ?? '${ids.length} fotos nuevas';
+        } else {
+          title = l?.toastNewItems(ids.length) ?? '${ids.length} elementos nuevos';
+        }
+        void open() {
+          router.go(AppRoutes.gallery);
+          if (ids.length == 1) router.push(AppRoutes.viewer(e.deviceId, id));
+        }
+        final handle = toasts.show(
           ToastData(
             title: '$title · $name',
             message: item?.name,
             thumbnail: _thumb(engine.gallery.cachedThumbnail(e.deviceId, id)),
             actions: [
-              ToastAction(
-                label: 'Ver',
-                onPressed: () {
-                  router.go(AppRoutes.gallery);
-                  router.push(AppRoutes.viewer(e.deviceId, id));
-                },
-              ),
+              ToastAction(label: l?.toastView ?? 'Ver', onPressed: open),
               ToastAction(
                 label: l?.download ?? 'Descargar',
-                onPressed: () => engine.downloadItems(e.deviceId, [id]),
+                onPressed: () => engine.downloadItems(e.deviceId, ids),
               ),
             ],
-            onTap: () {
-              router.go(AppRoutes.gallery);
-              router.push(AppRoutes.viewer(e.deviceId, id));
-            },
+            onTap: open,
           ),
         );
-        if (settings.notifications) {
+        _bursts[e.deviceId] = _PhotoBurst(handle, ids, now);
+        // One system notification per burst: the first item already alerted.
+        if (settings.notifications && !inBurst) {
           unawaited(
             SystemNotifications.instance.show(
               title: '$title · $name',
@@ -297,14 +316,22 @@ class AppServices with WidgetsBindingObserver {
           ),
         );
       case DevicePairedEngineEvent():
+        _connectedToastAt[e.device.deviceId] = DateTime.now();
         toasts.show(
           ToastData(
-            title: l?.toastDeviceConnected(e.device.name) ?? '${e.device.name} conectado',
+            title: l?.activityPaired(e.device.name) ?? '${e.device.name} emparejado',
             severity: ToastSeverity.success,
           ),
         );
       case DeviceConnectionEvent():
         final name = _deviceName(e.deviceId);
+        final last = _connectedToastAt[e.deviceId];
+        if (e.connected) {
+          if (last != null && DateTime.now().difference(last) < const Duration(seconds: 5)) {
+            return;
+          }
+          _connectedToastAt[e.deviceId] = DateTime.now();
+        }
         toasts.show(
           ToastData(
             title: e.connected
@@ -339,4 +366,11 @@ class AppServices with WidgetsBindingObserver {
     _clipboard?.dispose();
     await _share?.dispose();
   }
+}
+
+class _PhotoBurst {
+  _PhotoBurst(this.handle, this.ids, this.at);
+  final ToastHandle handle;
+  final List<String> ids;
+  final DateTime at;
 }

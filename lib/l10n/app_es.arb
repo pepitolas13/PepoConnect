@@ -622,6 +622,23 @@
   "activityPanelHide": "Ocultar actividad",
   "toastNewPhoto": "Foto nueva",
   "toastNewVideo": "Vídeo nuevo",
+  "toastNewItems": "{count, plural, =1{1 elemento nuevo} other{{count} elementos nuevos}}",
+  "@toastNewItems": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "toastNewPhotos": "{count} fotos nuevas",
+  "@toastNewPhotos": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "toastView": "Ver",
   "toastSaved": "Guardado en el PC",
   "toastCopied": "Copiado",
   "toastSentTo": "Enviado a {device}",

@@ -129,9 +129,13 @@ class GalleryHeader extends StatelessWidget {
     final text = context.text;
     final t = context.t;
     final selected = _selected;
+    // Narrow layouts show just the device name ("Galería de" would not fit).
+    final narrow = MediaQuery.sizeOf(context).width < 600;
     final deviceButton = Builder(
       builder: (anchor) => FluentButton(
-        label: selected == null ? t.allDevices : t.galleryOf(selected.name),
+        label: selected == null
+            ? t.allDevices
+            : (narrow ? selected.name : t.galleryOf(selected.name)),
         icon: selected == null
             ? FluentIcons.phone_desktop_20_regular
             : DeviceIcon.iconFor(selected.kind, 20),
