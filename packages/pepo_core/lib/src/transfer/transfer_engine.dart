@@ -308,6 +308,13 @@ class TransferEngine {
 
   Future<void> _finishOutgoing(_Outgoing out, TransferState state, {String? error}) async {
     final r = out.record;
+    // A transfer the user cancelled (or that lost its link) may also trip an
+    // error on the way out, e.g. the receiver already dropped it when the
+    // final ack was requested. Report what the user did, not the symptom.
+    if (out.cancel.isCancelled && state != TransferState.done) {
+      state = out.pauseOnDrop ? TransferState.paused : TransferState.cancelled;
+      if (state == TransferState.cancelled) error = null;
+    }
     r.state = state;
     r.error = error;
     r.bytesPerSecond = 0;

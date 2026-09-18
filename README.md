@@ -43,6 +43,14 @@ flutter test                       # tests de la app
 cd packages/pepo_core && dart test # tests del motor de red
 ```
 
+Prueba de extremo a extremo real (la app completa y un "móvil" sin interfaz en el
+mismo proceso, sobre TLS en loopback: emparejar por QR, foto nueva, descarga,
+envíos en los dos sentidos):
+
+```bash
+flutter test integration_test/e2e_test.dart -d windows
+```
+
 | Plataforma | Comando |
 |---|---|
 | Windows (`.exe` único) | `flutter build windows --release` y `.\packaging\windows\build-portable.ps1` → `dist\PepoConnect-win-x64.exe` |
