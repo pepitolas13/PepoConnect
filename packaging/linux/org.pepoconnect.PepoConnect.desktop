@@ -1,0 +1,13 @@
+[Desktop Entry]
+Type=Application
+Name=PepoConnect
+GenericName=Phone file transfer
+Comment=Fotos y archivos entre el móvil y el PC
+Exec=pepoconnect %U
+Icon=org.pepoconnect.PepoConnect
+Terminal=false
+Categories=Utility;Network;FileTransfer;
+Keywords=phone;photos;transfer;unison;
+StartupWMClass=pepoconnect
+X-Purism-FormFactor=Workstation;Mobile;
+MimeType=x-scheme-handler/pepoconnect;
