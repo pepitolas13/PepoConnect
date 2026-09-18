@@ -58,13 +58,24 @@ class MediaSourcePhotoManager extends MediaSource {
     }
   }
 
+  bool _permissionMissing = false;
+
+  /// True when the library could not be read (permission not granted yet).
+  bool get permissionMissing => _permissionMissing;
+
   @override
   Future<void> start() async {
     if (_running) return;
     _running = true;
     await Directory(cacheDir).create(recursive: true);
-    await _loadRoot();
-    await _snapshotIds();
+    try {
+      await _loadRoot();
+      await _snapshotIds();
+      _permissionMissing = false;
+    } catch (_) {
+      // No permission yet: the index stays empty until [restart] is called.
+      _permissionMissing = true;
+    }
     pm.PhotoManager.addChangeCallback(_onChange);
     try {
       await pm.PhotoManager.startChangeNotify();
@@ -73,6 +84,12 @@ class MediaSourcePhotoManager extends MediaSource {
       _notifying = false;
     }
     _poll = Timer.periodic(pollFallback, (_) => _pollTick());
+  }
+
+  /// Re-reads the library after the permission was granted.
+  Future<void> restart() async {
+    await stop();
+    await start();
   }
 
   @override

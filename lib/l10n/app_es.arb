@@ -1,4 +1,594 @@
 {
   "@@locale": "es",
-  "appName": "PepoConnect"
+  "appName": "PepoConnect",
+  "appTagline": "Fotos y archivos entre el móvil y el PC, al instante",
+
+  "ok": "Aceptar",
+  "cancel": "Cancelar",
+  "close": "Cerrar",
+  "confirm": "Confirmar",
+  "done": "Hecho",
+  "retry": "Reintentar",
+  "back": "Atrás",
+  "next": "Siguiente",
+  "skip": "Omitir",
+  "save": "Guardar",
+  "rename": "Cambiar nombre",
+  "remove": "Quitar",
+  "delete": "Eliminar",
+  "open": "Abrir",
+  "copy": "Copiar",
+  "share": "Compartir",
+  "select": "Seleccionar",
+  "selectAll": "Seleccionar todo",
+  "deselectAll": "Quitar selección",
+  "more": "Más opciones",
+  "search": "Buscar",
+  "loading": "Cargando…",
+  "refresh": "Actualizar",
+  "add": "Añadir",
+  "edit": "Editar",
+  "pause": "Pausar",
+  "resume": "Reanudar",
+  "clearAll": "Borrar todo",
+  "today": "hoy",
+  "yesterday": "ayer",
+  "unknownDevice": "Dispositivo desconocido",
+  "dismiss": "Descartar",
+  "showInFolder": "Mostrar en carpeta",
+  "saveAs": "Guardar como…",
+  "download": "Descargar",
+  "openFolder": "Abrir carpeta",
+
+  "navTransfers": "Transferencias",
+  "navGallery": "Galería",
+  "navActivity": "Actividad",
+  "navSettings": "Ajustes",
+  "navDownloads": "Descargas",
+  "navShortcutHint": "Ctrl+{number}",
+  "@navShortcutHint": {
+    "placeholders": {
+      "number": {"type": "int"}
+    }
+  },
+  "hubTooltip": "Dispositivos",
+  "thisPc": "Este PC",
+  "editPcName": "Cambiar el nombre del PC",
+  "pcNamePlaceholder": "Nombre del PC",
+  "lastSync": "Última sincronización: {when}",
+  "@lastSync": {
+    "placeholders": {
+      "when": {"type": "String"}
+    }
+  },
+  "neverSynced": "Sin sincronizar todavía",
+  "noDevicesPaired": "No hay dispositivos emparejados",
+  "addDevice": "Añadir dispositivo",
+  "manageDevices": "Gestionar dispositivos",
+  "doNotDisturb": "No molestar",
+  "doNotDisturbBody": "Silencia los avisos hasta que lo desactives",
+
+  "statusConnected": "Conectado",
+  "statusOffline": "Sin conexión",
+  "statusConnecting": "Conectando…",
+  "deviceConnected": "{device} conectado",
+  "@deviceConnected": {
+    "placeholders": {
+      "device": {"type": "String"}
+    }
+  },
+  "deviceDisconnected": "{device} desconectado",
+  "@deviceDisconnected": {
+    "placeholders": {
+      "device": {"type": "String"}
+    }
+  },
+  "batteryLevel": "{percent} %",
+  "@batteryLevel": {
+    "placeholders": {
+      "percent": {"type": "int"}
+    }
+  },
+  "batteryCharging": "Cargando",
+  "deviceKindPhone": "Móvil",
+  "deviceKindTablet": "Tablet",
+  "deviceKindPc": "PC",
+  "myPc": "Mi PC",
+  "myDevices": "Mis dispositivos",
+  "changeName": "Cambiar nombre",
+  "forgetDevice": "Quitar",
+  "forgetDeviceConfirm": "¿Quitar {device}?",
+  "@forgetDeviceConfirm": {
+    "placeholders": {
+      "device": {"type": "String"}
+    }
+  },
+  "forgetDeviceBody": "Tendrás que volver a emparejarlo para usarlo",
+  "deviceNamePlaceholder": "Nombre del dispositivo",
+  "noDevicesYet": "Aún no hay dispositivos",
+  "pairFirstDevice": "Empareja tu móvil para empezar",
+  "deviceOptions": "Opciones de {device}",
+  "@deviceOptions": {
+    "placeholders": {
+      "device": {"type": "String"}
+    }
+  },
+  "reconnect": "Volver a conectar",
+
+  "transfersTitle": "Transferir archivos",
+  "transfersSubtitle": "Arrastra o añade archivos para enviarlos a tu dispositivo",
+  "addFiles": "Añadir archivos…",
+  "dropHere": "Suelta para enviar a {device}",
+  "@dropHere": {
+    "placeholders": {
+      "device": {"type": "String"}
+    }
+  },
+  "dropAnywhere": "Suelta los archivos aquí",
+  "sentTo": "{percent} % enviado a {device}",
+  "@sentTo": {
+    "placeholders": {
+      "percent": {"type": "int"},
+      "device": {"type": "String"}
+    }
+  },
+  "receivedFrom": "{percent} % recibido de {device}",
+  "@receivedFrom": {
+    "placeholders": {
+      "percent": {"type": "int"},
+      "device": {"type": "String"}
+    }
+  },
+  "sendingTo": "Enviando a {device}",
+  "@sendingTo": {
+    "placeholders": {
+      "device": {"type": "String"}
+    }
+  },
+  "receivingFrom": "Recibiendo de {device}",
+  "@receivingFrom": {
+    "placeholders": {
+      "device": {"type": "String"}
+    }
+  },
+  "transferComplete": "Transferencia completada",
+  "transferFailed": "No se pudo transferir {file}",
+  "@transferFailed": {
+    "placeholders": {
+      "file": {"type": "String"}
+    }
+  },
+  "transferCancelled": "Transferencia cancelada",
+  "transferPaused": "En pausa",
+  "transferQueued": "En cola",
+  "transfersEmptyTitle": "No hay transferencias",
+  "transfersEmptyBody": "Los archivos que envíes o recibas aparecerán aquí",
+  "transfersRecent": "Recientes",
+  "transfersInProgress": "En curso",
+  "transfersActiveCount": "{count, plural, =1{1 transferencia en curso} other{{count} transferencias en curso}}",
+  "@transfersActiveCount": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "cancelTransfer": "Cancelar",
+  "pauseTransfer": "Pausar",
+  "resumeTransfer": "Reanudar",
+  "removeFromList": "Quitar de la lista",
+  "clearHistory": "Borrar historial",
+  "filesCount": "{count, plural, =1{1 archivo} other{{count} archivos}}",
+  "@filesCount": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "sendingFiles": "{count, plural, =1{Enviando 1 archivo} other{Enviando {count} archivos}}",
+  "@sendingFiles": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "sendToDevice": "Enviar a {device}",
+  "@sendToDevice": {
+    "placeholders": {
+      "device": {"type": "String"}
+    }
+  },
+  "chooseDevice": "Elige un dispositivo",
+  "noDeviceConnected": "No hay ningún dispositivo conectado",
+  "connectToSend": "Conecta el móvil para enviar archivos",
+  "executableBlocked": "PepoConnect no envía programas ejecutables",
+  "executableWarning": "{file} es un ejecutable. ¿Enviarlo igualmente?",
+  "@executableWarning": {
+    "placeholders": {
+      "file": {"type": "String"}
+    }
+  },
+  "speedAndEta": "{speed}/s · quedan {eta}",
+  "@speedAndEta": {
+    "placeholders": {
+      "speed": {"type": "String"},
+      "eta": {"type": "String"}
+    }
+  },
+  "etaSeconds": "{count, plural, =1{1 s} other{{count} s}}",
+  "@etaSeconds": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "etaMinutes": "{count, plural, =1{1 min} other{{count} min}}",
+  "@etaMinutes": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+
+  "galleryOf": "Galería de {device}",
+  "@galleryOf": {
+    "placeholders": {
+      "device": {"type": "String"}
+    }
+  },
+  "allDevices": "Todos los dispositivos",
+  "photos": "Fotos",
+  "videos": "Vídeos",
+  "all": "Todo",
+  "addToPhone": "Añadir al móvil",
+  "type": "Tipo",
+  "view": "Vista",
+  "viewLarge": "Grande",
+  "viewMedium": "Mediana",
+  "viewSmall": "Pequeña",
+  "squareThumbnails": "Miniaturas cuadradas",
+  "selectedCount": "{count, plural, =1{1 seleccionado} other{{count} seleccionados}}",
+  "@selectedCount": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "selectedCountSize": "{count, plural, =1{1 seleccionado ({size})} other{{count} seleccionados ({size})}}",
+  "@selectedCountSize": {
+    "placeholders": {
+      "count": {"type": "int"},
+      "size": {"type": "String"}
+    }
+  },
+  "deleteFromPhone": "Eliminar del móvil",
+  "deleteFromPhoneConfirm": "{count, plural, =1{¿Eliminar 1 elemento del móvil?} other{¿Eliminar {count} elementos del móvil?}}",
+  "@deleteFromPhoneConfirm": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "deleteFromPhoneBody": "Se borran del móvil. La copia del PC, si la hay, no se toca",
+  "newLabel": "Nuevo",
+  "onPc": "En el PC",
+  "galleryEmptyTitle": "No hay fotos todavía",
+  "galleryEmptyBody": "Las fotos que hagas con el móvil aparecerán aquí",
+  "galleryOffline": "Conecta el móvil para ver la galería",
+  "galleryLoadMore": "Cargar más",
+  "newPhotosCount": "{count, plural, =1{1 foto nueva} other{{count} fotos nuevas}}",
+  "@newPhotosCount": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "downloadedTo": "Guardado en {path}",
+  "@downloadedTo": {
+    "placeholders": {
+      "path": {"type": "String"}
+    }
+  },
+  "galleryRefreshTooltip": "Actualizar la galería",
+  "galleryItemsCount": "{count, plural, =1{1 elemento} other{{count} elementos}}",
+  "@galleryItemsCount": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "galleryGroupToday": "Hoy",
+  "galleryGroupYesterday": "Ayer",
+  "galleryGroupThisWeek": "Esta semana",
+  "galleryGroupThisMonth": "Este mes",
+  "dismissNew": "Quitar la marca de nuevo",
+
+  "viewerTitle": "Visor",
+  "viewerPrevious": "Anterior",
+  "viewerNext": "Siguiente",
+  "viewerZoomIn": "Acercar",
+  "viewerZoomOut": "Alejar",
+  "viewerFit": "Ajustar a la ventana",
+  "viewerActualSize": "Tamaño real",
+  "viewerInfo": "Información",
+  "viewerTakenOn": "Hecha el {date}",
+  "@viewerTakenOn": {
+    "placeholders": {
+      "date": {"type": "String"}
+    }
+  },
+  "viewerDimensions": "{width} × {height}",
+  "@viewerDimensions": {
+    "placeholders": {
+      "width": {"type": "int"},
+      "height": {"type": "int"}
+    }
+  },
+  "viewerFileSize": "Tamaño",
+  "viewerFileName": "Nombre",
+  "viewerPlay": "Reproducir",
+  "viewerLoadingFull": "Cargando la foto a tamaño completo…",
+
+  "settingsTitle": "Ajustes",
+  "settingsGeneral": "General",
+  "settingsNotifications": "Notificaciones",
+  "settingsAbout": "Acerca de",
+  "keepInBackground": "Permitir que PepoConnect siga en segundo plano",
+  "keepInBackgroundBody": "Al cerrar la ventana, la app sigue en la bandeja del sistema",
+  "startWithWindows": "Iniciar PepoConnect con Windows",
+  "startWithSystem": "Iniciar PepoConnect al arrancar",
+  "theme": "Tema",
+  "themeLight": "Claro",
+  "themeDark": "Oscuro",
+  "themeSystem": "Según el sistema",
+  "downloadsSavedIn": "Los archivos recibidos se guardan en:",
+  "changeLocation": "Cambiar ubicación",
+  "separateByDevice": "Separar por dispositivo",
+  "separateByDeviceBody": "Una carpeta por dispositivo dentro de esa ubicación",
+  "animations": "Animaciones",
+  "animationsBody": "Desactívalas para ahorrar recursos",
+  "autoDownloadPhotos": "Descargar fotos nuevas automáticamente",
+  "autoDownloadPhotosBody": "Cada foto nueva se guarda en el PC sin preguntar",
+  "convertHeic": "Convertir HEIC a JPEG",
+  "convertHeicBody": "Las fotos del iPhone se guardan como JPEG",
+  "sharedClipboard": "Portapapeles compartido",
+  "sharedClipboardBody": "Lo que copies en un dispositivo se puede pegar en el otro",
+  "notifications": "Notificaciones",
+  "notificationsBody": "Avisos de fotos nuevas y transferencias",
+  "sounds": "Sonidos",
+  "soundsBody": "Un sonido corto al terminar una transferencia",
+  "language": "Idioma",
+  "languageSystem": "Según el sistema",
+  "languageSpanish": "Español",
+  "languageEnglish": "English",
+  "version": "Versión {version}",
+  "@version": {
+    "placeholders": {
+      "version": {"type": "String"}
+    }
+  },
+  "aboutBody": "Fotos y archivos entre el móvil y el PC, en tu red local. Nada pasa por internet",
+  "allowExecutables": "Permitir ejecutables",
+  "allowExecutablesBody": "Acepta archivos .exe, .msi y similares. Solo si sabes lo que haces",
+  "autoSendPhotos": "Enviar fotos nuevas al PC automáticamente",
+  "autoSendPhotosBody": "Cada foto que hagas llega al PC al momento",
+  "backgroundService": "Mantener la conexión en segundo plano",
+  "backgroundServiceBody": "Necesario para que las fotos lleguen con la app cerrada",
+  "defaultHub": "PC predeterminado",
+  "deviceSettings": "Ajustes del dispositivo",
+  "openDownloadsFolder": "Abrir la carpeta de descargas",
+  "resetSettings": "Restablecer ajustes",
+  "settingsSaved": "Ajustes guardados",
+
+  "pairTitle": "Empareja tu móvil y tu PC",
+  "pairSubtitle": "Los dos deben estar en la misma red Wi-Fi",
+  "pairStep1": "Instala PepoConnect en el móvil y toca Añadir PC",
+  "pairStep2": "Escanea este código con el móvil",
+  "pairStepNumber": "Paso {number}",
+  "@pairStepNumber": {
+    "placeholders": {
+      "number": {"type": "int"}
+    }
+  },
+  "pairCheckCode": "Comprueba el código",
+  "pairCheckCodeBody": "Confirma que el móvil muestra el mismo código",
+  "pairConfirm": "Confirmar",
+  "pairRescan": "Volver a escanear",
+  "pairDone": "Emparejado",
+  "pairDoneBody": "Tu PC y tu móvil ya están conectados",
+  "pairUseCode": "Usar código en lugar de QR",
+  "pairUseQr": "Usar QR",
+  "pairCode": "Código",
+  "pairExpiresIn": "Caduca en {seconds} s",
+  "@pairExpiresIn": {
+    "placeholders": {
+      "seconds": {"type": "int"}
+    }
+  },
+  "pairExpired": "El código ha caducado",
+  "pairNewCode": "Nuevo código",
+  "pairEnterCode": "Escribe el código que muestra el PC",
+  "pairScanQr": "Escanea el QR del PC",
+  "pairFailed": "No se pudo emparejar",
+  "pairFailedBody": "Comprueba el código y que los dos estén en la misma red",
+  "pairCancel": "Cancelar emparejamiento",
+  "pairSearching": "Buscando PCs en la red…",
+  "pairFound": "PCs encontrados",
+  "pairManual": "Escribir la dirección a mano",
+  "pairAddress": "Dirección",
+  "pairPort": "Puerto",
+  "pairConnecting": "Conectando con {device}…",
+  "@pairConnecting": {
+    "placeholders": {
+      "device": {"type": "String"}
+    }
+  },
+  "pairingWith": "Emparejando con {device}",
+  "@pairingWith": {
+    "placeholders": {
+      "device": {"type": "String"}
+    }
+  },
+  "pairRequestTitle": "{device} quiere emparejarse",
+  "@pairRequestTitle": {
+    "placeholders": {
+      "device": {"type": "String"}
+    }
+  },
+  "pairCameraPermission": "PepoConnect necesita la cámara para leer el QR",
+
+  "mobileReceived": "Recibidos",
+  "mobileSent": "Enviados",
+  "mobileSendToPc": "Enviar al PC",
+  "mobileFiles": "Archivos",
+  "mobileGallery": "Galería",
+  "mobileCamera": "Cámara",
+  "mobileNoPc": "Sin PC conectado",
+  "mobileTapToChangePc": "Toca para cambiar de PC",
+  "mobileShareVia": "Enviar con PepoConnect",
+  "mobileReceivedEmpty": "Los archivos que te envíe el PC aparecerán aquí",
+  "mobileSentEmpty": "Lo que envíes al PC aparecerá aquí",
+  "mobileAddPc": "Añadir PC",
+  "mobileServiceNotification": "PepoConnect está conectado con {device}",
+  "@mobileServiceNotification": {
+    "placeholders": {
+      "device": {"type": "String"}
+    }
+  },
+  "mobileServiceIdle": "PepoConnect espera al PC",
+
+  "activityTitle": "Actividad",
+  "activityNewPhoto": "Foto nueva en {device}",
+  "@activityNewPhoto": {
+    "placeholders": {
+      "device": {"type": "String"}
+    }
+  },
+  "activityNewVideo": "Vídeo nuevo en {device}",
+  "@activityNewVideo": {
+    "placeholders": {
+      "device": {"type": "String"}
+    }
+  },
+  "activityReceived": "Recibido {file} de {device}",
+  "@activityReceived": {
+    "placeholders": {
+      "file": {"type": "String"},
+      "device": {"type": "String"}
+    }
+  },
+  "activitySent": "Enviado {file} a {device}",
+  "@activitySent": {
+    "placeholders": {
+      "file": {"type": "String"},
+      "device": {"type": "String"}
+    }
+  },
+  "activityFailed": "No se pudo transferir {file}",
+  "@activityFailed": {
+    "placeholders": {
+      "file": {"type": "String"}
+    }
+  },
+  "activityConnected": "{device} conectado",
+  "@activityConnected": {
+    "placeholders": {
+      "device": {"type": "String"}
+    }
+  },
+  "activityDisconnected": "{device} desconectado",
+  "@activityDisconnected": {
+    "placeholders": {
+      "device": {"type": "String"}
+    }
+  },
+  "activityPaired": "{device} emparejado",
+  "@activityPaired": {
+    "placeholders": {
+      "device": {"type": "String"}
+    }
+  },
+  "activityForgotten": "{device} quitado",
+  "@activityForgotten": {
+    "placeholders": {
+      "device": {"type": "String"}
+    }
+  },
+  "activityClipboard": "Texto copiado de {device}",
+  "@activityClipboard": {
+    "placeholders": {
+      "device": {"type": "String"}
+    }
+  },
+  "activityEmpty": "Sin actividad reciente",
+  "markAllRead": "Marcar todo como leído",
+  "unreadCount": "{count, plural, =1{1 sin leer} other{{count} sin leer}}",
+  "@unreadCount": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "activityPanelShow": "Mostrar actividad",
+  "activityPanelHide": "Ocultar actividad",
+
+  "toastNewPhoto": "Foto nueva",
+  "toastNewVideo": "Vídeo nuevo",
+  "toastSaved": "Guardado en el PC",
+  "toastCopied": "Copiado",
+  "toastSentTo": "Enviado a {device}",
+  "@toastSentTo": {
+    "placeholders": {
+      "device": {"type": "String"}
+    }
+  },
+  "toastReceivedFrom": "Recibido de {device}",
+  "@toastReceivedFrom": {
+    "placeholders": {
+      "device": {"type": "String"}
+    }
+  },
+  "toastDeviceConnected": "{device} conectado",
+  "@toastDeviceConnected": {
+    "placeholders": {
+      "device": {"type": "String"}
+    }
+  },
+  "toastDeviceOffline": "{device} sin conexión",
+  "@toastDeviceOffline": {
+    "placeholders": {
+      "device": {"type": "String"}
+    }
+  },
+  "toastDeleted": "{count, plural, =1{1 elemento eliminado del móvil} other{{count} elementos eliminados del móvil}}",
+  "@toastDeleted": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "toastClipboardReceived": "Texto copiado desde {device}",
+  "@toastClipboardReceived": {
+    "placeholders": {
+      "device": {"type": "String"}
+    }
+  },
+  "toastUndo": "Deshacer",
+
+  "errorGeneric": "Algo ha fallado",
+  "errorNetwork": "Sin conexión con el dispositivo",
+  "errorNotPaired": "Este dispositivo ya no está emparejado",
+  "errorFileMissing": "El archivo ya no existe",
+  "errorNoSpace": "No queda espacio en el disco",
+  "errorPermission": "PepoConnect no tiene permiso para acceder a las fotos",
+  "errorPermissionAction": "Abrir ajustes",
+  "errorTimeout": "El dispositivo no responde",
+  "errorCancelled": "Cancelado",
+  "errorTryAgain": "Inténtalo de nuevo",
+  "errorFolderMissing": "La carpeta de descargas no existe",
+  "errorCode": "Código incorrecto",
+  "errorDetails": "Detalles",
+  "errorCopyDetails": "Copiar detalles",
+
+  "onboardingTitle": "Tu móvil, en el PC",
+  "onboardingBody": "Las fotos que hagas aparecen aquí al instante. Y puedes enviar archivos en los dos sentidos",
+  "onboardingStart": "Empezar",
+  "onboardingPairLater": "Emparejar más tarde",
+  "onboardingNamePrompt": "¿Cómo se llama este PC?",
+  "onboardingFolderPrompt": "¿Dónde guardamos lo que llegue?",
+  "onboardingLocalOnly": "Todo va por tu red local. Nada sale a internet",
+
+  "shortcutsTitle": "Atajos de teclado",
+  "shortcutSections": "Ctrl+1 a Ctrl+4 cambian de sección",
+  "shortcutSettings": "Ctrl+, abre Ajustes",
+  "shortcutRefresh": "F5 actualiza",
+  "shortcutEscape": "Esc cierra menús y selecciones"
 }

@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- PepoConnect monochrome mark (tray, favicon, inline). Uses currentColor. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round">
+  <defs>
+    <clipPath id="crossing">
+      <rect x="11.5" y="8.5" width="4.5" height="4.5"/>
+    </clipPath>
+    <!-- Cuts a gap in the front frame where the back frame passes over it -->
+    <mask id="over" maskUnits="userSpaceOnUse" x="0" y="0" width="24" height="24">
+      <rect width="24" height="24" fill="#FFFFFF"/>
+      <g clip-path="url(#crossing)">
+        <rect x="2.5" y="4.5" width="11" height="9" rx="2" stroke="#000000" stroke-width="3.6"/>
+      </g>
+    </mask>
+  </defs>
+  <rect x="2.5" y="4.5" width="11" height="9" rx="2"/>
+  <rect x="10.5" y="10.5" width="11" height="9" rx="2" mask="url(#over)"/>
+</svg>

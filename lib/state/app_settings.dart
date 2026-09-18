@@ -177,6 +177,18 @@ final sharedPreferencesProvider = Provider<SharedPreferences>(
 class SettingsNotifier extends Notifier<AppSettings> {
   static const _key = 'pepo.settings';
 
+  /// Reads the persisted settings without a provider (used before the
+  /// container exists).
+  static AppSettings load(SharedPreferences prefs) {
+    final raw = prefs.getString(_key);
+    if (raw == null) return const AppSettings();
+    try {
+      return AppSettings.fromJson(jsonDecode(raw) as Map<String, dynamic>);
+    } catch (_) {
+      return const AppSettings();
+    }
+  }
+
   @override
   AppSettings build() {
     final prefs = ref.watch(sharedPreferencesProvider);
