@@ -21,6 +21,7 @@ import '../pairing/pairing_session.dart';
 import '../pairing/qr_payload.dart';
 import '../protocol/message_types.dart';
 import '../protocol/models.dart';
+import '../share/guest_share_server.dart';
 import '../transfer/folder_layout.dart';
 import '../transfer/transfer_engine.dart';
 import '../transfer/transfer_record.dart';
@@ -101,6 +102,7 @@ class PepoEngine {
   late final TransferEngine transfers;
   late final GalleryClient gallery;
   MediaServer? mediaServer;
+  GuestShareServer? _guest;
   late FolderLayout layout;
   final _events = StreamController<EngineEvent>.broadcast();
   final List<StreamSubscription<dynamic>> _subs = [];
@@ -222,6 +224,8 @@ class PepoEngine {
       await s.cancel();
     }
     _subs.clear();
+    await _guest?.dispose();
+    _guest = null;
     await gallery.dispose();
     await mediaServer?.stop();
     await transfers.dispose();
@@ -506,6 +510,50 @@ class PepoEngine {
       s.control?.send(MsgType.clipboardSet, data: {'mime': 'text/plain', 'text': text});
     }
   }
+
+  // ---------------------------------------------------------------------------
+  // Guest share (browser, no app)
+
+  GuestShareServer _guestServer() {
+    var g = _guest;
+    if (g == null) {
+      g = GuestShareServer(hostName: config.deviceName, receiveDir: layout.guestsDirectory());
+      _guest = g;
+      _subs.add(g.events.listen((e) => _emit(GuestShareChangedEvent(
+            kind: e.kind.name,
+            session: e.session.toJson(),
+            fileName: e.fileName,
+            bytes: e.bytes,
+            remote: e.remote,
+            path: e.path,
+          ))));
+    }
+    g.receiveDir = layout.guestsDirectory();
+    return g;
+  }
+
+  /// Current guest session (null when none or expired).
+  GuestSession? get guestSession => _guest?.session;
+
+  /// Port of the guest HTTP server (0 until first use).
+  int get guestPort => _guest?.boundPort ?? 0;
+
+  /// One-time link to let a guest download [paths]. Returns the URLs for
+  /// every local address.
+  Future<List<String>> startGuestSend(List<String> paths, {String? message}) async {
+    final g = _guestServer();
+    final s = await g.startSend(paths, message: message);
+    return s.urls(await localIPv4Addresses(), g.boundPort);
+  }
+
+  /// One-time link to let a guest upload files into the guests folder.
+  Future<List<String>> startGuestReceive({String? message}) async {
+    final g = _guestServer();
+    final s = await g.startReceive(message: message);
+    return s.urls(await localIPv4Addresses(), g.boundPort);
+  }
+
+  void cancelGuestShare() => _guest?.cancel();
 
   // ---------------------------------------------------------------------------
   // Own gallery (phone side helpers)

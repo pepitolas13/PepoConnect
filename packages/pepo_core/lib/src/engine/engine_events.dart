@@ -46,6 +46,15 @@ sealed class EngineEvent {
         );
       case 'clipboard':
         return ClipboardReceivedEvent(j['deviceId'] as String, j['text'] as String);
+      case 'guest':
+        return GuestShareChangedEvent(
+          kind: j['kind'] as String,
+          session: j['session'] as Map<String, dynamic>?,
+          fileName: j['fileName'] as String?,
+          bytes: j['bytes'] as int?,
+          remote: j['remote'] as String?,
+          path: j['path'] as String?,
+        );
       case 'log':
         return EngineLogEvent(j['level'] as String, j['message'] as String);
       default:
@@ -161,6 +170,36 @@ class ClipboardReceivedEvent extends EngineEvent {
 
   @override
   Map<String, dynamic> toJson() => {'e': 'clipboard', 'deviceId': deviceId, 'text': text};
+}
+
+/// Guest (browser) share session changed: created, opened, downloaded,
+/// uploaded, uploadFailed, expired, cancelled.
+class GuestShareChangedEvent extends EngineEvent {
+  const GuestShareChangedEvent({
+    required this.kind,
+    this.session,
+    this.fileName,
+    this.bytes,
+    this.remote,
+    this.path,
+  });
+  final String kind;
+  final Map<String, dynamic>? session;
+  final String? fileName;
+  final int? bytes;
+  final String? remote;
+  final String? path;
+
+  @override
+  Map<String, dynamic> toJson() => {
+        'e': 'guest',
+        'kind': kind,
+        'session': ?session,
+        'fileName': ?fileName,
+        'bytes': ?bytes,
+        'remote': ?remote,
+        'path': ?path,
+      };
 }
 
 class EngineLogEvent extends EngineEvent {

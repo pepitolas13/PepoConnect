@@ -23,6 +23,7 @@ export 'src/pairing/pairing_session.dart' show PairingMode;
 export 'src/pairing/qr_payload.dart';
 export 'src/protocol/message_types.dart';
 export 'src/protocol/models.dart';
+export 'src/share/guest_share_server.dart';
 export 'src/transfer/folder_layout.dart';
 export 'src/transfer/name_sanitizer.dart';
 export 'src/transfer/transfer_engine.dart' show TransferEngine, OfferPolicy, DestinationResolver;
