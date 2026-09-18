@@ -79,12 +79,18 @@ String deviceLabel(List<DeviceView> devices, String deviceId) {
 class SelectedDeviceNotifier extends Notifier<String?> {
   @override
   String? build() {
-    // Keep the selection valid when devices come and go.
-    ref.listen(devicesProvider, (_, devices) {
+    // Keep the selection valid when devices come and go, and pick the first
+    // device paired on its own (so the header reads "Galería de <móvil>").
+    ref.listen(devicesProvider, (prev, devices) {
       final current = state;
-      if (current != null && !devices.any((d) => d.deviceId == current)) state = null;
+      if (current != null && !devices.any((d) => d.deviceId == current)) {
+        state = null;
+      } else if (current == null && (prev ?? const []).isEmpty && devices.length == 1) {
+        state = devices.single.deviceId;
+      }
     });
-    return null;
+    final devices = ref.read(devicesProvider);
+    return devices.length == 1 ? devices.single.deviceId : null;
   }
 
   void select(String? deviceId) => state = deviceId;
