@@ -42,7 +42,11 @@ class LaunchOptions {
 
 /// Where this instance keeps its data.
 class AppPaths {
-  const AppPaths({required this.dataDir, required this.defaultDownloadRoot, required this.cacheDir});
+  const AppPaths({
+    required this.dataDir,
+    required this.defaultDownloadRoot,
+    required this.cacheDir,
+  });
 
   final String dataDir;
   final String defaultDownloadRoot;
@@ -54,7 +58,10 @@ class AppPaths {
     if (portable != null && portable.isNotEmpty) {
       dataDir = portable;
     } else if (Platform.isWindows) {
-      dataDir = p.join(Platform.environment['APPDATA'] ?? (await getApplicationSupportDirectory()).path, 'PepoConnect');
+      dataDir = p.join(
+        Platform.environment['APPDATA'] ?? (await getApplicationSupportDirectory()).path,
+        'PepoConnect',
+      );
     } else {
       dataDir = (await getApplicationSupportDirectory()).path;
     }
@@ -97,7 +104,10 @@ Future<({String name, String? model})> defaultDeviceIdentity() async {
       final a = await info.androidInfo;
       final model = a.model.isNotEmpty ? a.model : 'Android';
       final brand = a.brand.isNotEmpty ? '${a.brand[0].toUpperCase()}${a.brand.substring(1)} ' : '';
-      return (name: model.toLowerCase().startsWith(brand.trim().toLowerCase()) ? model : '$brand$model', model: model);
+      return (
+        name: model.toLowerCase().startsWith(brand.trim().toLowerCase()) ? model : '$brand$model',
+        model: model,
+      );
     }
     if (Platform.isIOS) {
       final i = await info.iosInfo;
@@ -105,7 +115,10 @@ Future<({String name, String? model})> defaultDeviceIdentity() async {
     }
     if (Platform.isWindows) {
       final w = await info.windowsInfo;
-      return (name: w.computerName.isNotEmpty ? w.computerName : Platform.localHostname, model: null);
+      return (
+        name: w.computerName.isNotEmpty ? w.computerName : Platform.localHostname,
+        model: null,
+      );
     }
     if (Platform.isLinux) {
       final l = await info.linuxInfo;
@@ -141,7 +154,11 @@ Future<PepoEngine> startEngine({
     appVersion: pkg.version,
     model: identity.model,
     separateByDevice: settings.separateByDevice,
-    listenPort: options.port ?? (options.profile == null ? defaultListenPort : defaultListenPort + 10 + options.profile.hashCode.abs() % 50),
+    listenPort:
+        options.port ??
+        (options.profile == null
+            ? defaultListenPort
+            : defaultListenPort + 10 + options.profile.hashCode.abs() % 50),
     mediaRoots: mediaRoots,
     udpDiscovery: !Platform.isIOS,
     profile: options.profile,
@@ -169,7 +186,10 @@ Future<PepoEngine> startEngine({
         listenPort: engine.listenPort,
       );
     } catch (_) {
-      _lastStatus = DeviceStatus(addresses: await localIPv4Addresses(), listenPort: engine.listenPort);
+      _lastStatus = DeviceStatus(
+        addresses: await localIPv4Addresses(),
+        listenPort: engine.listenPort,
+      );
     }
     engine.sessions.broadcastStatus();
   }

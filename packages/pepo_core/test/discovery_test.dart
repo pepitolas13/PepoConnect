@@ -14,19 +14,21 @@ void main() {
     addTearDown(a.dispose);
     addTearDown(b.dispose);
     final advertA = DiscoveryAdvert(
-        deviceId: 'AAAAAAAAAAAAAAAAAAAAAAAAAA',
-        fingerprint: 'a' * 64,
-        name: 'PC',
-        port: 47473,
-        platform: DevicePlatform.windows,
-        role: DeviceRole.hub);
+      deviceId: 'AAAAAAAAAAAAAAAAAAAAAAAAAA',
+      fingerprint: 'a' * 64,
+      name: 'PC',
+      port: 47473,
+      platform: DevicePlatform.windows,
+      role: DeviceRole.hub,
+    );
     final advertB = DiscoveryAdvert(
-        deviceId: 'BBBBBBBBBBBBBBBBBBBBBBBBBB',
-        fingerprint: 'b' * 64,
-        name: 'Phone',
-        port: 47480,
-        platform: DevicePlatform.android,
-        role: DeviceRole.phone);
+      deviceId: 'BBBBBBBBBBBBBBBBBBBBBBBBBB',
+      fingerprint: 'b' * 64,
+      name: 'Phone',
+      port: 47480,
+      platform: DevicePlatform.android,
+      role: DeviceRole.phone,
+    );
     await a.start(advertA);
     await b.start(advertB);
     final seenByB = b.found.first;

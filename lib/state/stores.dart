@@ -228,7 +228,7 @@ class JsonMediaStateStore implements MediaStateStore {
 /// Activity/history entries in `history.json` (most recent first, capped).
 class JsonListStore<T> {
   JsonListStore(String path, {required this.encode, required this.decode, this.cap = 300})
-      : _file = JsonFile(path, debounce: const Duration(milliseconds: 400));
+    : _file = JsonFile(path, debounce: const Duration(milliseconds: 400));
 
   final JsonFile _file;
   final Map<String, dynamic> Function(T) encode;

@@ -19,9 +19,7 @@ final dataDirProvider = Provider<String>(
 );
 
 /// Raw engine events (broadcast).
-final engineEventsProvider = StreamProvider<EngineEvent>(
-  (ref) => ref.watch(engineProvider).events,
-);
+final engineEventsProvider = StreamProvider<EngineEvent>((ref) => ref.watch(engineProvider).events);
 
 // -----------------------------------------------------------------------------
 // Devices
@@ -92,8 +90,9 @@ class SelectedDeviceNotifier extends Notifier<String?> {
   void select(String? deviceId) => state = deviceId;
 }
 
-final selectedDeviceProvider =
-    NotifierProvider<SelectedDeviceNotifier, String?>(SelectedDeviceNotifier.new);
+final selectedDeviceProvider = NotifierProvider<SelectedDeviceNotifier, String?>(
+  SelectedDeviceNotifier.new,
+);
 
 // -----------------------------------------------------------------------------
 // Transfers
@@ -142,7 +141,9 @@ class TransfersNotifier extends Notifier<TransfersState> {
       if (e is TransferChangedEvent) _apply(e.record);
     });
     final engine = ref.read(engineProvider);
-    return TransfersState(active: engine.activeTransfers.where((t) => !t.state.isTerminal).toList());
+    return TransfersState(
+      active: engine.activeTransfers.where((t) => !t.state.isTerminal).toList(),
+    );
   }
 
   Future<void> _loadHistory() async {
@@ -187,7 +188,9 @@ class TransfersNotifier extends Notifier<TransfersState> {
   }
 }
 
-final transfersProvider = NotifierProvider<TransfersNotifier, TransfersState>(TransfersNotifier.new);
+final transfersProvider = NotifierProvider<TransfersNotifier, TransfersState>(
+  TransfersNotifier.new,
+);
 
 // -----------------------------------------------------------------------------
 // Gallery
@@ -238,14 +241,13 @@ class GalleryState {
     bool? hasMore,
     bool? loading,
     bool? loaded,
-  }) =>
-      GalleryState(
-        entries: entries ?? this.entries,
-        total: total ?? this.total,
-        hasMore: hasMore ?? this.hasMore,
-        loading: loading ?? this.loading,
-        loaded: loaded ?? this.loaded,
-      );
+  }) => GalleryState(
+    entries: entries ?? this.entries,
+    total: total ?? this.total,
+    hasMore: hasMore ?? this.hasMore,
+    loading: loading ?? this.loading,
+    loaded: loaded ?? this.loaded,
+  );
 }
 
 /// Gallery of one device (`deviceId`) or of all devices merged (`null`).
@@ -283,18 +285,26 @@ class GalleryNotifier extends Notifier<GalleryState> {
       loading |= g.loading;
       loaded &= g.loaded;
       for (final item in g.items) {
-        entries.add(GalleryEntry(
-          deviceId: g.deviceId,
-          item: item,
-          state: g.stateOf(item.id),
-          localPath: g.localPath(item.id),
-        ));
+        entries.add(
+          GalleryEntry(
+            deviceId: g.deviceId,
+            item: item,
+            state: g.stateOf(item.id),
+            localPath: g.localPath(item.id),
+          ),
+        );
       }
     }
     if (galleries.length > 1) {
       entries.sort((a, b) => b.item.takenAt.compareTo(a.item.takenAt));
     }
-    return GalleryState(entries: entries, total: total, hasMore: hasMore, loading: loading, loaded: loaded);
+    return GalleryState(
+      entries: entries,
+      total: total,
+      hasMore: hasMore,
+      loading: loading,
+      loaded: loaded,
+    );
   }
 
   Set<MediaKind>? get filter => _filter;
@@ -307,7 +317,9 @@ class GalleryNotifier extends Notifier<GalleryState> {
   Future<void> refresh() async {
     final engine = ref.read(engineProvider);
     state = state.copyWith(loading: true);
-    final ids = deviceId == null ? engine.gallery.galleries.map((g) => g.deviceId).toList() : [deviceId!];
+    final ids = deviceId == null
+        ? engine.gallery.galleries.map((g) => g.deviceId).toList()
+        : [deviceId!];
     for (final id in ids) {
       try {
         await engine.refreshGallery(id, kinds: _filter);
@@ -318,7 +330,9 @@ class GalleryNotifier extends Notifier<GalleryState> {
 
   Future<void> loadMore() async {
     final engine = ref.read(engineProvider);
-    final ids = deviceId == null ? engine.gallery.galleries.map((g) => g.deviceId).toList() : [deviceId!];
+    final ids = deviceId == null
+        ? engine.gallery.galleries.map((g) => g.deviceId).toList()
+        : [deviceId!];
     for (final id in ids) {
       try {
         await engine.loadMoreGallery(id);
@@ -327,7 +341,8 @@ class GalleryNotifier extends Notifier<GalleryState> {
     _rebuild();
   }
 
-  Future<Uint8List?> thumbnail(GalleryEntry e) => ref.read(engineProvider).thumbnail(e.deviceId, e.id);
+  Future<Uint8List?> thumbnail(GalleryEntry e) =>
+      ref.read(engineProvider).thumbnail(e.deviceId, e.id);
 
   Future<Uint8List?> preview(GalleryEntry e) => ref.read(engineProvider).preview(e.deviceId, e.id);
 
@@ -358,8 +373,9 @@ class GalleryNotifier extends Notifier<GalleryState> {
   }
 }
 
-final galleryProvider =
-    NotifierProvider.family<GalleryNotifier, GalleryState, String?>(GalleryNotifier.new);
+final galleryProvider = NotifierProvider.family<GalleryNotifier, GalleryState, String?>(
+  GalleryNotifier.new,
+);
 
 /// Synchronous thumbnail lookup for widgets (memory cache only).
 Uint8List? cachedThumbnail(WidgetRef ref, GalleryEntry e) =>
@@ -395,8 +411,9 @@ class PairingNotifier extends Notifier<PairingInvite?> {
     PeerCandidate? candidate,
     String? host,
     int? port,
-  }) =>
-      ref.read(engineProvider).pairWithCode(code: code, candidate: candidate, host: host, port: port);
+  }) => ref
+      .read(engineProvider)
+      .pairWithCode(code: code, candidate: candidate, host: host, port: port);
 
   List<PeerCandidate> discovered() => ref.read(engineProvider).discoveredCandidates();
 
@@ -454,15 +471,17 @@ class ActivityNotifier extends Notifier<List<ActivityEntry>> {
       case GalleryChangedEvent(change: GalleryChange.newItem):
         for (final id in e.ids) {
           final item = engine.gallery.gallery(e.deviceId).byId[id];
-          _add(ActivityEntry(
-            id: _nextId(),
-            at: DateTime.now(),
-            kind: item?.isVideo == true ? ActivityKind.newVideo : ActivityKind.newPhoto,
-            deviceId: e.deviceId,
-            deviceName: _name(e.deviceId),
-            fileName: item?.name,
-            mediaId: id,
-          ));
+          _add(
+            ActivityEntry(
+              id: _nextId(),
+              at: DateTime.now(),
+              kind: item?.isVideo == true ? ActivityKind.newVideo : ActivityKind.newPhoto,
+              deviceId: e.deviceId,
+              deviceName: _name(e.deviceId),
+              fileName: item?.name,
+              mediaId: id,
+            ),
+          );
         }
       case TransferChangedEvent(record: final r) when r.state.isTerminal:
         final kind = switch (r.state) {
@@ -471,45 +490,53 @@ class ActivityNotifier extends Notifier<List<ActivityEntry>> {
           _ => null,
         };
         if (kind != null) {
-          _add(ActivityEntry(
-            id: _nextId(),
-            at: DateTime.now(),
-            kind: kind,
-            deviceId: r.deviceId,
-            deviceName: _name(r.deviceId),
-            fileName: r.name,
-            transferId: r.id,
-            path: r.finalPath,
-            mediaId: r.sourceId,
-            text: r.error,
-          ));
+          _add(
+            ActivityEntry(
+              id: _nextId(),
+              at: DateTime.now(),
+              kind: kind,
+              deviceId: r.deviceId,
+              deviceName: _name(r.deviceId),
+              fileName: r.name,
+              transferId: r.id,
+              path: r.finalPath,
+              mediaId: r.sourceId,
+              text: r.error,
+            ),
+          );
         }
       case DeviceConnectionEvent():
-        _add(ActivityEntry(
-          id: _nextId(),
-          at: DateTime.now(),
-          kind: e.connected ? ActivityKind.connected : ActivityKind.disconnected,
-          deviceId: e.deviceId,
-          deviceName: _name(e.deviceId),
-          read: true,
-        ));
+        _add(
+          ActivityEntry(
+            id: _nextId(),
+            at: DateTime.now(),
+            kind: e.connected ? ActivityKind.connected : ActivityKind.disconnected,
+            deviceId: e.deviceId,
+            deviceName: _name(e.deviceId),
+            read: true,
+          ),
+        );
       case DevicePairedEngineEvent():
-        _add(ActivityEntry(
-          id: _nextId(),
-          at: DateTime.now(),
-          kind: ActivityKind.paired,
-          deviceId: e.device.deviceId,
-          deviceName: e.device.name,
-        ));
+        _add(
+          ActivityEntry(
+            id: _nextId(),
+            at: DateTime.now(),
+            kind: ActivityKind.paired,
+            deviceId: e.device.deviceId,
+            deviceName: e.device.name,
+          ),
+        );
       case ClipboardReceivedEvent():
-        _add(ActivityEntry(
-          id: _nextId(),
-          at: DateTime.now(),
-          kind: ActivityKind.clipboard,
-          deviceId: e.deviceId,
-          deviceName: _name(e.deviceId),
-          text: e.text,
-        ));
+        _add(
+          ActivityEntry(
+            id: _nextId(),
+            at: DateTime.now(),
+            kind: ActivityKind.clipboard,
+            deviceId: e.deviceId,
+            deviceName: _name(e.deviceId),
+            text: e.text,
+          ),
+        );
       default:
         break;
     }
@@ -538,7 +565,9 @@ class ActivityNotifier extends Notifier<List<ActivityEntry>> {
   }
 }
 
-final activityProvider = NotifierProvider<ActivityNotifier, List<ActivityEntry>>(ActivityNotifier.new);
+final activityProvider = NotifierProvider<ActivityNotifier, List<ActivityEntry>>(
+  ActivityNotifier.new,
+);
 
 final unreadActivityProvider = Provider<int>(
   (ref) => ref.watch(activityProvider).where((a) => !a.read).length,

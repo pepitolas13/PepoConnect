@@ -14,21 +14,31 @@ Future<void> main(List<String> args) async {
   for (final tls in [false, true]) {
     for (final chunk in [64 * 1024, 256 * 1024, 1024 * 1024]) {
       final mbps = await _run(id, tls: tls, chunk: chunk, bytes: mb * 1024 * 1024);
-      stdout.writeln('${tls ? 'TLS  ' : 'TCP  '} chunk ${(chunk / 1024).round().toString().padLeft(4)} KiB: ${mbps.toStringAsFixed(0)} MB/s');
+      stdout.writeln(
+        '${tls ? 'TLS  ' : 'TCP  '} chunk ${(chunk / 1024).round().toString().padLeft(4)} KiB: ${mbps.toStringAsFixed(0)} MB/s',
+      );
     }
   }
 }
 
-Future<double> _run(Identity id, {required bool tls, required int chunk, required int bytes}) async {
+Future<double> _run(
+  Identity id, {
+  required bool tls,
+  required int chunk,
+  required int bytes,
+}) async {
   final ready = ReceivePort();
   final done = ReceivePort();
   await Isolate.spawn(_receiver, [ready.sendPort, done.sendPort, tls, id.toJson()]);
   final port = await ready.first as int;
   final Socket socket;
   if (tls) {
-    socket = await SecureSocket.connect('127.0.0.1', port,
-        context: SecurityContext(withTrustedRoots: false),
-        onBadCertificate: (c) => Identity.fingerprintOfDer(c.der) == id.fingerprint);
+    socket = await SecureSocket.connect(
+      '127.0.0.1',
+      port,
+      context: SecurityContext(withTrustedRoots: false),
+      onBadCertificate: (c) => Identity.fingerprintOfDer(c.der) == id.fingerprint,
+    );
   } else {
     socket = await Socket.connect('127.0.0.1', port);
   }

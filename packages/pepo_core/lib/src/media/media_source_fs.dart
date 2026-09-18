@@ -31,7 +31,18 @@ class MediaSourceFs extends MediaSource {
   final Duration settleTime;
   final int thumbnailQuality;
 
-  static const imageExt = {'.jpg', '.jpeg', '.png', '.gif', '.webp', '.bmp', '.heic', '.heif', '.tif', '.tiff'};
+  static const imageExt = {
+    '.jpg',
+    '.jpeg',
+    '.png',
+    '.gif',
+    '.webp',
+    '.bmp',
+    '.heic',
+    '.heif',
+    '.tif',
+    '.tiff',
+  };
   static const videoExt = {'.mp4', '.m4v', '.mov', '.mkv', '.webm', '.3gp', '.avi'};
 
   final Map<String, _Entry> _entries = {};
@@ -212,9 +223,14 @@ class MediaSourceFs extends MediaSource {
 
   void _watchDir(Directory dir) {
     try {
-      _watches.add(dir.watch().listen(_onEvent, onError: (Object e) {
-        _log.fine('watch error on ${dir.path}: $e');
-      }));
+      _watches.add(
+        dir.watch().listen(
+          _onEvent,
+          onError: (Object e) {
+            _log.fine('watch error on ${dir.path}: $e');
+          },
+        ),
+      );
     } catch (e) {
       _log.fine('cannot watch ${dir.path}: $e');
     }
@@ -227,7 +243,8 @@ class MediaSourceFs extends MediaSource {
       if (event is FileSystemCreateEvent) _watchDir(Directory(path));
       return;
     }
-    if (event is FileSystemDeleteEvent || (event is FileSystemMoveEvent && event.destination == null)) {
+    if (event is FileSystemDeleteEvent ||
+        (event is FileSystemMoveEvent && event.destination == null)) {
       _removePath(path);
       return;
     }
@@ -269,7 +286,8 @@ class MediaSourceFs extends MediaSource {
     _entries[id] = _Entry(item, path);
     _thumbMemory.remove(id);
     _rebuild();
-    if (!_changes.isClosed) _changes.add(MediaChange(added: [item], removed: existing == null ? const [] : [id]));
+    if (!_changes.isClosed)
+      _changes.add(MediaChange(added: [item], removed: existing == null ? const [] : [id]));
   }
 
   void _removePath(String path) {
@@ -284,7 +302,12 @@ class MediaSourceFs extends MediaSource {
   // MediaSource
 
   @override
-  Future<MediaPage> index({int page = 0, int pageSize = 200, Set<MediaKind>? kinds, DateTime? since}) async {
+  Future<MediaPage> index({
+    int page = 0,
+    int pageSize = 200,
+    Set<MediaKind>? kinds,
+    DateTime? since,
+  }) async {
     Iterable<MediaItem> items = _sorted;
     if (kinds != null && kinds.isNotEmpty) items = items.where((i) => kinds.contains(i.kind));
     if (since != null) items = items.where((i) => i.takenAt.isAfter(since));
@@ -352,8 +375,21 @@ class MediaSourceFs extends MediaSource {
   Future<Uint8List?> _videoFrame(String path, int maxPx) async {
     try {
       final result = await Process.run('ffmpeg', [
-        '-v', 'quiet', '-ss', '1', '-i', path, '-frames:v', '1',
-        '-vf', 'scale=$maxPx:-2', '-f', 'image2', '-c:v', 'mjpeg', 'pipe:1',
+        '-v',
+        'quiet',
+        '-ss',
+        '1',
+        '-i',
+        path,
+        '-frames:v',
+        '1',
+        '-vf',
+        'scale=$maxPx:-2',
+        '-f',
+        'image2',
+        '-c:v',
+        'mjpeg',
+        'pipe:1',
       ], stdoutEncoding: null);
       if (result.exitCode != 0) return null;
       final out = result.stdout as List<int>;

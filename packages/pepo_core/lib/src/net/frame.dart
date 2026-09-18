@@ -13,12 +13,12 @@ enum FrameKind {
   final int code;
 
   static FrameKind? fromCode(int code) => switch (code) {
-        1 => FrameKind.control,
-        2 => FrameKind.data,
-        3 => FrameKind.ping,
-        4 => FrameKind.pong,
-        _ => null,
-      };
+    1 => FrameKind.control,
+    2 => FrameKind.data,
+    3 => FrameKind.ping,
+    4 => FrameKind.pong,
+    _ => null,
+  };
 }
 
 /// Thrown when a peer sends bytes that do not form a valid frame.
@@ -72,40 +72,24 @@ class Frame {
   final Uint8List body;
 
   /// Ping frame.
-  factory Frame.ping() =>
-      Frame(kind: FrameKind.ping, header: _empty, body: _empty);
+  factory Frame.ping() => Frame(kind: FrameKind.ping, header: _empty, body: _empty);
 
   /// Pong frame.
-  factory Frame.pong() =>
-      Frame(kind: FrameKind.pong, header: _empty, body: _empty);
+  factory Frame.pong() => Frame(kind: FrameKind.pong, header: _empty, body: _empty);
 
   /// Control frame carrying a JSON header `{"t": type, ...data}` and an
   /// optional binary body.
-  factory Frame.control(
-    String type, {
-    Map<String, dynamic>? data,
-    int reqId = 0,
-    Uint8List? body,
-  }) {
+  factory Frame.control(String type, {Map<String, dynamic>? data, int reqId = 0, Uint8List? body}) {
     final json = <String, dynamic>{'t': type, ...?data};
     final header = utf8.encode(jsonEncode(json));
     if (header.length > maxJsonHeader) {
       throw FrameFormatException('control header too large: ${header.length}');
     }
-    return Frame(
-      kind: FrameKind.control,
-      header: header,
-      body: body ?? _empty,
-      reqId: reqId,
-    );
+    return Frame(kind: FrameKind.control, header: header, body: body ?? _empty, reqId: reqId);
   }
 
   /// Data frame for a transfer chunk.
-  factory Frame.data({
-    required int transferId,
-    required int offset,
-    required Uint8List chunk,
-  }) {
+  factory Frame.data({required int transferId, required int offset, required Uint8List chunk}) {
     final header = Uint8List(dataHeaderSize);
     final bd = ByteData.sublistView(header);
     bd.setUint32(0, transferId, Endian.little);
@@ -181,12 +165,7 @@ class Frame {
 
 /// Decoded view of a control frame.
 class ControlMessage {
-  ControlMessage({
-    required this.type,
-    required this.data,
-    required this.reqId,
-    required this.body,
-  });
+  ControlMessage({required this.type, required this.data, required this.reqId, required this.body});
 
   final String type;
   final Map<String, dynamic> data;
@@ -210,12 +189,7 @@ class ControlMessage {
     if (type is! String || type.isEmpty) {
       throw FrameFormatException('missing message type');
     }
-    return ControlMessage(
-      type: type,
-      data: decoded,
-      reqId: frame.reqId,
-      body: frame.body,
-    );
+    return ControlMessage(type: type, data: decoded, reqId: frame.reqId, body: frame.body);
   }
 
   /// Typed accessors with sane failures.
@@ -235,11 +209,9 @@ class ControlMessage {
 
   int? optInt(String key) => data[key] as int?;
 
-  bool flag(String key, {bool defaultValue = false}) =>
-      data[key] as bool? ?? defaultValue;
+  bool flag(String key, {bool defaultValue = false}) => data[key] as bool? ?? defaultValue;
 
-  List<T> list<T>(String key) =>
-      (data[key] as List<dynamic>? ?? const []).cast<T>();
+  List<T> list<T>(String key) => (data[key] as List<dynamic>? ?? const []).cast<T>();
 
   Map<String, dynamic>? map(String key) => data[key] as Map<String, dynamic>?;
 

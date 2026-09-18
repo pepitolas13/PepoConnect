@@ -12,7 +12,11 @@ void main() {
 
   setUp(() async {
     tmp = await Directory.systemTemp.createTemp('pepo_guest_');
-    server = GuestShareServer(hostName: 'PC de Daniel', receiveDir: p.join(tmp.path, 'Invitados'), port: 0);
+    server = GuestShareServer(
+      hostName: 'PC de Daniel',
+      receiveDir: p.join(tmp.path, 'Invitados'),
+      port: 0,
+    );
   });
 
   tearDown(() async {
@@ -27,7 +31,8 @@ void main() {
   }
 
   test('send session: page lists files, downloads with ranges, single client', () async {
-    final f = File(p.join(tmp.path, 'foto ñ.jpg'))..writeAsBytesSync(List.generate(5000, (i) => i & 0xFF));
+    final f = File(p.join(tmp.path, 'foto ñ.jpg'))
+      ..writeAsBytesSync(List.generate(5000, (i) => i & 0xFF));
     final events = <GuestEventKind>[];
     server.events.listen((e) => events.add(e.kind));
     final s = await server.startSend([f.path], message: 'Hola');
@@ -56,7 +61,14 @@ void main() {
     expect(missing.statusCode, 404);
     final wrongToken = await get('${url}x');
     expect(wrongToken.statusCode, 410);
-    expect(events, containsAllInOrder([GuestEventKind.created, GuestEventKind.opened, GuestEventKind.downloaded]));
+    expect(
+      events,
+      containsAllInOrder([
+        GuestEventKind.created,
+        GuestEventKind.opened,
+        GuestEventKind.downloaded,
+      ]),
+    );
     expect(s.downloads, 1);
 
     server.cancel();
@@ -82,7 +94,8 @@ void main() {
 
     expect(await upload('../../evil.txt', utf8.encode('x')), 200);
     expect(await upload('evil.txt', utf8.encode('y')), 200);
-    final files = Directory(server.receiveDir).listSync().map((e) => p.basename(e.path)).toList()..sort();
+    final files = Directory(server.receiveDir).listSync().map((e) => p.basename(e.path)).toList()
+      ..sort();
     expect(files, ['evil (2).txt', 'evil.txt']);
     expect(File(p.join(server.receiveDir, 'evil.txt')).readAsStringSync(), 'x');
     expect(s.uploads, 2);
@@ -94,7 +107,12 @@ void main() {
   });
 
   test('sessions expire', () async {
-    final short = GuestShareServer(hostName: 'PC', receiveDir: tmp.path, port: 0, ttl: const Duration(milliseconds: 300));
+    final short = GuestShareServer(
+      hostName: 'PC',
+      receiveDir: tmp.path,
+      port: 0,
+      ttl: const Duration(milliseconds: 300),
+    );
     addTearDown(short.dispose);
     final expired = short.events.firstWhere((e) => e.kind == GuestEventKind.expired);
     final s = await short.startReceive();

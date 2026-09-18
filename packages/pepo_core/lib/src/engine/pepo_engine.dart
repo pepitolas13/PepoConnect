@@ -49,12 +49,12 @@ class DeviceView {
   String get deviceId => device.deviceId;
 
   Map<String, dynamic> toJson() => {
-        'device': device.toJson(includePsk: false),
-        'connected': connected,
-        'connecting': connecting,
-        'status': status.toJson(),
-        'connectedAt': ?connectedAt?.toUtc().toIso8601String(),
-      };
+    'device': device.toJson(includePsk: false),
+    'connected': connected,
+    'connecting': connecting,
+    'status': status.toJson(),
+    'connectedAt': ?connectedAt?.toUtc().toIso8601String(),
+  };
 }
 
 /// The facade every UI talks to. Composes identity, sessions, discovery,
@@ -71,20 +71,20 @@ class PepoEngine {
     DeviceStatus Function()? localStatus,
     OfferPolicy? offerPolicy,
     DeletePolicy? deletePolicy,
-  })  : _identityStore = identityStore ?? FileIdentityStore(p.join(config.dataDir, 'identity.json')),
-        _deviceStore = deviceStore ?? MemoryDeviceStore(),
-        _transferStore = transferStore ?? MemoryTransferStore(),
-        _mediaStateStore = mediaStateStore ?? MemoryMediaStateStore(),
-        // ignore: prefer_initializing_formals
-        _mediaSource = mediaSource,
-        // ignore: prefer_initializing_formals
-        _discovery = discovery,
-        // ignore: prefer_initializing_formals
-        _localStatus = localStatus,
-        // ignore: prefer_initializing_formals
-        _offerPolicy = offerPolicy,
-        // ignore: prefer_initializing_formals
-        _deletePolicy = deletePolicy;
+  }) : _identityStore = identityStore ?? FileIdentityStore(p.join(config.dataDir, 'identity.json')),
+       _deviceStore = deviceStore ?? MemoryDeviceStore(),
+       _transferStore = transferStore ?? MemoryTransferStore(),
+       _mediaStateStore = mediaStateStore ?? MemoryMediaStateStore(),
+       // ignore: prefer_initializing_formals
+       _mediaSource = mediaSource,
+       // ignore: prefer_initializing_formals
+       _discovery = discovery,
+       // ignore: prefer_initializing_formals
+       _localStatus = localStatus,
+       // ignore: prefer_initializing_formals
+       _offerPolicy = offerPolicy,
+       // ignore: prefer_initializing_formals
+       _deletePolicy = deletePolicy;
 
   EngineConfig config;
   final IdentityStore _identityStore;
@@ -158,10 +158,14 @@ class PepoEngine {
     );
     sessions.handlers.add(gallery);
     sessions.handlers.add(_ClipboardHandler(this));
-    final source = _mediaSource ??
+    final source =
+        _mediaSource ??
         (config.mediaRoots.isEmpty
             ? null
-            : MediaSourceFs(roots: config.mediaRoots, cacheDir: p.join(config.dataDir, 'cache', 'own')));
+            : MediaSourceFs(
+                roots: config.mediaRoots,
+                cacheDir: p.join(config.dataDir, 'cache', 'own'),
+              ));
     if (source != null) {
       _mediaSource = source;
       mediaServer = MediaServer(
@@ -183,37 +187,44 @@ class PepoEngine {
   }
 
   void _wireEvents() {
-    _subs.add(sessions.events.listen((e) {
-      switch (e) {
-        case DeviceConnectedEvent():
-          _emit(DeviceConnectionEvent(deviceId: e.deviceId, connected: true));
-          _emit(DevicesChangedEvent());
-        case DeviceDisconnectedEvent():
-          _emit(DeviceConnectionEvent(deviceId: e.deviceId, connected: false, reason: e.reason));
-          _emit(DevicesChangedEvent());
-        case DevicePairedEvent():
-          unawaited(_ensureFolderName(e.device));
-          _emit(DevicePairedEngineEvent(e.device));
-          _emit(DevicesChangedEvent());
-        case DeviceForgottenEvent():
-          _folderNames.remove(e.deviceId);
-          _emit(DevicesChangedEvent());
-        case DeviceStatusEvent():
-          _emit(DeviceStatusChangedEvent(e.deviceId, e.status));
-        case DeviceUpdatedEvent():
-          _emit(DevicesChangedEvent());
-      }
-    }));
-    _subs.add(transfers.events.listen((e) {
-      _emit(TransferChangedEvent(e.record, progressOnly: e.progressOnly));
-      if (e.record.state == TransferState.done && e.record.direction == TransferDirection.receive) {
-        _log.fine('received ${e.record.name} → ${e.record.finalPath}');
-      }
-    }));
-    _subs.add(gallery.events.listen((e) {
-      _emit(GalleryChangedEvent(e.deviceId, e.change, e.ids));
-      if (e.change == GalleryChange.newItem) unawaited(_maybeAutoDownload(e.deviceId, e.ids));
-    }));
+    _subs.add(
+      sessions.events.listen((e) {
+        switch (e) {
+          case DeviceConnectedEvent():
+            _emit(DeviceConnectionEvent(deviceId: e.deviceId, connected: true));
+            _emit(DevicesChangedEvent());
+          case DeviceDisconnectedEvent():
+            _emit(DeviceConnectionEvent(deviceId: e.deviceId, connected: false, reason: e.reason));
+            _emit(DevicesChangedEvent());
+          case DevicePairedEvent():
+            unawaited(_ensureFolderName(e.device));
+            _emit(DevicePairedEngineEvent(e.device));
+            _emit(DevicesChangedEvent());
+          case DeviceForgottenEvent():
+            _folderNames.remove(e.deviceId);
+            _emit(DevicesChangedEvent());
+          case DeviceStatusEvent():
+            _emit(DeviceStatusChangedEvent(e.deviceId, e.status));
+          case DeviceUpdatedEvent():
+            _emit(DevicesChangedEvent());
+        }
+      }),
+    );
+    _subs.add(
+      transfers.events.listen((e) {
+        _emit(TransferChangedEvent(e.record, progressOnly: e.progressOnly));
+        if (e.record.state == TransferState.done &&
+            e.record.direction == TransferDirection.receive) {
+          _log.fine('received ${e.record.name} → ${e.record.finalPath}');
+        }
+      }),
+    );
+    _subs.add(
+      gallery.events.listen((e) {
+        _emit(GalleryChangedEvent(e.deviceId, e.change, e.ids));
+        if (e.change == GalleryChange.newItem) unawaited(_maybeAutoDownload(e.deviceId, e.ids));
+      }),
+    );
     _subs.add(sessions.pairing.changes.listen((_) => _emit(PairingChangedEvent(currentInvite))));
   }
 
@@ -282,12 +293,14 @@ class PepoEngine {
   }) async {
     final current = sessions.session(deviceId)?.device ?? await _deviceStore.find(deviceId);
     if (current == null) return;
-    await sessions.updateDevice(current.copyWith(
-      name: name,
-      autoDownload: autoDownload,
-      convertHeic: convertHeic,
-      shareClipboard: shareClipboard,
-    ));
+    await sessions.updateDevice(
+      current.copyWith(
+        name: name,
+        autoDownload: autoDownload,
+        convertHeic: convertHeic,
+        shareClipboard: shareClipboard,
+      ),
+    );
   }
 
   Future<void> _ensureFolderName(PairedDevice device) async {
@@ -353,15 +366,15 @@ class PepoEngine {
       expiresAt: s.expiresAt,
       qrText: s.mode == PairingMode.qr
           ? sessions.pairing
-              .payloadFor(
-                s,
-                deviceId: identity.deviceId,
-                fingerprint: identity.fingerprint,
-                name: config.deviceName,
-                addresses: addrs,
-                port: sessions.listenPort,
-              )
-              .toString()
+                .payloadFor(
+                  s,
+                  deviceId: identity.deviceId,
+                  fingerprint: identity.fingerprint,
+                  name: config.deviceName,
+                  addresses: addrs,
+                  port: sessions.listenPort,
+                )
+                .toString()
           : null,
       code: s.code,
       addresses: addrs,
@@ -395,7 +408,8 @@ class PepoEngine {
   /// Pairs using scanned/pasted QR text. Returns the new device.
   Future<PairedDevice> pairWithQrText(String text) async {
     final payload = QrPayload.tryParse(text);
-    if (payload == null) throw HandshakeException('not a PepoConnect code', code: ErrorCode.badRequest);
+    if (payload == null)
+      throw HandshakeException('not a PepoConnect code', code: ErrorCode.badRequest);
     final device = await sessions.pairWithQr(payload);
     await _ensureFolderName(device);
     return device;
@@ -519,14 +533,20 @@ class PepoEngine {
     if (g == null) {
       g = GuestShareServer(hostName: config.deviceName, receiveDir: layout.guestsDirectory());
       _guest = g;
-      _subs.add(g.events.listen((e) => _emit(GuestShareChangedEvent(
-            kind: e.kind.name,
-            session: e.session.toJson(),
-            fileName: e.fileName,
-            bytes: e.bytes,
-            remote: e.remote,
-            path: e.path,
-          ))));
+      _subs.add(
+        g.events.listen(
+          (e) => _emit(
+            GuestShareChangedEvent(
+              kind: e.kind.name,
+              session: e.session.toJson(),
+              fileName: e.fileName,
+              bytes: e.bytes,
+              remote: e.remote,
+              path: e.path,
+            ),
+          ),
+        ),
+      );
     }
     g.receiveDir = layout.guestsDirectory();
     return g;

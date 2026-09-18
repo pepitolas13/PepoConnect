@@ -33,19 +33,19 @@ class QrPayload {
   bool get isExpired => DateTime.now().isAfter(expiresAt);
 
   Uri toUri() => Uri(
-        scheme: scheme,
-        host: 'pair',
-        path: '/$version',
-        queryParameters: {
-          'id': deviceId,
-          'fp': fingerprint,
-          'n': name,
-          'a': addresses.join(','),
-          'p': '$port',
-          's': base64Url(secret),
-          'e': '${expiresAt.toUtc().millisecondsSinceEpoch ~/ 1000}',
-        },
-      );
+    scheme: scheme,
+    host: 'pair',
+    path: '/$version',
+    queryParameters: {
+      'id': deviceId,
+      'fp': fingerprint,
+      'n': name,
+      'a': addresses.join(','),
+      'p': '$port',
+      's': base64Url(secret),
+      'e': '${expiresAt.toUtc().millisecondsSinceEpoch ~/ 1000}',
+    },
+  );
 
   @override
   String toString() => toUri().toString();

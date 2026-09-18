@@ -50,8 +50,13 @@ class PeerListener {
     Object? lastError;
     for (var p = preferredPort; p < preferredPort + 20; p++) {
       try {
-        server = await SecureServerSocket.bind(InternetAddress.anyIPv6, p, ctx,
-            v6Only: false, shared: false);
+        server = await SecureServerSocket.bind(
+          InternetAddress.anyIPv6,
+          p,
+          ctx,
+          v6Only: false,
+          shared: false,
+        );
         break;
       } on SocketException catch (e) {
         lastError = e;
@@ -68,9 +73,12 @@ class PeerListener {
       throw SocketException('cannot bind listener: $lastError');
     }
     _server = server;
-    _sub = server.listen(_onSocket, onError: (Object e) {
-      _log.warning('accept error: $e');
-    });
+    _sub = server.listen(
+      _onSocket,
+      onError: (Object e) {
+        _log.warning('accept error: $e');
+      },
+    );
     _log.info('listening on port ${server.port}');
     return server.port;
   }
@@ -166,8 +174,7 @@ class PeerDialer {
       host,
       port,
       context: SecurityContext(withTrustedRoots: false),
-      onBadCertificate: (cert) =>
-          Identity.fingerprintOfDer(cert.der) == expectedFingerprint,
+      onBadCertificate: (cert) => Identity.fingerprintOfDer(cert.der) == expectedFingerprint,
       timeout: timeout,
     );
     return PeerConnection.wrap(socket, isInitiator: true, label: 'out:$host');
@@ -194,48 +201,49 @@ class PeerDialer {
     var remaining = hosts.length;
     for (var i = 0; i < hosts.length; i++) {
       final host = hosts[i];
-      unawaited(Future<void>.delayed(stagger * i).then((_) async {
-        if (completer.isCompleted) return;
-        PeerConnection? conn;
-        try {
-          conn = await connect(host, port, expectedFingerprint: expectedFingerprint);
-          if (completer.isCompleted) {
-            await conn.close();
-            return;
+      unawaited(
+        Future<void>.delayed(stagger * i).then((_) async {
+          if (completer.isCompleted) return;
+          PeerConnection? conn;
+          try {
+            conn = await connect(host, port, expectedFingerprint: expectedFingerprint);
+            if (completer.isCompleted) {
+              await conn.close();
+              return;
+            }
+            final result = await ClientHandshake.run(
+              conn,
+              me: me,
+              info: info,
+              channel: channel,
+              known: known,
+              pairingSecret: pairingSecret,
+              sessionToken: sessionToken,
+              listenPort: listenPort,
+            );
+            if (completer.isCompleted) {
+              await conn.close();
+            } else {
+              completer.complete(result);
+            }
+          } catch (e) {
+            errors.add(e);
+            await conn?.close();
+            // Authentication problems are definitive: stop trying other hosts.
+            if (e is HandshakeException && !completer.isCompleted) {
+              completer.completeError(e);
+            }
+          } finally {
+            remaining--;
+            if (remaining == 0 && !completer.isCompleted) {
+              completer.completeError(
+                errors.isEmpty ? const SocketException('unreachable') : errors.last,
+              );
+            }
           }
-          final result = await ClientHandshake.run(
-            conn,
-            me: me,
-            info: info,
-            channel: channel,
-            known: known,
-            pairingSecret: pairingSecret,
-            sessionToken: sessionToken,
-            listenPort: listenPort,
-          );
-          if (completer.isCompleted) {
-            await conn.close();
-          } else {
-            completer.complete(result);
-          }
-        } catch (e) {
-          errors.add(e);
-          await conn?.close();
-          // Authentication problems are definitive: stop trying other hosts.
-          if (e is HandshakeException && !completer.isCompleted) {
-            completer.completeError(e);
-          }
-        } finally {
-          remaining--;
-          if (remaining == 0 && !completer.isCompleted) {
-            completer.completeError(errors.isEmpty
-                ? const SocketException('unreachable')
-                : errors.last);
-          }
-        }
-      }));
+        }),
+      );
     }
     return completer.future;
   }
 }
-

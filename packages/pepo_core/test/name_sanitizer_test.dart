@@ -37,14 +37,20 @@ void main() {
 
   test('folder layout separates or unifies devices', () {
     const separate = FolderLayout(root: '/root');
-    expect(separate.directoryFor(deviceFolder: 'Pixel 8', kind: MediaKind.image),
-        p.join('/root', 'Pixel 8', 'Fotos'));
-    expect(separate.directoryFor(deviceFolder: 'Pixel 8', kind: MediaKind.video),
-        p.join('/root', 'Pixel 8', 'Vídeos'));
+    expect(
+      separate.directoryFor(deviceFolder: 'Pixel 8', kind: MediaKind.image),
+      p.join('/root', 'Pixel 8', 'Fotos'),
+    );
+    expect(
+      separate.directoryFor(deviceFolder: 'Pixel 8', kind: MediaKind.video),
+      p.join('/root', 'Pixel 8', 'Vídeos'),
+    );
     expect(separate.directoryFor(deviceFolder: 'Pixel 8'), p.join('/root', 'Pixel 8', 'Archivos'));
     final unified = separate.copyWith(separateByDevice: false);
-    expect(unified.directoryFor(deviceFolder: 'Pixel 8', kind: MediaKind.image),
-        p.join('/root', 'Fotos'));
+    expect(
+      unified.directoryFor(deviceFolder: 'Pixel 8', kind: MediaKind.image),
+      p.join('/root', 'Fotos'),
+    );
     expect(FolderLayout.folderNameFor('Pixel 8', ['Pixel 8']), 'Pixel 8-2');
     expect(FolderLayout.folderNameFor('Pixel 8', ['Pixel 8', 'Pixel 8-2']), 'Pixel 8-3');
     expect(FolderLayout.folderNameFor('a/b:c', []), 'b_c');

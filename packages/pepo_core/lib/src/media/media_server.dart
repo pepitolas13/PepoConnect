@@ -108,7 +108,12 @@ class MediaServer implements MessageHandler {
           parts.add({'id': id, 'len': t?.length ?? 0});
           if (t != null) body.add(t);
         }
-        conn.respond(m.reqId, MsgType.mediaThumbBatch, data: {'parts': parts}, body: body.takeBytes());
+        conn.respond(
+          m.reqId,
+          MsgType.mediaThumbBatch,
+          data: {'parts': parts},
+          body: body.takeBytes(),
+        );
         return true;
       case MsgType.mediaPreview:
         final id = m.str('id');
@@ -117,7 +122,12 @@ class MediaServer implements MessageHandler {
         if (bytes == null) {
           conn.respondError(m.reqId, ErrorCode.notFound, 'no preview for $id');
         } else {
-          conn.respond(m.reqId, MsgType.mediaPreviewResult, data: {'id': id, 'mime': 'image/jpeg'}, body: bytes);
+          conn.respond(
+            m.reqId,
+            MsgType.mediaPreviewResult,
+            data: {'id': id, 'mime': 'image/jpeg'},
+            body: bytes,
+          );
         }
         return true;
       case MsgType.fileRequest:
@@ -177,8 +187,10 @@ class MediaServer implements MessageHandler {
   Future<String?> Function(String path) convertHeicToJpeg = (_) async => null;
 
   static bool _isHeic(MediaItem item) =>
-      item.mime == 'image/heic' || item.mime == 'image/heif' ||
-      item.name.toLowerCase().endsWith('.heic') || item.name.toLowerCase().endsWith('.heif');
+      item.mime == 'image/heic' ||
+      item.mime == 'image/heif' ||
+      item.name.toLowerCase().endsWith('.heic') ||
+      item.name.toLowerCase().endsWith('.heif');
 
   static String _stripExtension(String name) {
     final i = name.lastIndexOf('.');

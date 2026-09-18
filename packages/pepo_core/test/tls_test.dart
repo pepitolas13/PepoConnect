@@ -79,8 +79,7 @@ void main() {
         InternetAddress.loopbackIPv4,
         listener.port,
         context: SecurityContext(withTrustedRoots: false),
-        onBadCertificate: (cert) =>
-            Identity.fingerprintOfDer(cert.der) == server.fingerprint,
+        onBadCertificate: (cert) => Identity.fingerprintOfDer(cert.der) == server.fingerprint,
       ),
       throwsA(isA<HandshakeException>()),
     );

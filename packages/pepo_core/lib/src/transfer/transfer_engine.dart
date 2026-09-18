@@ -46,8 +46,8 @@ class TransferEngine {
     this.maxActivePerDevice = 3,
     this.chunkSize = 256 * 1024,
     this.progressInterval = const Duration(milliseconds: 100),
-  })  : policy = policy ?? ((_, _) async => true),
-        _nextId = Random().nextInt(1 << 30) + 1;
+  }) : policy = policy ?? ((_, _) async => true),
+       _nextId = Random().nextInt(1 << 30) + 1;
 
   final ChannelProvider channels;
   final TransferStore store;
@@ -71,9 +71,9 @@ class TransferEngine {
 
   /// Snapshots of all transfers known to the engine (active, queued, recent).
   List<TransferRecord> get transfers => [
-        ..._outgoing.values.map((o) => o.record.copy()),
-        ..._incoming.values.map((i) => i.record.copy()),
-      ];
+    ..._outgoing.values.map((o) => o.record.copy()),
+    ..._incoming.values.map((i) => i.record.copy()),
+  ];
 
   TransferRecord? find(int id) => (_outgoing[id]?.record ?? _incoming[id]?.record)?.copy();
 
@@ -151,10 +151,12 @@ class TransferEngine {
       if (control == null) return; // offline: stays queued until reconnect
       final out = queue.removeAt(0);
       _activeOutgoing[deviceId] = (_activeOutgoing[deviceId] ?? 0) + 1;
-      unawaited(_runOutgoing(out, control).whenComplete(() {
-        _activeOutgoing[deviceId] = (_activeOutgoing[deviceId] ?? 1) - 1;
-        _pump(deviceId);
-      }));
+      unawaited(
+        _runOutgoing(out, control).whenComplete(() {
+          _activeOutgoing[deviceId] = (_activeOutgoing[deviceId] ?? 1) - 1;
+          _pump(deviceId);
+        }),
+      );
     }
   }
 
@@ -190,18 +192,26 @@ class TransferEngine {
     );
     ControlMessage reply;
     try {
-      reply = await control.request(MsgType.fileOffer,
-          data: offer.toJson(), timeout: const Duration(seconds: 90));
+      reply = await control.request(
+        MsgType.fileOffer,
+        data: offer.toJson(),
+        timeout: const Duration(seconds: 90),
+      );
     } on PeerError catch (e) {
-      return _finishOutgoing(out,
-          e.code == ErrorCode.timeout ? TransferState.paused : TransferState.failed,
-          error: e.message);
+      return _finishOutgoing(
+        out,
+        e.code == ErrorCode.timeout ? TransferState.paused : TransferState.failed,
+        error: e.message,
+      );
     } on PeerClosedException {
       return _finishOutgoing(out, TransferState.paused, error: 'connection lost');
     }
     if (reply.type == MsgType.fileReject) {
-      return _finishOutgoing(out, TransferState.failed,
-          error: reply.optStr('reason') ?? 'rejected');
+      return _finishOutgoing(
+        out,
+        TransferState.failed,
+        error: reply.optStr('reason') ?? 'rejected',
+      );
     }
     if (reply.type != MsgType.fileAccept) {
       return _finishOutgoing(out, TransferState.failed, error: 'unexpected ${reply.type}');
@@ -238,10 +248,9 @@ class TransferEngine {
     final progress = _ProgressMeter(this, r, offset);
     var broken = false;
     try {
-      await bulk.addStream(reader.frames(
-        cancel: out.cancel,
-        onProgress: (sent) => progress.update(offset + sent),
-      ));
+      await bulk.addStream(
+        reader.frames(cancel: out.cancel, onProgress: (sent) => progress.update(offset + sent)),
+      );
     } catch (e) {
       broken = true;
       _log.fine('bulk stream failed for ${r.name}: $e');
@@ -340,7 +349,11 @@ class TransferEngine {
       return;
     }
     if (!await policy(deviceId, offer)) {
-      control.respond(m.reqId, MsgType.fileReject, data: {'x': offer.transferId, 'reason': 'rejected'});
+      control.respond(
+        m.reqId,
+        MsgType.fileReject,
+        data: {'x': offer.transferId, 'reason': 'rejected'},
+      );
       return;
     }
     final String dir;
@@ -405,11 +418,11 @@ class TransferEngine {
     _incoming[record.id] = inc;
     await store.save(record);
     _emit(record);
-    control.respond(m.reqId, MsgType.fileAccept, data: {
-      'x': record.id,
-      'offset': offset,
-      if (offset > 0) 'tailHash': tailHash,
-    });
+    control.respond(
+      m.reqId,
+      MsgType.fileAccept,
+      data: {'x': record.id, 'offset': offset, if (offset > 0) 'tailHash': tailHash},
+    );
     if (offer.size == 0) inc.markReceived();
   }
 
@@ -431,8 +444,11 @@ class TransferEngine {
       await inc.received.future.timeout(const Duration(seconds: 60));
     } on TimeoutException {
       await _pauseIncoming(inc);
-      control.respond(m.reqId, MsgType.fileAck,
-          data: {'x': id, 'ok': false, 'reason': 'incomplete: ${r.bytesDone}/${r.size}'});
+      control.respond(
+        m.reqId,
+        MsgType.fileAck,
+        data: {'x': id, 'ok': false, 'reason': 'incomplete: ${r.bytesDone}/${r.size}'},
+      );
       return;
     }
     await inc.close();
@@ -440,7 +456,11 @@ class TransferEngine {
     if (theirHash != inc.hasher.hashHex) {
       _log.warning('hash mismatch for ${r.name}: $theirHash vs ${inc.hasher.hashHex}');
       await _failIncoming(inc, 'hash mismatch');
-      control.respond(m.reqId, MsgType.fileAck, data: {'x': id, 'ok': false, 'reason': 'hash mismatch'});
+      control.respond(
+        m.reqId,
+        MsgType.fileAck,
+        data: {'x': id, 'ok': false, 'reason': 'hash mismatch'},
+      );
       return;
     }
     final finalPath = NameSanitizer.uniquePath(inc.directory, r.name);
@@ -466,11 +486,11 @@ class TransferEngine {
     await store.remove(r.id);
     _incoming.remove(r.id);
     _emit(r);
-    control.respond(m.reqId, MsgType.fileAck, data: {
-      'x': id,
-      'ok': true,
-      'storedName': p.basename(finalPath),
-    });
+    control.respond(
+      m.reqId,
+      MsgType.fileAck,
+      data: {'x': id, 'ok': true, 'storedName': p.basename(finalPath)},
+    );
   }
 
   Future<void> _onRemoteCancel(String deviceId, ControlMessage m) async {
@@ -483,7 +503,9 @@ class TransferEngine {
       if (out.record.state == TransferState.queued) {
         _queues[deviceId]?.remove(out);
         await _finishOutgoing(
-            out, reason == CancelReason.pause ? TransferState.paused : TransferState.cancelled);
+          out,
+          reason == CancelReason.pause ? TransferState.paused : TransferState.cancelled,
+        );
       }
       return;
     }
@@ -502,13 +524,17 @@ class TransferEngine {
     final out = _outgoing[id];
     if (out != null) {
       final r = out.record;
-      channels.controlFor(r.deviceId)?.send(MsgType.transferCancel, data: {'x': id, 'reason': reason.name});
+      channels
+          .controlFor(r.deviceId)
+          ?.send(MsgType.transferCancel, data: {'x': id, 'reason': reason.name});
       out.pauseOnDrop = reason == CancelReason.pause;
       out.cancel.cancel();
       if (r.state == TransferState.queued) {
         _queues[r.deviceId]?.remove(out);
         await _finishOutgoing(
-            out, reason == CancelReason.pause ? TransferState.paused : TransferState.cancelled);
+          out,
+          reason == CancelReason.pause ? TransferState.paused : TransferState.cancelled,
+        );
       }
       return;
     }
@@ -645,8 +671,8 @@ class _Outgoing {
 
 class _Incoming {
   _Incoming(this.record, this._raf, this.directory, {required this.startOffset})
-      : expected = startOffset,
-        _meter = null;
+    : expected = startOffset,
+      _meter = null;
 
   final TransferRecord record;
   final String directory;
@@ -707,9 +733,9 @@ class _Incoming {
 /// Throttles progress events and estimates speed with a short moving average.
 class _ProgressMeter {
   _ProgressMeter(this._engine, this._record, int start)
-      : _lastBytes = start,
-        _lastTime = DateTime.now(),
-        _lastEmit = DateTime.now();
+    : _lastBytes = start,
+      _lastTime = DateTime.now(),
+      _lastEmit = DateTime.now();
 
   final TransferEngine _engine;
   final TransferRecord _record;
@@ -723,8 +749,9 @@ class _ProgressMeter {
     final dt = now.difference(_lastTime).inMicroseconds;
     if (dt >= 200000) {
       final rate = (bytesDone - _lastBytes) * 1e6 / dt;
-      _record.bytesPerSecond =
-          _record.bytesPerSecond == 0 ? rate : _record.bytesPerSecond * 0.6 + rate * 0.4;
+      _record.bytesPerSecond = _record.bytesPerSecond == 0
+          ? rate
+          : _record.bytesPerSecond * 0.6 + rate * 0.4;
       _lastBytes = bytesDone;
       _lastTime = now;
     }

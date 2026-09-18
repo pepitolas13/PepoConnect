@@ -49,11 +49,7 @@ class DesktopIntegration with WindowListener, TrayListener {
     } catch (_) {}
   }
 
-  Future<void> init({
-    required String title,
-    Rect? bounds,
-    bool startHidden = false,
-  }) async {
+  Future<void> init({required String title, Rect? bounds, bool startHidden = false}) async {
     if (_initialized || !isSupported) return;
     _initialized = true;
     await windowManager.ensureInitialized();
@@ -98,13 +94,18 @@ class DesktopIntegration with WindowListener, TrayListener {
   }
 
   Future<void> _rebuildMenu() async {
-    await trayManager.setContextMenu(Menu(items: [
-      MenuItem(key: 'open', label: labelOpen),
-      if (_activeTransfers > 0) MenuItem(key: 'pause', label: '$labelPauseAll ($_activeTransfers)'),
-      MenuItem(key: 'downloads', label: labelDownloads),
-      MenuItem.separator(),
-      MenuItem(key: 'quit', label: labelQuit),
-    ]));
+    await trayManager.setContextMenu(
+      Menu(
+        items: [
+          MenuItem(key: 'open', label: labelOpen),
+          if (_activeTransfers > 0)
+            MenuItem(key: 'pause', label: '$labelPauseAll ($_activeTransfers)'),
+          MenuItem(key: 'downloads', label: labelDownloads),
+          MenuItem.separator(),
+          MenuItem(key: 'quit', label: labelQuit),
+        ],
+      ),
+    );
   }
 
   /// Updates the tooltip/menu with the number of active transfers.

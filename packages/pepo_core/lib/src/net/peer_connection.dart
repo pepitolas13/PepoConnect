@@ -52,8 +52,7 @@ class PeerConnection {
     SecureSocket socket, {
     required bool isInitiator,
     String label = '',
-  }) =>
-      PeerConnection._(socket, isInitiator: isInitiator, label: label);
+  }) => PeerConnection._(socket, isInitiator: isInitiator, label: label);
 
   static const keepAliveIdle = Duration(seconds: 15);
   static const keepAliveTimeout = Duration(seconds: 5);
@@ -167,10 +166,9 @@ class PeerConnection {
         if (pending != null) {
           _pendingTimers.remove(msg.reqId)?.cancel();
           if (msg.type == MsgType.error) {
-            pending.completeError(PeerError(
-              msg.optStr('code') ?? ErrorCode.internal,
-              msg.optStr('msg') ?? 'error',
-            ));
+            pending.completeError(
+              PeerError(msg.optStr('code') ?? ErrorCode.internal, msg.optStr('msg') ?? 'error'),
+            );
           } else {
             pending.complete(msg);
           }
@@ -220,7 +218,9 @@ class PeerConnection {
     _pendingTimers[reqId] = Timer(timeout, () {
       final c = _pending.remove(reqId);
       _pendingTimers.remove(reqId);
-      c?.completeError(PeerError(ErrorCode.timeout, 'no response to $type in ${timeout.inSeconds}s'));
+      c?.completeError(
+        PeerError(ErrorCode.timeout, 'no response to $type in ${timeout.inSeconds}s'),
+      );
     });
     sendFrame(Frame.control(type, data: data, body: body, reqId: reqId));
     return completer.future;

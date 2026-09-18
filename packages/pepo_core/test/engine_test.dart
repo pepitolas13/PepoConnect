@@ -60,9 +60,11 @@ void main() {
     } catch (_) {}
   });
 
-  Future<T> next<T extends EngineEvent>(PepoEngine e, bool Function(T) where,
-          {Duration timeout = const Duration(seconds: 15)}) =>
-      e.events.where((x) => x is T && where(x)).cast<T>().first.timeout(timeout);
+  Future<T> next<T extends EngineEvent>(
+    PepoEngine e,
+    bool Function(T) where, {
+    Duration timeout = const Duration(seconds: 15),
+  }) => e.events.where((x) => x is T && where(x)).cast<T>().first.timeout(timeout);
 
   test('full flow: QR pairing, gallery, new photo, download into per-device folder', () async {
     expect(hub.shortId, startsWith('PEPO-'));
@@ -107,7 +109,9 @@ void main() {
 
     // Download lands in <root>/Pixel 8/Fotos.
     final done = next<TransferChangedEvent>(
-        hub, (e) => e.record.state == TransferState.done && e.record.sourceId == ev.ids.single);
+      hub,
+      (e) => e.record.state == TransferState.done && e.record.sourceId == ev.ids.single,
+    );
     await hub.downloadItems(phoneId, [ev.ids.single]);
     final t = await done;
     expect(t.record.finalPath, p.join(hub.config.downloadRoot, 'Pixel 8', 'Fotos', 'IMG_0002.jpg'));
@@ -118,7 +122,9 @@ void main() {
     // Auto download: enabling it on the device makes the next photo arrive by itself.
     await hub.updateDevice(phoneId, autoDownload: true);
     final auto = next<TransferChangedEvent>(
-        hub, (e) => e.record.state == TransferState.done && e.record.name == 'IMG_0003.jpg');
+      hub,
+      (e) => e.record.state == TransferState.done && e.record.name == 'IMG_0003.jpg',
+    );
     await photo(p.join(tmp.path, 'phone', 'DCIM'), 'IMG_0003.jpg');
     await auto;
 
@@ -126,7 +132,9 @@ void main() {
     hub.setSeparateByDevice(false);
     final plain = File(p.join(tmp.path, 'phone', 'notas.txt'))..writeAsStringSync('hola');
     final received = next<TransferChangedEvent>(
-        hub, (e) => e.record.state == TransferState.done && e.record.name == 'notas.txt');
+      hub,
+      (e) => e.record.state == TransferState.done && e.record.name == 'notas.txt',
+    );
     await phone.sendFiles(hub.deviceId, [plain.path]);
     final r = await received;
     expect(r.record.finalPath, p.join(hub.config.downloadRoot, 'Archivos', 'notas.txt'));
@@ -149,7 +157,11 @@ void main() {
     final invite = await hub.startCodePairing();
     expect(invite.code, matches(RegExp(r'^\d{6}$')));
     final connected = next<DeviceConnectionEvent>(hub, (e) => e.connected);
-    final device = await phone.pairWithCode(code: invite.code!, host: '127.0.0.1', port: hub.listenPort);
+    final device = await phone.pairWithCode(
+      code: invite.code!,
+      host: '127.0.0.1',
+      port: hub.listenPort,
+    );
     expect(device.deviceId, hub.deviceId);
     await connected;
     expect((await hub.devices()).single.connected, isTrue);

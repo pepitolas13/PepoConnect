@@ -26,9 +26,7 @@ sealed class EngineEvent {
           DeviceStatus.fromJson(j['status'] as Map<String, dynamic>),
         );
       case 'paired':
-        return DevicePairedEngineEvent(
-          PairedDevice.fromJson(j['device'] as Map<String, dynamic>),
-        );
+        return DevicePairedEngineEvent(PairedDevice.fromJson(j['device'] as Map<String, dynamic>));
       case 'pairing':
         return PairingChangedEvent(
           j['invite'] == null ? null : PairingInvite.fromJson(j['invite'] as Map<String, dynamic>),
@@ -76,8 +74,12 @@ class DeviceConnectionEvent extends EngineEvent {
   final String? reason;
 
   @override
-  Map<String, dynamic> toJson() =>
-      {'e': 'connection', 'deviceId': deviceId, 'connected': connected, 'reason': ?reason};
+  Map<String, dynamic> toJson() => {
+    'e': 'connection',
+    'deviceId': deviceId,
+    'connected': connected,
+    'reason': ?reason,
+  };
 }
 
 class DeviceStatusChangedEvent extends EngineEvent {
@@ -116,22 +118,22 @@ class PairingInvite {
   final int port;
 
   Map<String, dynamic> toJson() => {
-        'mode': mode.name,
-        'expiresAt': expiresAt.toUtc().toIso8601String(),
-        'qrText': ?qrText,
-        'code': ?code,
-        'addresses': addresses,
-        'port': port,
-      };
+    'mode': mode.name,
+    'expiresAt': expiresAt.toUtc().toIso8601String(),
+    'qrText': ?qrText,
+    'code': ?code,
+    'addresses': addresses,
+    'port': port,
+  };
 
   factory PairingInvite.fromJson(Map<String, dynamic> j) => PairingInvite(
-        mode: PairingMode.values.byName(j['mode'] as String),
-        expiresAt: DateTime.parse(j['expiresAt'] as String),
-        qrText: j['qrText'] as String?,
-        code: j['code'] as String?,
-        addresses: (j['addresses'] as List<dynamic>? ?? const []).cast<String>(),
-        port: j['port'] as int? ?? 0,
-      );
+    mode: PairingMode.values.byName(j['mode'] as String),
+    expiresAt: DateTime.parse(j['expiresAt'] as String),
+    qrText: j['qrText'] as String?,
+    code: j['code'] as String?,
+    addresses: (j['addresses'] as List<dynamic>? ?? const []).cast<String>(),
+    port: j['port'] as int? ?? 0,
+  );
 }
 
 class PairingChangedEvent extends EngineEvent {
@@ -148,8 +150,11 @@ class TransferChangedEvent extends EngineEvent {
   final bool progressOnly;
 
   @override
-  Map<String, dynamic> toJson() =>
-      {'e': 'transfer', 'record': record.toJson(), 'progressOnly': progressOnly};
+  Map<String, dynamic> toJson() => {
+    'e': 'transfer',
+    'record': record.toJson(),
+    'progressOnly': progressOnly,
+  };
 }
 
 class GalleryChangedEvent extends EngineEvent {
@@ -159,8 +164,12 @@ class GalleryChangedEvent extends EngineEvent {
   final List<String> ids;
 
   @override
-  Map<String, dynamic> toJson() =>
-      {'e': 'gallery', 'deviceId': deviceId, 'change': change.name, 'ids': ids};
+  Map<String, dynamic> toJson() => {
+    'e': 'gallery',
+    'deviceId': deviceId,
+    'change': change.name,
+    'ids': ids,
+  };
 }
 
 class ClipboardReceivedEvent extends EngineEvent {
@@ -192,14 +201,14 @@ class GuestShareChangedEvent extends EngineEvent {
 
   @override
   Map<String, dynamic> toJson() => {
-        'e': 'guest',
-        'kind': kind,
-        'session': ?session,
-        'fileName': ?fileName,
-        'bytes': ?bytes,
-        'remote': ?remote,
-        'path': ?path,
-      };
+    'e': 'guest',
+    'kind': kind,
+    'session': ?session,
+    'fileName': ?fileName,
+    'bytes': ?bytes,
+    'remote': ?remote,
+    'path': ?path,
+  };
 }
 
 class EngineLogEvent extends EngineEvent {

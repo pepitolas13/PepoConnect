@@ -26,10 +26,7 @@ class X509Encoder {
   static AsymmetricKeyPair<ECPublicKey, ECPrivateKey> generateP256KeyPair() {
     final rnd = secureRandom();
     final gen = ECKeyGenerator()
-      ..init(ParametersWithRandom(
-        ECKeyGeneratorParameters(ECCurve_secp256r1()),
-        rnd,
-      ));
+      ..init(ParametersWithRandom(ECKeyGeneratorParameters(ECCurve_secp256r1()), rnd));
     return gen.generateKeyPair();
   }
 
@@ -54,56 +51,58 @@ class X509Encoder {
     String organization = 'PepoConnect',
   }) {
     final name = _name(commonName, organization);
-    final tbs = ASN1Sequence(elements: [
-      ASN1Sequence(elements: [ASN1Integer(BigInt.two)], tag: 0xA0),
-      ASN1Integer(serial),
-      _algorithmEcdsaSha256(),
-      name,
-      ASN1Sequence(elements: [
-        _time(notBefore),
-        _time(notAfter),
-      ]),
-      _name(commonName, organization),
-      _subjectPublicKeyInfo(publicKey),
-    ]);
+    final tbs = ASN1Sequence(
+      elements: [
+        ASN1Sequence(elements: [ASN1Integer(BigInt.two)], tag: 0xA0),
+        ASN1Integer(serial),
+        _algorithmEcdsaSha256(),
+        name,
+        ASN1Sequence(elements: [_time(notBefore), _time(notAfter)]),
+        _name(commonName, organization),
+        _subjectPublicKeyInfo(publicKey),
+      ],
+    );
     final tbsDer = tbs.encode();
     final signature = _ecdsaSign(privateKey, tbsDer);
-    final cert = ASN1Sequence(elements: [
-      ASN1Sequence.fromBytes(tbsDer),
-      _algorithmEcdsaSha256(),
-      ASN1BitString(stringValues: signature),
-    ]);
+    final cert = ASN1Sequence(
+      elements: [
+        ASN1Sequence.fromBytes(tbsDer),
+        _algorithmEcdsaSha256(),
+        ASN1BitString(stringValues: signature),
+      ],
+    );
     return cert.encode();
   }
 
   /// DER of a PKCS#8 `PrivateKeyInfo` wrapping an RFC 5915 `ECPrivateKey`.
-  static Uint8List pkcs8PrivateKeyDer(
-    ECPrivateKey privateKey,
-    ECPublicKey publicKey,
-  ) {
-    final ecPrivateKey = ASN1Sequence(elements: [
-      ASN1Integer(BigInt.one),
-      ASN1OctetString(octets: _bigIntToFixed(privateKey.d!, 32)),
-      ASN1Sequence(
-        elements: [ASN1BitString(stringValues: _uncompressedPoint(publicKey))],
-        tag: 0xA1,
-      ),
-    ]);
-    final info = ASN1Sequence(elements: [
-      ASN1Integer(BigInt.zero),
-      ASN1Sequence(elements: [
-        ASN1ObjectIdentifier.fromIdentifierString(_oidIdEcPublicKey),
-        ASN1ObjectIdentifier.fromIdentifierString(_oidPrime256v1),
-      ]),
-      ASN1OctetString(octets: ecPrivateKey.encode()),
-    ]);
+  static Uint8List pkcs8PrivateKeyDer(ECPrivateKey privateKey, ECPublicKey publicKey) {
+    final ecPrivateKey = ASN1Sequence(
+      elements: [
+        ASN1Integer(BigInt.one),
+        ASN1OctetString(octets: _bigIntToFixed(privateKey.d!, 32)),
+        ASN1Sequence(
+          elements: [ASN1BitString(stringValues: _uncompressedPoint(publicKey))],
+          tag: 0xA1,
+        ),
+      ],
+    );
+    final info = ASN1Sequence(
+      elements: [
+        ASN1Integer(BigInt.zero),
+        ASN1Sequence(
+          elements: [
+            ASN1ObjectIdentifier.fromIdentifierString(_oidIdEcPublicKey),
+            ASN1ObjectIdentifier.fromIdentifierString(_oidPrime256v1),
+          ],
+        ),
+        ASN1OctetString(octets: ecPrivateKey.encode()),
+      ],
+    );
     return info.encode();
   }
 
   /// Parses a PKCS#8 DER produced by [pkcs8PrivateKeyDer] back into keys.
-  static AsymmetricKeyPair<ECPublicKey, ECPrivateKey> keyPairFromPkcs8(
-    Uint8List der,
-  ) {
+  static AsymmetricKeyPair<ECPublicKey, ECPrivateKey> keyPairFromPkcs8(Uint8List der) {
     final info = ASN1Sequence.fromBytes(der);
     final wrapped = info.elements![2] as ASN1OctetString;
     final ecKey = ASN1Sequence.fromBytes(wrapped.octets!);
@@ -128,25 +127,37 @@ class X509Encoder {
 
   // ---------------------------------------------------------------------------
 
-  static ASN1Sequence _algorithmEcdsaSha256() => ASN1Sequence(elements: [
-        // RFC 5758 §3.2: parameters MUST be absent (no NULL).
-        ASN1ObjectIdentifier.fromIdentifierString(_oidEcdsaWithSha256),
-      ]);
+  static ASN1Sequence _algorithmEcdsaSha256() => ASN1Sequence(
+    elements: [
+      // RFC 5758 §3.2: parameters MUST be absent (no NULL).
+      ASN1ObjectIdentifier.fromIdentifierString(_oidEcdsaWithSha256),
+    ],
+  );
 
-  static ASN1Sequence _name(String cn, String org) => ASN1Sequence(elements: [
-        ASN1Set(elements: [
-          ASN1Sequence(elements: [
-            ASN1ObjectIdentifier.fromIdentifierString(_oidCommonName),
-            ASN1UTF8String(utf8StringValue: cn),
-          ]),
-        ]),
-        ASN1Set(elements: [
-          ASN1Sequence(elements: [
-            ASN1ObjectIdentifier.fromIdentifierString(_oidOrganization),
-            ASN1UTF8String(utf8StringValue: org),
-          ]),
-        ]),
-      ]);
+  static ASN1Sequence _name(String cn, String org) => ASN1Sequence(
+    elements: [
+      ASN1Set(
+        elements: [
+          ASN1Sequence(
+            elements: [
+              ASN1ObjectIdentifier.fromIdentifierString(_oidCommonName),
+              ASN1UTF8String(utf8StringValue: cn),
+            ],
+          ),
+        ],
+      ),
+      ASN1Set(
+        elements: [
+          ASN1Sequence(
+            elements: [
+              ASN1ObjectIdentifier.fromIdentifierString(_oidOrganization),
+              ASN1UTF8String(utf8StringValue: org),
+            ],
+          ),
+        ],
+      ),
+    ],
+  );
 
   static ASN1Object _time(DateTime t) {
     final utc = t.toUtc();
@@ -155,32 +166,26 @@ class X509Encoder {
     return ASN1UtcTime(utc);
   }
 
-  static ASN1Sequence _subjectPublicKeyInfo(ECPublicKey pub) =>
-      ASN1Sequence(elements: [
-        ASN1Sequence(elements: [
+  static ASN1Sequence _subjectPublicKeyInfo(ECPublicKey pub) => ASN1Sequence(
+    elements: [
+      ASN1Sequence(
+        elements: [
           ASN1ObjectIdentifier.fromIdentifierString(_oidIdEcPublicKey),
           ASN1ObjectIdentifier.fromIdentifierString(_oidPrime256v1),
-        ]),
-        ASN1BitString(stringValues: _uncompressedPoint(pub)),
-      ]);
+        ],
+      ),
+      ASN1BitString(stringValues: _uncompressedPoint(pub)),
+    ],
+  );
 
   static Uint8List _uncompressedPoint(ECPublicKey pub) =>
       Uint8List.fromList(pub.Q!.getEncoded(false));
 
   static Uint8List _ecdsaSign(ECPrivateKey key, Uint8List data) {
     final signer = Signer('SHA-256/ECDSA') as ECDSASigner;
-    signer.init(
-      true,
-      ParametersWithRandom(
-        PrivateKeyParameter<ECPrivateKey>(key),
-        secureRandom(),
-      ),
-    );
+    signer.init(true, ParametersWithRandom(PrivateKeyParameter<ECPrivateKey>(key), secureRandom()));
     final sig = signer.generateSignature(data) as ECSignature;
-    return ASN1Sequence(elements: [
-      ASN1Integer(sig.r),
-      ASN1Integer(sig.s),
-    ]).encode();
+    return ASN1Sequence(elements: [ASN1Integer(sig.r), ASN1Integer(sig.s)]).encode();
   }
 
   static Uint8List _bigIntToFixed(BigInt v, int length) {

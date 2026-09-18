@@ -45,7 +45,11 @@ class Pair {
     pr.listener = PeerListener(
       identity: pr.hubId,
       info: const LocalDeviceInfo(
-          name: 'PC', platform: DevicePlatform.windows, role: DeviceRole.hub, appVersion: 't'),
+        name: 'PC',
+        platform: DevicePlatform.windows,
+        role: DeviceRole.hub,
+        appVersion: 't',
+      ),
       registry: pr.hubRegistry,
       pairingSessions: sessions,
       tokens: SessionTokens(),
@@ -58,7 +62,11 @@ class Pair {
       pr.listener.port,
       me: pr.phoneId,
       info: const LocalDeviceInfo(
-          name: 'Phone', platform: DevicePlatform.android, role: DeviceRole.phone, appVersion: 't'),
+        name: 'Phone',
+        platform: DevicePlatform.android,
+        role: DeviceRole.phone,
+        appVersion: 't',
+      ),
       expectedFingerprint: pr.hubId.fingerprint,
       channel: ChannelKind.control,
       pairingSecret: session.secret,
@@ -86,8 +94,12 @@ class Pair {
       chunkSize: chunkSize,
     );
     // Route control messages to the engines.
-    pr.hubControl.messages.listen((m) => pr.hubEngine.handleControl(pr.phoneId.deviceId, pr.hubControl, m));
-    pr.phoneControl.messages.listen((m) => pr.phoneEngine.handleControl(pr.hubId.deviceId, pr.phoneControl, m));
+    pr.hubControl.messages.listen(
+      (m) => pr.hubEngine.handleControl(pr.phoneId.deviceId, pr.hubControl, m),
+    );
+    pr.phoneControl.messages.listen(
+      (m) => pr.phoneEngine.handleControl(pr.hubId.deviceId, pr.phoneControl, m),
+    );
     // Bulk channels accepted by the hub are attached to its engine.
     pr.listener.connections.listen((r) {
       if (r.channel == ChannelKind.bulk) {
@@ -127,7 +139,8 @@ class PhoneChannels implements ChannelProvider {
   int opened = 0;
 
   @override
-  PeerConnection? controlFor(String deviceId) => pair.phoneControl.isClosed ? null : pair.phoneControl;
+  PeerConnection? controlFor(String deviceId) =>
+      pair.phoneControl.isClosed ? null : pair.phoneControl;
 
   @override
   Future<PeerConnection> acquireBulk(String deviceId) async {
@@ -138,7 +151,11 @@ class PhoneChannels implements ChannelProvider {
       pair.listener.port,
       me: pair.phoneId,
       info: const LocalDeviceInfo(
-          name: 'Phone', platform: DevicePlatform.android, role: DeviceRole.phone, appVersion: 't'),
+        name: 'Phone',
+        platform: DevicePlatform.android,
+        role: DeviceRole.phone,
+        appVersion: 't',
+      ),
       expectedFingerprint: pair.hubId.fingerprint,
       channel: ChannelKind.bulk,
       known: pair.phoneKnowsHub,
@@ -174,7 +191,11 @@ class HubChannels implements ChannelProvider {
     // In the real session layer chan.open is a request the phone answers by
     // dialing; here the test opens it directly.
     final future = incomingBulk.stream.first;
-    unawaited(pair.phoneChannels.acquireBulk(pair.hubId.deviceId).then((c) => pair.phoneChannels.idle.add(c)));
+    unawaited(
+      pair.phoneChannels
+          .acquireBulk(pair.hubId.deviceId)
+          .then((c) => pair.phoneChannels.idle.add(c)),
+    );
     return future.timeout(const Duration(seconds: 5));
   }
 
@@ -228,7 +249,11 @@ Future<bool> sameContent(File a, File b) async {
   }
 }
 
-Future<TransferRecord> waitTerminal(TransferEngine engine, int id, {Duration timeout = const Duration(seconds: 60)}) {
+Future<TransferRecord> waitTerminal(
+  TransferEngine engine,
+  int id, {
+  Duration timeout = const Duration(seconds: 60),
+}) {
   return engine.events
       .where((e) => e.record.id == id && e.record.state.isTerminal)
       .map((e) => e.record)
@@ -247,14 +272,21 @@ void main() {
     final terminal = waitTerminal(pair.hubEngine, -1); // placeholder, replaced below
     terminal.ignore();
     final sw = Stopwatch()..start();
-    final queued = await pair.phoneEngine.send(deviceId: pair.hubId.deviceId, path: src.path, mediaKind: MediaKind.image);
+    final queued = await pair.phoneEngine.send(
+      deviceId: pair.hubId.deviceId,
+      path: src.path,
+      mediaKind: MediaKind.image,
+    );
     final result = await waitTerminal(pair.phoneEngine, queued.id);
     sw.stop();
     expect(result.state, TransferState.done, reason: result.error);
     final received = File(p.join(pair.hubDir.path, 'IMG_0001.jpg'));
     expect(await received.exists(), isTrue);
     expect(await sameContent(src, received), isTrue);
-    expect(await Directory(pair.hubDir.path).list().where((e) => e.path.endsWith('.pepopart')).isEmpty, isTrue);
+    expect(
+      await Directory(pair.hubDir.path).list().where((e) => e.path.endsWith('.pepopart')).isEmpty,
+      isTrue,
+    );
     final mbps = 24 * 1024 * 1024 / 1048576 / (sw.elapsedMilliseconds / 1000);
     // ignore: avoid_print
     print('24 MB in ${sw.elapsedMilliseconds} ms = ${mbps.toStringAsFixed(0)} MB/s (loopback TLS)');
@@ -275,7 +307,9 @@ void main() {
   test('three files in parallel reuse bulk channels', () async {
     final files = <File>[];
     for (var i = 0; i < 3; i++) {
-      files.add(await writeRandom(pair.phoneDir, 'clip$i.mp4', (2 + i) * 1024 * 1024, seed: 10 + i));
+      files.add(
+        await writeRandom(pair.phoneDir, 'clip$i.mp4', (2 + i) * 1024 * 1024, seed: 10 + i),
+      );
     }
     final ids = <int>[];
     for (final f in files) {
@@ -302,7 +336,11 @@ void main() {
         .firstWhere((e) => e.record.id == t.id && e.record.bytesDone > 4 * 1024 * 1024)
         .timeout(const Duration(seconds: 20));
     final pausedFuture = pair.phoneEngine.events
-        .where((e) => e.record.id == t.id && (e.record.state == TransferState.paused || e.record.state.isTerminal))
+        .where(
+          (e) =>
+              e.record.id == t.id &&
+              (e.record.state == TransferState.paused || e.record.state.isTerminal),
+        )
         .map((e) => e.record)
         .first
         .timeout(const Duration(seconds: 20));
@@ -312,7 +350,9 @@ void main() {
         .list()
         .where((e) => e.path.endsWith('.pepopart'))
         .toList();
-    final hubPaused = (await pair.hubStore.all()).where((r) => r.state == TransferState.paused).toList();
+    final hubPaused = (await pair.hubStore.all())
+        .where((r) => r.state == TransferState.paused)
+        .toList();
     expect(hubPaused, hasLength(1), reason: 'hub keeps a resumable record');
     expect(part, hasLength(1));
     final keptBytes = await File(part.single.path).length();
@@ -322,11 +362,17 @@ void main() {
     // Resume: the phone re-offers and the hub accepts from the kept offset.
     final t2 = await pair.phoneEngine.send(deviceId: pair.hubId.deviceId, path: src.path);
     final progressEvents = <int>[];
-    final sub = pair.hubEngine.events.where((e) => e.record.id == t2.id).listen((e) => progressEvents.add(e.record.bytesDone));
+    final sub = pair.hubEngine.events
+        .where((e) => e.record.id == t2.id)
+        .listen((e) => progressEvents.add(e.record.bytesDone));
     final r2 = await waitTerminal(pair.phoneEngine, t2.id);
     await sub.cancel();
     expect(r2.state, TransferState.done, reason: r2.error);
-    expect(progressEvents.first, greaterThanOrEqualTo(keptBytes), reason: 'started from the kept offset');
+    expect(
+      progressEvents.first,
+      greaterThanOrEqualTo(keptBytes),
+      reason: 'started from the kept offset',
+    );
     expect(await sameContent(src, File(p.join(pair.hubDir.path, 'big.bin'))), isTrue);
   });
 
@@ -345,16 +391,21 @@ void main() {
     expect(leftovers.where((e) => e.path.contains('cancel.bin')), isEmpty);
   });
 
-  test('throughput: 512 MB over loopback TLS', () async {
-    final src = await writeRandom(pair.phoneDir, 'huge.bin', 512 * 1024 * 1024, seed: 42);
-    final sw = Stopwatch()..start();
-    final t = await pair.phoneEngine.send(deviceId: pair.hubId.deviceId, path: src.path);
-    final r = await waitTerminal(pair.phoneEngine, t.id, timeout: const Duration(minutes: 5));
-    sw.stop();
-    expect(r.state, TransferState.done, reason: r.error);
-    final mbps = 512 / (sw.elapsedMilliseconds / 1000);
-    // ignore: avoid_print
-    print('512 MB in ${sw.elapsedMilliseconds} ms = ${mbps.toStringAsFixed(0)} MB/s');
-    expect(mbps, greaterThan(50));
-  }, tags: ['perf'], timeout: const Timeout(Duration(minutes: 6)));
+  test(
+    'throughput: 512 MB over loopback TLS',
+    () async {
+      final src = await writeRandom(pair.phoneDir, 'huge.bin', 512 * 1024 * 1024, seed: 42);
+      final sw = Stopwatch()..start();
+      final t = await pair.phoneEngine.send(deviceId: pair.hubId.deviceId, path: src.path);
+      final r = await waitTerminal(pair.phoneEngine, t.id, timeout: const Duration(minutes: 5));
+      sw.stop();
+      expect(r.state, TransferState.done, reason: r.error);
+      final mbps = 512 / (sw.elapsedMilliseconds / 1000);
+      // ignore: avoid_print
+      print('512 MB in ${sw.elapsedMilliseconds} ms = ${mbps.toStringAsFixed(0)} MB/s');
+      expect(mbps, greaterThan(50));
+    },
+    tags: ['perf'],
+    timeout: const Timeout(Duration(minutes: 6)),
+  );
 }

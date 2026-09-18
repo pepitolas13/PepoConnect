@@ -69,8 +69,7 @@ Uint8List randomBytes(int n) {
 }
 
 /// SHA-256 digest as bytes.
-Uint8List sha256Bytes(List<int> data) =>
-    Uint8List.fromList(sha256.convert(data).bytes);
+Uint8List sha256Bytes(List<int> data) => Uint8List.fromList(sha256.convert(data).bytes);
 
 /// Constant-time comparison of two byte lists.
 bool constantTimeEquals(List<int> a, List<int> b) {

@@ -39,10 +39,7 @@ class ChunkedFileReader {
 
   /// Yields `[head, body]` pairs; each pair is one data frame. The frame
   /// head is emitted separately so the body is never copied.
-  Stream<List<int>> frames({
-    CancelToken? cancel,
-    void Function(int bytesSent)? onProgress,
-  }) async* {
+  Stream<List<int>> frames({CancelToken? cancel, void Function(int bytesSent)? onProgress}) async* {
     final raf = await File(path).open();
     try {
       if (startOffset > 0) await raf.setPosition(startOffset);
@@ -66,8 +63,7 @@ class ChunkedFileReader {
 
   /// xxh3 of the last `min(length, window)` bytes before [offset] of a file,
   /// used to check that both sides agree on the resume point.
-  static Future<String> tailHash(String path, int offset,
-      {int window = 1024 * 1024}) async {
+  static Future<String> tailHash(String path, int offset, {int window = 1024 * 1024}) async {
     if (offset <= 0) return '';
     final start = offset > window ? offset - window : 0;
     final raf = await File(path).open();

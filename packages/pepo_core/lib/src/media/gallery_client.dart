@@ -43,20 +43,20 @@ class MediaItemState {
   String? hash;
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'state': state.name,
-        'localPath': ?localPath,
-        'firstSeen': ?firstSeen?.toUtc().toIso8601String(),
-        'hash': ?hash,
-      };
+    'id': id,
+    'state': state.name,
+    'localPath': ?localPath,
+    'firstSeen': ?firstSeen?.toUtc().toIso8601String(),
+    'hash': ?hash,
+  };
 
   factory MediaItemState.fromJson(Map<String, dynamic> j) => MediaItemState(
-        id: j['id'] as String,
-        state: MediaState.values.byName(j['state'] as String),
-        localPath: j['localPath'] as String?,
-        firstSeen: j['firstSeen'] == null ? null : DateTime.parse(j['firstSeen'] as String),
-        hash: j['hash'] as String?,
-      );
+    id: j['id'] as String,
+    state: MediaState.values.byName(j['state'] as String),
+    localPath: j['localPath'] as String?,
+    firstSeen: j['firstSeen'] == null ? null : DateTime.parse(j['firstSeen'] as String),
+    hash: j['hash'] as String?,
+  );
 }
 
 class MemoryMediaStateStore implements MediaStateStore {
@@ -160,7 +160,8 @@ class GalleryClient implements MessageHandler {
 
   Stream<GalleryEvent> get events => _events.stream;
 
-  DeviceGallery gallery(String deviceId) => _galleries.putIfAbsent(deviceId, () => DeviceGallery(deviceId));
+  DeviceGallery gallery(String deviceId) =>
+      _galleries.putIfAbsent(deviceId, () => DeviceGallery(deviceId));
   Iterable<DeviceGallery> get galleries => _galleries.values;
 
   void _emit(String deviceId, GalleryChange change, [List<String> ids = const []]) {
@@ -224,11 +225,15 @@ class GalleryClient implements MessageHandler {
   }
 
   Future<MediaPage> _requestPage(PeerConnection control, int page, Set<MediaKind>? kinds) async {
-    final reply = await control.request(MsgType.mediaIndex, data: {
-      'page': page,
-      'pageSize': pageSize,
-      if (kinds != null) 'kinds': kinds.map((k) => k.code).toList(),
-    }, timeout: const Duration(seconds: 30));
+    final reply = await control.request(
+      MsgType.mediaIndex,
+      data: {
+        'page': page,
+        'pageSize': pageSize,
+        if (kinds != null) 'kinds': kinds.map((k) => k.code).toList(),
+      },
+      timeout: const Duration(seconds: 30),
+    );
     return MediaPage.fromJson(reply.data);
   }
 
@@ -265,7 +270,10 @@ class GalleryClient implements MessageHandler {
     final completer = Completer<Uint8List?>();
     _thumbWaiters[key] = completer;
     (_thumbQueue[deviceId] ??= []).add(id);
-    _thumbTimers[deviceId] ??= Timer(const Duration(milliseconds: 15), () => _flushThumbs(deviceId));
+    _thumbTimers[deviceId] ??= Timer(
+      const Duration(milliseconds: 15),
+      () => _flushThumbs(deviceId),
+    );
     if (_thumbQueue[deviceId]!.length >= 32) {
       _thumbTimers[deviceId]?.cancel();
       _thumbTimers.remove(deviceId);
@@ -363,18 +371,22 @@ class GalleryClient implements MessageHandler {
   Future<void> download(String deviceId, String id, {bool convertHeic = false}) async {
     final control = sessions.controlFor(deviceId);
     if (control == null) throw PeerClosedException('device offline');
-    await control.request(MsgType.fileRequest, data: {
-      'id': id,
-      'convert': convertHeic ? 'jpeg' : 'none',
-    }, timeout: const Duration(seconds: 30));
+    await control.request(
+      MsgType.fileRequest,
+      data: {'id': id, 'convert': convertHeic ? 'jpeg' : 'none'},
+      timeout: const Duration(seconds: 30),
+    );
   }
 
   /// Deletes items on the device (the device may ask its user).
   Future<List<String>> deleteOnDevice(String deviceId, List<String> ids) async {
     final control = sessions.controlFor(deviceId);
     if (control == null) throw PeerClosedException('device offline');
-    final reply = await control.request(MsgType.mediaDelete, data: {'ids': ids},
-        timeout: const Duration(seconds: 60));
+    final reply = await control.request(
+      MsgType.mediaDelete,
+      data: {'ids': ids},
+      timeout: const Duration(seconds: 60),
+    );
     final deleted = reply.list<String>('deleted');
     final g = gallery(deviceId);
     for (final id in deleted) {
@@ -386,8 +398,14 @@ class GalleryClient implements MessageHandler {
 
   Future<void> dismiss(String deviceId, String id) => _setState(deviceId, id, MediaState.dismissed);
 
-  Future<void> _setState(String deviceId, String id, MediaState state,
-      {String? localPath, String? hash, bool onlyIfFresh = false}) async {
+  Future<void> _setState(
+    String deviceId,
+    String id,
+    MediaState state, {
+    String? localPath,
+    String? hash,
+    bool onlyIfFresh = false,
+  }) async {
     final g = gallery(deviceId);
     final current = g.states[id];
     if (onlyIfFresh && current != null && current.state != MediaState.fresh) return;
@@ -415,7 +433,11 @@ class GalleryClient implements MessageHandler {
           _rememberThumb(key, m.body);
           unawaited(_writeDisk(deviceId, item.id, m.body));
         }
-        g.states[item.id] ??= MediaItemState(id: item.id, state: MediaState.fresh, firstSeen: DateTime.now());
+        g.states[item.id] ??= MediaItemState(
+          id: item.id,
+          state: MediaState.fresh,
+          firstSeen: DateTime.now(),
+        );
         await stateStore.save(deviceId, g.states[item.id]!);
         _emit(deviceId, GalleryChange.newItem, [item.id]);
         return true;
@@ -439,16 +461,25 @@ class GalleryClient implements MessageHandler {
     final r = e.record;
     if (r.direction != TransferDirection.receive || r.sourceId == null) return;
     if (r.state == TransferState.done && r.finalPath != null) {
-      unawaited(_setState(r.deviceId, r.sourceId!, MediaState.downloaded,
-          localPath: r.finalPath, hash: r.hash));
+      unawaited(
+        _setState(
+          r.deviceId,
+          r.sourceId!,
+          MediaState.downloaded,
+          localPath: r.finalPath,
+          hash: r.hash,
+        ),
+      );
     }
   }
 
   void _onSession(SessionEvent e) {
     if (e is DeviceConnectedEvent) {
-      unawaited(refresh(e.deviceId, kinds: gallery(e.deviceId).filter).catchError((Object err) {
-        _log.fine('refresh after connect failed: $err');
-      }));
+      unawaited(
+        refresh(e.deviceId, kinds: gallery(e.deviceId).filter).catchError((Object err) {
+          _log.fine('refresh after connect failed: $err');
+        }),
+      );
     } else if (e is DeviceForgottenEvent) {
       _galleries.remove(e.deviceId);
       _thumbCache.removeWhere((k, _) => k.startsWith('${e.deviceId}/'));

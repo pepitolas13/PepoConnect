@@ -34,13 +34,16 @@ class SystemNotifications {
           },
         );
         if (Platform.isAndroid) {
-          final android = _mobile.resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>();
-          await android?.createNotificationChannel(const AndroidNotificationChannel(
-            _channelId,
-            'PepoConnect',
-            description: 'Fotos nuevas y transferencias',
-            importance: Importance.defaultImportance,
-          ));
+          final android = _mobile
+              .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>();
+          await android?.createNotificationChannel(
+            const AndroidNotificationChannel(
+              _channelId,
+              'PepoConnect',
+              description: 'Fotos nuevas y transferencias',
+              importance: Importance.defaultImportance,
+            ),
+          );
           await android?.requestNotificationsPermission();
         } else {
           await _mobile
@@ -84,8 +87,12 @@ class SystemNotifications {
           title: title,
           body: body,
           notificationDetails: const NotificationDetails(
-            android: AndroidNotificationDetails(_channelId, 'PepoConnect',
-                importance: Importance.defaultImportance, priority: Priority.defaultPriority),
+            android: AndroidNotificationDetails(
+              _channelId,
+              'PepoConnect',
+              importance: Importance.defaultImportance,
+              priority: Priority.defaultPriority,
+            ),
             iOS: DarwinNotificationDetails(),
           ),
           payload: payload,

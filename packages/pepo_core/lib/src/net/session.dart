@@ -156,12 +156,15 @@ class PeerSession {
     final c = _control;
     if (c == null) return;
     final status = _manager.localStatus();
-    c.send(MsgType.deviceInfo, data: {
-      ...status.toJson(),
-      'name': _manager.info.name,
-      'role': _manager.info.role.code,
-      'version': _manager.info.appVersion,
-    });
+    c.send(
+      MsgType.deviceInfo,
+      data: {
+        ...status.toJson(),
+        'name': _manager.info.name,
+        'role': _manager.info.role.code,
+        'version': _manager.info.appVersion,
+      },
+    );
   }
 
   /// Pushes a fresh status (battery, storage) to the peer.
@@ -328,10 +331,13 @@ class PeerSession {
     if (_bulk.length + _pendingOpens < maxBulk) {
       await _requestSecondary(ChannelKind.bulk);
     }
-    return completer.future.timeout(const Duration(seconds: 15), onTimeout: () {
-      _waitingBulk.remove(completer);
-      throw TimeoutException('no bulk channel');
-    });
+    return completer.future.timeout(
+      const Duration(seconds: 15),
+      onTimeout: () {
+        _waitingBulk.remove(completer);
+        throw TimeoutException('no bulk channel');
+      },
+    );
   }
 
   int _pendingOpens = 0;
@@ -382,10 +388,13 @@ class PeerSession {
     final completer = Completer<PeerConnection>();
     _waitingMedia.add(completer);
     if (_waitingMedia.length == 1) await _requestSecondary(ChannelKind.media);
-    return completer.future.timeout(const Duration(seconds: 15), onTimeout: () {
-      _waitingMedia.remove(completer);
-      throw TimeoutException('no media channel');
-    });
+    return completer.future.timeout(
+      const Duration(seconds: 15),
+      onTimeout: () {
+        _waitingMedia.remove(completer);
+        throw TimeoutException('no media channel');
+      },
+    );
   }
 
   // ---------------------------------------------------------------------------
@@ -430,7 +439,10 @@ class PeerSession {
       );
       final hostUsed = result.connection.remoteAddress.split(':').first;
       final updated = result.device.copyWith(
-        lastAddresses: [hostUsed, ...device.lastAddresses.where((a) => a != hostUsed)].take(3).toList(),
+        lastAddresses: [
+          hostUsed,
+          ...device.lastAddresses.where((a) => a != hostUsed),
+        ].take(3).toList(),
         lastPort: device.lastPort ?? defaultListenPort,
       );
       _bindControl(result.connection, result.sessionToken, updated);
@@ -482,11 +494,11 @@ class SessionManager implements ChannelProvider, PeerRegistry {
     List<Discovery> discovery = const [],
     DeviceStatus Function()? localStatus,
     this.preferredPort = defaultListenPort,
-  })  : _info = info,
-        // ignore: prefer_initializing_formals
-        _deviceStore = deviceStore,
-        _discovery = List.of(discovery),
-        _localStatus = localStatus ?? (() => const DeviceStatus()) {
+  }) : _info = info,
+       // ignore: prefer_initializing_formals
+       _deviceStore = deviceStore,
+       _discovery = List.of(discovery),
+       _localStatus = localStatus ?? (() => const DeviceStatus()) {
     pairing = PairingSessions();
     tokens = SessionTokens();
     _listener = PeerListener(
@@ -551,13 +563,13 @@ class SessionManager implements ChannelProvider, PeerRegistry {
   }
 
   DiscoveryAdvert _advert() => DiscoveryAdvert(
-        deviceId: identity.deviceId,
-        fingerprint: identity.fingerprint,
-        name: _info.name,
-        port: _listener.port,
-        platform: _info.platform,
-        role: _info.role,
-      );
+    deviceId: identity.deviceId,
+    fingerprint: identity.fingerprint,
+    name: _info.name,
+    port: _listener.port,
+    platform: _info.platform,
+    role: _info.role,
+  );
 
   /// Renames this device (propagated to peers on next connect).
   Future<void> updateInfo(LocalDeviceInfo info) async {
@@ -629,8 +641,11 @@ class SessionManager implements ChannelProvider, PeerRegistry {
     }
     if (r.channel == ChannelKind.control) {
       final port = r.remoteInfo.listenPort;
-      s._bindControl(r.connection, r.sessionToken,
-          port == null ? r.device : r.device.copyWith(lastPort: port));
+      s._bindControl(
+        r.connection,
+        r.sessionToken,
+        port == null ? r.device : r.device.copyWith(lastPort: port),
+      );
     } else {
       s._adoptSecondary(r.connection, r.channel);
     }
@@ -659,7 +674,12 @@ class SessionManager implements ChannelProvider, PeerRegistry {
     required String hostFingerprint,
   }) {
     final secret = PepoCrypto.manualCodeSecret(code, hostDeviceId);
-    return _pairDial(addresses: addresses, port: port, fingerprint: hostFingerprint, secret: secret);
+    return _pairDial(
+      addresses: addresses,
+      port: port,
+      fingerprint: hostFingerprint,
+      secret: secret,
+    );
   }
 
   /// Learns the identity of a listener at [host] (for manual code pairing

@@ -21,8 +21,7 @@ void main() {
   }
 
   test('control frame round trip', () {
-    final f = Frame.control('hello', data: {'v': 1, 'name': 'Pixel ñ'}, reqId: 7,
-        body: bytes(100));
+    final f = Frame.control('hello', data: {'v': 1, 'name': 'Pixel ñ'}, reqId: 7, body: bytes(100));
     final decoded = decodeAll([f.encode()]);
     expect(decoded, hasLength(1));
     final m = ControlMessage.fromFrame(decoded.single);
@@ -75,13 +74,19 @@ void main() {
   });
 
   test('rejects malformed input', () {
-    expect(() => decodeAll([Uint8List.fromList([9, 0, 0, 0, 99, 0, 0, 0, 0, 0, 0, 0, 0])]),
-        throwsA(isA<FrameFormatException>()));
+    expect(
+      () => decodeAll([
+        Uint8List.fromList([9, 0, 0, 0, 99, 0, 0, 0, 0, 0, 0, 0, 0]),
+      ]),
+      throwsA(isA<FrameFormatException>()),
+    );
     final huge = Uint8List(12);
     ByteData.sublistView(huge).setUint32(0, 0xFFFFFFFF, Endian.little);
     expect(() => decodeAll([huge]), throwsA(isA<FrameFormatException>()));
-    expect(() => Frame.control('x', data: {'p': 'y' * 70000}),
-        throwsA(isA<FrameFormatException>()));
+    expect(
+      () => Frame.control('x', data: {'p': 'y' * 70000}),
+      throwsA(isA<FrameFormatException>()),
+    );
     final bad = Frame.control('x').encode();
     bad[4] = FrameKind.data.code; // wrong header size for a data frame
     expect(() => decodeAll([bad]), throwsA(isA<FrameFormatException>()));
@@ -93,11 +98,18 @@ void main() {
       final frames = List.generate(1 + r.nextInt(6), (i) {
         switch (r.nextInt(3)) {
           case 0:
-            return Frame.control('t$i', data: {'i': i}, reqId: r.nextInt(1 << 31),
-                body: bytes(r.nextInt(5000), i));
+            return Frame.control(
+              't$i',
+              data: {'i': i},
+              reqId: r.nextInt(1 << 31),
+              body: bytes(r.nextInt(5000), i),
+            );
           case 1:
-            return Frame.data(transferId: i, offset: r.nextInt(1 << 30),
-                chunk: bytes(r.nextInt(20000), i + 1));
+            return Frame.data(
+              transferId: i,
+              offset: r.nextInt(1 << 30),
+              chunk: bytes(r.nextInt(20000), i + 1),
+            );
           default:
             return r.nextBool() ? Frame.ping() : Frame.pong();
         }

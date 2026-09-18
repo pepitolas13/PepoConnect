@@ -10,12 +10,7 @@ enum PairingMode { qr, manualCode }
 
 /// A pending invitation shown by the listening device (QR or 6-digit code).
 class PairingSession {
-  PairingSession._({
-    required this.mode,
-    required this.secret,
-    required this.expiresAt,
-    this.code,
-  });
+  PairingSession._({required this.mode, required this.secret, required this.expiresAt, this.code});
 
   final PairingMode mode;
   final Uint8List secret;
@@ -108,16 +103,15 @@ class PairingSessions {
     required String name,
     required List<String> addresses,
     required int port,
-  }) =>
-      QrPayload(
-        deviceId: deviceId,
-        fingerprint: fingerprint,
-        name: name,
-        addresses: addresses,
-        port: port,
-        secret: s.secret,
-        expiresAt: s.expiresAt,
-      );
+  }) => QrPayload(
+    deviceId: deviceId,
+    fingerprint: fingerprint,
+    name: name,
+    addresses: addresses,
+    port: port,
+    secret: s.secret,
+    expiresAt: s.expiresAt,
+  );
 
   void dispose() => _events.close();
 }

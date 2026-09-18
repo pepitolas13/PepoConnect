@@ -48,9 +48,13 @@ class OpenHelper {
       if (Platform.isLinux) {
         // Try the freedesktop FileManager1 interface; fall back to the folder.
         final r = await Process.run('dbus-send', [
-          '--session', '--dest=org.freedesktop.FileManager1', '--type=method_call',
-          '/org/freedesktop/FileManager1', 'org.freedesktop.FileManager1.ShowItems',
-          'array:string:${Uri.file(path)}', 'string:',
+          '--session',
+          '--dest=org.freedesktop.FileManager1',
+          '--type=method_call',
+          '/org/freedesktop/FileManager1',
+          'org.freedesktop.FileManager1.ShowItems',
+          'array:string:${Uri.file(path)}',
+          'string:',
         ]);
         if (r.exitCode == 0) return true;
         return await openFolder(p.dirname(path));

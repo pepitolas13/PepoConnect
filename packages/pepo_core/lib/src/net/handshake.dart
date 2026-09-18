@@ -45,8 +45,7 @@ class SessionTokens {
 
   void revoke(String token) => _tokens.remove(token);
 
-  void revokeDevice(String deviceId) =>
-      _tokens.removeWhere((_, e) => e.deviceId == deviceId);
+  void revokeDevice(String deviceId) => _tokens.removeWhere((_, e) => e.deviceId == deviceId);
 }
 
 class _TokenEntry {
@@ -150,17 +149,16 @@ Map<String, dynamic> _helloData({
   required Uint8List nonce,
   String? sessionToken,
   int? listenPort,
-}) =>
-    {
-      'v': protocolVersion,
-      'chan': channel,
-      'id': me.deviceId,
-      'fp': me.fingerprint,
-      ...info.toJson(),
-      'nonce': base64Url(nonce),
-      'session': ?sessionToken,
-      'port': ?listenPort,
-    };
+}) => {
+  'v': protocolVersion,
+  'chan': channel,
+  'id': me.deviceId,
+  'fp': me.fingerprint,
+  ...info.toJson(),
+  'nonce': base64Url(nonce),
+  'session': ?sessionToken,
+  'port': ?listenPort,
+};
 
 /// Client side of the handshake (the device that dialed).
 class ClientHandshake {
@@ -199,8 +197,10 @@ class ClientHandshake {
         .catchError((Object e) => throw HandshakeException('hello failed: $e'));
     final remote = RemoteHello.parse(helloReply);
     if (remote.version != protocolVersion) {
-      throw HandshakeException('protocol version ${remote.version} unsupported',
-          code: ErrorCode.unsupported);
+      throw HandshakeException(
+        'protocol version ${remote.version} unsupported',
+        code: ErrorCode.unsupported,
+      );
     }
     final pinned = conn.remoteFingerprint;
     if (pinned != null && pinned != remote.fingerprint) {
@@ -297,8 +297,10 @@ class ClientHandshake {
       throw HandshakeException('pairing rejected: ${e.message}', code: e.code);
     }
     if (reply.type != MsgType.pairAccept) {
-      throw HandshakeException('pairing rejected: ${reply.optStr('reason') ?? reply.type}',
-          code: ErrorCode.rejected);
+      throw HandshakeException(
+        'pairing rejected: ${reply.optStr('reason') ?? reply.type}',
+        code: ErrorCode.rejected,
+      );
     }
     final acceptProof = base64UrlDecode(reply.str('proof'));
     final expected = PepoCrypto.pairingProof(
@@ -373,8 +375,10 @@ class ServerHandshake {
     final remote = RemoteHello.parse(first);
     if (remote.version != protocolVersion) {
       conn.respondError(first.reqId, ErrorCode.unsupported, 'protocol version');
-      throw HandshakeException('protocol version ${remote.version} unsupported',
-          code: ErrorCode.unsupported);
+      throw HandshakeException(
+        'protocol version ${remote.version} unsupported',
+        code: ErrorCode.unsupported,
+      );
     }
     final myNonce = randomBytes(32);
     conn.respond(
@@ -453,11 +457,15 @@ class ServerHandshake {
         role: 'server',
       );
       final token = tokens.issue(device.deviceId);
-      conn.respond(next.reqId, MsgType.authOk, data: {
-        'proof': base64Url(serverProof),
-        'session': token,
-        'serverTime': DateTime.now().toUtc().millisecondsSinceEpoch,
-      });
+      conn.respond(
+        next.reqId,
+        MsgType.authOk,
+        data: {
+          'proof': base64Url(serverProof),
+          'session': token,
+          'serverTime': DateTime.now().toUtc().millisecondsSinceEpoch,
+        },
+      );
       final updated = device.copyWith(
         name: remote.name,
         platform: remote.platform,
@@ -493,8 +501,10 @@ class ServerHandshake {
       if (!PepoCrypto.verify(given, expected)) {
         pairingSessions.recordFailure(session, conn.remoteAddress);
         conn.respondError(next.reqId, ErrorCode.rejected, 'bad pairing proof');
-        throw HandshakeException('bad pairing proof from ${conn.remoteAddress}',
-            code: ErrorCode.rejected);
+        throw HandshakeException(
+          'bad pairing proof from ${conn.remoteAddress}',
+          code: ErrorCode.rejected,
+        );
       }
       pairingSessions.consume(session);
       final acceptProof = PepoCrypto.pairingProof(
@@ -526,10 +536,11 @@ class ServerHandshake {
       );
       await registry.saveDevice(device);
       final token = tokens.issue(device.deviceId);
-      conn.respond(next.reqId, MsgType.pairAccept, data: {
-        'proof': base64Url(acceptProof),
-        'session': token,
-      });
+      conn.respond(
+        next.reqId,
+        MsgType.pairAccept,
+        data: {'proof': base64Url(acceptProof), 'session': token},
+      );
       _log.info('paired with ${device.name} (${device.shortId})');
       return HandshakeResult(
         connection: conn,

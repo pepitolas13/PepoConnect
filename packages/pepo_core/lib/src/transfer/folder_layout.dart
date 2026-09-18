@@ -25,13 +25,13 @@ class FolderLayout {
   final String guestsFolder;
 
   FolderLayout copyWith({String? root, bool? separateByDevice}) => FolderLayout(
-        root: root ?? this.root,
-        separateByDevice: separateByDevice ?? this.separateByDevice,
-        photosFolder: photosFolder,
-        videosFolder: videosFolder,
-        filesFolder: filesFolder,
-        guestsFolder: guestsFolder,
-      );
+    root: root ?? this.root,
+    separateByDevice: separateByDevice ?? this.separateByDevice,
+    photosFolder: photosFolder,
+    videosFolder: videosFolder,
+    filesFolder: filesFolder,
+    guestsFolder: guestsFolder,
+  );
 
   /// Directory for a file of [kind] coming from [deviceFolder].
   String directoryFor({required String? deviceFolder, MediaKind? kind}) {

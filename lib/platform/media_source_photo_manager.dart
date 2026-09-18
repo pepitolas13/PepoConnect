@@ -10,7 +10,10 @@ import 'package:photo_manager/photo_manager.dart' as pm;
 /// Android/iOS gallery through `photo_manager` (MediaStore / PhotoKit),
 /// including change notifications for the "new photo" event.
 class MediaSourcePhotoManager extends MediaSource {
-  MediaSourcePhotoManager({required this.cacheDir, this.pollFallback = const Duration(seconds: 10)});
+  MediaSourcePhotoManager({
+    required this.cacheDir,
+    this.pollFallback = const Duration(seconds: 10),
+  });
 
   final String cacheDir;
   final Duration pollFallback;
@@ -38,6 +41,21 @@ class MediaSourcePhotoManager extends MediaSource {
       ),
     );
     return state.hasAccess;
+  }
+
+  /// Current permission state without prompting.
+  static Future<bool> hasPermission() async {
+    try {
+      final state = await pm.PhotoManager.getPermissionState(
+        requestOption: const pm.PermissionRequestOption(
+          androidPermission: pm.AndroidPermission(type: pm.RequestType.common, mediaLocation: true),
+          iosAccessLevel: pm.IosAccessLevel.readWrite,
+        ),
+      );
+      return state.hasAccess;
+    } catch (_) {
+      return false;
+    }
   }
 
   @override
@@ -108,7 +126,8 @@ class MediaSourcePhotoManager extends MediaSource {
   Future<void> _pollTick() async {
     // Only poll when the observer seems dead (some OEMs break it).
     final last = _lastObserverEvent;
-    if (_notifying && last != null && DateTime.now().difference(last) < const Duration(minutes: 5)) return;
+    if (_notifying && last != null && DateTime.now().difference(last) < const Duration(minutes: 5))
+      return;
     await _diff();
   }
 
@@ -157,9 +176,15 @@ class MediaSourcePhotoManager extends MediaSource {
   }
 
   @override
-  Future<MediaPage> index({int page = 0, int pageSize = 200, Set<MediaKind>? kinds, DateTime? since}) async {
+  Future<MediaPage> index({
+    int page = 0,
+    int pageSize = 200,
+    Set<MediaKind>? kinds,
+    DateTime? since,
+  }) async {
     final root = _all;
-    if (root == null) return MediaPage(items: const [], total: 0, nextPage: null, indexVersion: _indexVersion);
+    if (root == null)
+      return MediaPage(items: const [], total: 0, nextPage: null, indexVersion: _indexVersion);
     final total = await root.assetCountAsync;
     final assets = await root.getAssetListPaged(page: page, size: pageSize);
     final items = <MediaItem>[];
@@ -175,7 +200,12 @@ class MediaSourcePhotoManager extends MediaSource {
       if (item != null) items.add(item);
     }
     final end = (page + 1) * pageSize;
-    return MediaPage(items: items, total: total, nextPage: end < total ? page + 1 : null, indexVersion: _indexVersion);
+    return MediaPage(
+      items: items,
+      total: total,
+      nextPage: end < total ? page + 1 : null,
+      indexVersion: _indexVersion,
+    );
   }
 
   Future<pm.AssetEntity?> _asset(String id) async => _known[id] ?? await pm.AssetEntity.fromId(id);
@@ -190,14 +220,22 @@ class MediaSourcePhotoManager extends MediaSource {
   Future<Uint8List?> thumbnail(String id, {int maxPx = 320}) async {
     final a = await _asset(id);
     if (a == null) return null;
-    return a.thumbnailDataWithSize(pm.ThumbnailSize.square(maxPx), quality: 80, format: pm.ThumbnailFormat.jpeg);
+    return a.thumbnailDataWithSize(
+      pm.ThumbnailSize.square(maxPx),
+      quality: 80,
+      format: pm.ThumbnailFormat.jpeg,
+    );
   }
 
   @override
   Future<Uint8List?> preview(String id, {int maxPx = 1600}) async {
     final a = await _asset(id);
     if (a == null) return null;
-    return a.thumbnailDataWithSize(pm.ThumbnailSize(maxPx, maxPx), quality: 85, format: pm.ThumbnailFormat.jpeg);
+    return a.thumbnailDataWithSize(
+      pm.ThumbnailSize(maxPx, maxPx),
+      quality: 85,
+      format: pm.ThumbnailFormat.jpeg,
+    );
   }
 
   @override

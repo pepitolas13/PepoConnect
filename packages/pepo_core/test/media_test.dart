@@ -105,24 +105,51 @@ void main() {
 
       hub = SessionManager(
         identity: const CertificateFactory().generate(commonName: 'hub'),
-        info: const LocalDeviceInfo(name: 'PC', platform: DevicePlatform.windows, role: DeviceRole.hub, appVersion: 't'),
+        info: const LocalDeviceInfo(
+          name: 'PC',
+          platform: DevicePlatform.windows,
+          role: DeviceRole.hub,
+          appVersion: 't',
+        ),
         deviceStore: MemoryDeviceStore(),
         preferredPort: 0,
       );
       phone = SessionManager(
         identity: const CertificateFactory().generate(commonName: 'phone'),
-        info: const LocalDeviceInfo(name: 'Phone', platform: DevicePlatform.android, role: DeviceRole.phone, appVersion: 't'),
+        info: const LocalDeviceInfo(
+          name: 'Phone',
+          platform: DevicePlatform.android,
+          role: DeviceRole.phone,
+          appVersion: 't',
+        ),
         deviceStore: MemoryDeviceStore(),
         preferredPort: 0,
       );
-      hubTransfers = TransferEngine(channels: hub, store: MemoryTransferStore(), destination: (_, _) async => hubDir.path);
-      phoneTransfers = TransferEngine(channels: phone, store: MemoryTransferStore(), destination: (_, _) async => phoneRoot.path);
+      hubTransfers = TransferEngine(
+        channels: hub,
+        store: MemoryTransferStore(),
+        destination: (_, _) async => hubDir.path,
+      );
+      phoneTransfers = TransferEngine(
+        channels: phone,
+        store: MemoryTransferStore(),
+        destination: (_, _) async => phoneRoot.path,
+      );
       hub.transfers = hubTransfers;
       phone.transfers = phoneTransfers;
-      source = MediaSourceFs(roots: [phoneRoot.path], cacheDir: phoneCache.path, settleTime: const Duration(milliseconds: 150));
+      source = MediaSourceFs(
+        roots: [phoneRoot.path],
+        cacheDir: phoneCache.path,
+        settleTime: const Duration(milliseconds: 150),
+      );
       server = MediaServer(source: source, sessions: phone, transfers: phoneTransfers);
       phone.handlers.add(server);
-      client = GalleryClient(sessions: hub, transfers: hubTransfers, stateStore: MemoryMediaStateStore(), cacheDir: hubCache.path);
+      client = GalleryClient(
+        sessions: hub,
+        transfers: hubTransfers,
+        stateStore: MemoryMediaStateStore(),
+        cacheDir: hubCache.path,
+      );
       hub.handlers.add(client);
       await server.start();
       await hub.start();
@@ -145,12 +172,14 @@ void main() {
 
     test('index, thumbnails, preview, live new photo, download', () async {
       final session = hub.pairing.startQr();
-      final payload = hub.pairing.payloadFor(session,
-          deviceId: hub.identity.deviceId,
-          fingerprint: hub.identity.fingerprint,
-          name: 'PC',
-          addresses: ['127.0.0.1'],
-          port: hub.listenPort);
+      final payload = hub.pairing.payloadFor(
+        session,
+        deviceId: hub.identity.deviceId,
+        fingerprint: hub.identity.fingerprint,
+        name: 'PC',
+        addresses: ['127.0.0.1'],
+        port: hub.listenPort,
+      );
       final reset = client.events.where((e) => e.change == GalleryChange.reset).first;
       await phone.pairWithQr(payload);
       await reset.timeout(const Duration(seconds: 10));
@@ -166,7 +195,10 @@ void main() {
       var diskThumbs = 0;
       for (var i = 0; i < 40 && diskThumbs < 2; i++) {
         await Future<void>.delayed(const Duration(milliseconds: 50));
-        diskThumbs = await Directory(hubCache.path).list(recursive: true).where((e) => e.path.endsWith('.jpg')).length;
+        diskThumbs = await Directory(hubCache.path)
+            .list(recursive: true)
+            .where((e) => e.path.endsWith('.jpg'))
+            .length;
       }
       expect(diskThumbs, 2, reason: 'thumbnails are cached on disk');
 
@@ -191,13 +223,20 @@ void main() {
 
       // Download the original: the transfer completes and the state flips.
       final downloaded = client.events
-          .where((e) => e.change == GalleryChange.updated && g.stateOf(ev.ids.single) == MediaState.downloaded)
+          .where(
+            (e) =>
+                e.change == GalleryChange.updated &&
+                g.stateOf(ev.ids.single) == MediaState.downloaded,
+          )
           .first;
       await client.download(phoneId, ev.ids.single);
       await downloaded.timeout(const Duration(seconds: 20));
       final local = g.localPath(ev.ids.single)!;
       expect(p.basename(local), 'IMG_0003.jpg');
-      expect(await File(local).length(), await File(p.join(phoneRoot.path, 'IMG_0003.jpg')).length());
+      expect(
+        await File(local).length(),
+        await File(p.join(phoneRoot.path, 'IMG_0003.jpg')).length(),
+      );
 
       // Delete on the device propagates.
       final removed = client.events.where((e) => e.change == GalleryChange.removed).first;

@@ -27,10 +27,18 @@ void main() {
   late Identity hubId;
   late Identity phoneId;
   const hubInfo = LocalDeviceInfo(
-      name: 'PC de Daniel', platform: DevicePlatform.windows, role: DeviceRole.hub, appVersion: '0.1.0');
+    name: 'PC de Daniel',
+    platform: DevicePlatform.windows,
+    role: DeviceRole.hub,
+    appVersion: '0.1.0',
+  );
   const phoneInfo = LocalDeviceInfo(
-      name: 'Pixel 8', platform: DevicePlatform.android, role: DeviceRole.phone, appVersion: '0.1.0',
-      model: 'Pixel 8');
+    name: 'Pixel 8',
+    platform: DevicePlatform.android,
+    role: DeviceRole.phone,
+    appVersion: '0.1.0',
+    model: 'Pixel 8',
+  );
 
   setUpAll(() {
     hubId = const CertificateFactory().generate(commonName: 'hub');
@@ -75,8 +83,10 @@ void main() {
     expect(hubResult.device.name, 'Pixel 8');
     expect(hubResult.device.model, 'Pixel 8');
     expect(phoneResult.device.psk, hubResult.device.psk);
-    expect(PepoCrypto.verificationCode(phoneResult.device.psk),
-        PepoCrypto.verificationCode(hubResult.device.psk));
+    expect(
+      PepoCrypto.verificationCode(phoneResult.device.psk),
+      PepoCrypto.verificationCode(hubResult.device.psk),
+    );
     expect(sessions.active, isNull, reason: 'single use');
     expect(registry.devices, contains(phoneId.deviceId));
 

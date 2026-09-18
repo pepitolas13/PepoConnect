@@ -126,4 +126,5 @@ if (S.mode === 'send') {
 ''';
 
 /// Minimal error page.
-String guestErrorPage(String message) => '''<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>PepoConnect</title><style>body{font:16px/24px "Segoe UI",Roboto,system-ui,sans-serif;margin:0;background:#f3f3f3;color:#000000e4}main{max-width:560px;margin:48px auto;padding:24px}</style></head><body><main><h1>PepoConnect</h1><p>$message</p></main></body></html>''';
+String guestErrorPage(String message) =>
+    '''<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>PepoConnect</title><style>body{font:16px/24px "Segoe UI",Roboto,system-ui,sans-serif;margin:0;background:#f3f3f3;color:#000000e4}main{max-width:560px;margin:48px auto;padding:24px}</style></head><body><main><h1>PepoConnect</h1><p>$message</p></main></body></html>''';

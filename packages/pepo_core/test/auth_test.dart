@@ -22,30 +22,65 @@ void main() {
     final nc = randomBytes(32);
     final ns = randomBytes(32);
     final p1 = PepoCrypto.pairingProof(
-        secret: secret, label: PepoCrypto.labelPairRequest,
-        nonceClient: nc, nonceServer: ns, fpClient: 'aa', fpServer: 'bb');
+      secret: secret,
+      label: PepoCrypto.labelPairRequest,
+      nonceClient: nc,
+      nonceServer: ns,
+      fpClient: 'aa',
+      fpServer: 'bb',
+    );
     final p2 = PepoCrypto.pairingProof(
-        secret: secret, label: PepoCrypto.labelPairRequest,
-        nonceClient: nc, nonceServer: ns, fpClient: 'aa', fpServer: 'bb');
+      secret: secret,
+      label: PepoCrypto.labelPairRequest,
+      nonceClient: nc,
+      nonceServer: ns,
+      fpClient: 'aa',
+      fpServer: 'bb',
+    );
     final p3 = PepoCrypto.pairingProof(
-        secret: secret, label: PepoCrypto.labelPairRequest,
-        nonceClient: nc, nonceServer: ns, fpClient: 'aa', fpServer: 'cc');
+      secret: secret,
+      label: PepoCrypto.labelPairRequest,
+      nonceClient: nc,
+      nonceServer: ns,
+      fpClient: 'aa',
+      fpServer: 'cc',
+    );
     expect(PepoCrypto.verify(p1, p2), isTrue);
     expect(PepoCrypto.verify(p1, p3), isFalse);
 
     final pskA = PepoCrypto.derivePsk(
-        secret: secret, nonceClient: nc, nonceServer: ns, deviceIdA: 'A', deviceIdB: 'B');
+      secret: secret,
+      nonceClient: nc,
+      nonceServer: ns,
+      deviceIdA: 'A',
+      deviceIdB: 'B',
+    );
     final pskB = PepoCrypto.derivePsk(
-        secret: secret, nonceClient: nc, nonceServer: ns, deviceIdA: 'B', deviceIdB: 'A');
+      secret: secret,
+      nonceClient: nc,
+      nonceServer: ns,
+      deviceIdA: 'B',
+      deviceIdB: 'A',
+    );
     expect(pskA, pskB);
     expect(pskA, hasLength(32));
 
     final auth = PepoCrypto.authProof(
-        psk: pskA, nonceClient: nc, nonceServer: ns, fpClient: 'aa', fpServer: 'bb',
-        role: 'client');
+      psk: pskA,
+      nonceClient: nc,
+      nonceServer: ns,
+      fpClient: 'aa',
+      fpServer: 'bb',
+      role: 'client',
+    );
     final authServer = PepoCrypto.authProof(
-        psk: pskA, nonceClient: nc, nonceServer: ns, fpClient: 'aa', fpServer: 'bb',
-        role: 'server');
+      psk: pskA,
+      nonceClient: nc,
+      nonceServer: ns,
+      fpClient: 'aa',
+      fpServer: 'bb',
+      role: 'server',
+    );
     expect(PepoCrypto.verify(auth, authServer), isFalse);
     expect(PepoCrypto.verificationCode(pskA), matches(RegExp(r'^[A-Z]{4} [A-Z]{4}$')));
   });
@@ -85,10 +120,12 @@ void main() {
     expect(QrPayload.tryParse('https://example.com'), isNull);
     expect(QrPayload.tryParse('pepoconnect://pair/1?id=short'), isNull);
     expect(QrPayload.tryParse('not a uri at all ://'), isNull);
-    final expired = QrPayload.tryParse(payload.toUri().replace(queryParameters: {
-      ...payload.toUri().queryParameters,
-      'e': '1000',
-    }).toString())!;
+    final expired = QrPayload.tryParse(
+      payload
+          .toUri()
+          .replace(queryParameters: {...payload.toUri().queryParameters, 'e': '1000'})
+          .toString(),
+    )!;
     expect(expired.isExpired, isTrue);
   });
 }

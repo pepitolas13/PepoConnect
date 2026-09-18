@@ -13,12 +13,10 @@ import '../util/bytes.dart';
 /// so any peer can recompute them from what it sees on the wire.
 @immutable
 class Identity {
-  Identity({
-    required this.certificatePem,
-    required this.privateKeyPem,
-  })  : certificateDer = pemToDer(certificatePem),
-        fingerprint = toHex(sha256Bytes(pemToDer(certificatePem))),
-        deviceId = deviceIdFromDer(pemToDer(certificatePem));
+  Identity({required this.certificatePem, required this.privateKeyPem})
+    : certificateDer = pemToDer(certificatePem),
+      fingerprint = toHex(sha256Bytes(pemToDer(certificatePem))),
+      deviceId = deviceIdFromDer(pemToDer(certificatePem));
 
   /// PEM encoded certificate (`-----BEGIN CERTIFICATE-----`).
   final String certificatePem;
@@ -47,14 +45,14 @@ class Identity {
   }
 
   Map<String, dynamic> toJson() => {
-        'certificatePem': certificatePem,
-        'privateKeyPem': privateKeyPem,
-      };
+    'certificatePem': certificatePem,
+    'privateKeyPem': privateKeyPem,
+  };
 
   factory Identity.fromJson(Map<String, dynamic> json) => Identity(
-        certificatePem: json['certificatePem'] as String,
-        privateKeyPem: json['privateKeyPem'] as String,
-      );
+    certificatePem: json['certificatePem'] as String,
+    privateKeyPem: json['privateKeyPem'] as String,
+  );
 
   /// Device id from a certificate DER: first 26 chars of Crockford base32 of
   /// its SHA-256.
@@ -69,6 +67,5 @@ class Identity {
       'PEPO-${deviceId.substring(0, 4)}-${deviceId.substring(4, 8)}';
 
   /// Short (16 hex) fingerprint used in discovery records.
-  static String shortFingerprint(String fingerprint) =>
-      fingerprint.substring(0, 16);
+  static String shortFingerprint(String fingerprint) => fingerprint.substring(0, 16);
 }

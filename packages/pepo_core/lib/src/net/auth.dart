@@ -51,17 +51,16 @@ class PepoCrypto {
     required List<int> nonceServer,
     required String fpClient,
     required String fpServer,
-  }) =>
-      hmacSha256(
-        secret,
-        concatBytes([
-          utf8.encode(label),
-          nonceClient,
-          nonceServer,
-          utf8.encode(fpClient),
-          utf8.encode(fpServer),
-        ]),
-      );
+  }) => hmacSha256(
+    secret,
+    concatBytes([
+      utf8.encode(label),
+      nonceClient,
+      nonceServer,
+      utf8.encode(fpClient),
+      utf8.encode(fpServer),
+    ]),
+  );
 
   /// Long-term pre-shared key derived at pairing time. Symmetric in the
   /// device ids so both sides compute the same value.
@@ -88,26 +87,24 @@ class PepoCrypto {
     required String fpClient,
     required String fpServer,
     required String role,
-  }) =>
-      hmacSha256(
-        psk,
-        concatBytes([
-          utf8.encode(labelAuth),
-          nonceClient,
-          nonceServer,
-          utf8.encode(fpClient),
-          utf8.encode(fpServer),
-          utf8.encode(role),
-        ]),
-      );
+  }) => hmacSha256(
+    psk,
+    concatBytes([
+      utf8.encode(labelAuth),
+      nonceClient,
+      nonceServer,
+      utf8.encode(fpClient),
+      utf8.encode(fpServer),
+      utf8.encode(role),
+    ]),
+  );
 
   /// Pairing secret derived from a 6-digit manual code shown by the host.
-  static Uint8List manualCodeSecret(String code, String hostDeviceId) =>
-      hkdfSha256(
-        ikm: utf8.encode(code),
-        salt: utf8.encode(labelManualCode),
-        info: utf8.encode(hostDeviceId),
-      );
+  static Uint8List manualCodeSecret(String code, String hostDeviceId) => hkdfSha256(
+    ikm: utf8.encode(code),
+    salt: utf8.encode(labelManualCode),
+    info: utf8.encode(hostDeviceId),
+  );
 
   /// Constant-time equality.
   static bool verify(List<int> a, List<int> b) => constantTimeEquals(a, b);

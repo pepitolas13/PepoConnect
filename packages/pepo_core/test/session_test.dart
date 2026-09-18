@@ -53,8 +53,10 @@ class Node {
   }
 }
 
-Future<T> nextEvent<T extends SessionEvent>(SessionManager m, {Duration timeout = const Duration(seconds: 10)}) =>
-    m.events.where((e) => e is T).cast<T>().first.timeout(timeout);
+Future<T> nextEvent<T extends SessionEvent>(
+  SessionManager m, {
+  Duration timeout = const Duration(seconds: 10),
+}) => m.events.where((e) => e is T).cast<T>().first.timeout(timeout);
 
 Future<File> makeFile(Directory dir, String name, int bytes) async {
   final f = File(p.join(dir.path, name));
@@ -129,7 +131,11 @@ void main() {
 
     // --- Phone -> hub ------------------------------------------------------
     final fromPhone = await makeFile(phone.dir, 'IMG_1.jpg', 2 * 1024 * 1024);
-    final t2 = await phone.engine.send(deviceId: hub.id, path: fromPhone.path, mediaKind: MediaKind.image);
+    final t2 = await phone.engine.send(
+      deviceId: hub.id,
+      path: fromPhone.path,
+      mediaKind: MediaKind.image,
+    );
     final r2 = await phone.engine.events
         .where((e) => e.record.id == t2.id && e.record.state.isTerminal)
         .first
@@ -139,8 +145,14 @@ void main() {
 
     // --- Drop the control channel: the initiator reconnects by itself ------
     final hubDisconnected = nextEvent<DeviceDisconnectedEvent>(hub.manager);
-    final hubReconnected = nextEvent<DeviceConnectedEvent>(hub.manager, timeout: const Duration(seconds: 15));
-    final phoneReconnected = nextEvent<DeviceConnectedEvent>(phone.manager, timeout: const Duration(seconds: 15));
+    final hubReconnected = nextEvent<DeviceConnectedEvent>(
+      hub.manager,
+      timeout: const Duration(seconds: 15),
+    );
+    final phoneReconnected = nextEvent<DeviceConnectedEvent>(
+      phone.manager,
+      timeout: const Duration(seconds: 15),
+    );
     await phone.manager.session(hub.id)!.control!.close();
     await hubDisconnected;
     await hubReconnected;
@@ -166,12 +178,14 @@ void main() {
 
   test('a restarted initiator reconnects from its stored device list', () async {
     final session = hub.manager.pairing.startQr();
-    final payload = hub.manager.pairing.payloadFor(session,
-        deviceId: hub.id,
-        fingerprint: hub.manager.identity.fingerprint,
-        name: 'PC',
-        addresses: ['127.0.0.1'],
-        port: hub.manager.listenPort);
+    final payload = hub.manager.pairing.payloadFor(
+      session,
+      deviceId: hub.id,
+      fingerprint: hub.manager.identity.fingerprint,
+      name: 'PC',
+      addresses: ['127.0.0.1'],
+      port: hub.manager.listenPort,
+    );
     final hubConnected = nextEvent<DeviceConnectedEvent>(hub.manager);
     await phone.manager.pairWithQr(payload);
     await hubConnected;
@@ -182,11 +196,18 @@ void main() {
     final hubDisconnected = nextEvent<DeviceDisconnectedEvent>(hub.manager);
     await phone.manager.dispose();
     await hubDisconnected;
-    final hubReconnected = nextEvent<DeviceConnectedEvent>(hub.manager, timeout: const Duration(seconds: 15));
+    final hubReconnected = nextEvent<DeviceConnectedEvent>(
+      hub.manager,
+      timeout: const Duration(seconds: 15),
+    );
     phone.manager = SessionManager(
       identity: identity,
       info: const LocalDeviceInfo(
-          name: 'Phone', platform: DevicePlatform.android, role: DeviceRole.phone, appVersion: 'test'),
+        name: 'Phone',
+        platform: DevicePlatform.android,
+        role: DeviceRole.phone,
+        appVersion: 'test',
+      ),
       deviceStore: store,
       preferredPort: 0,
     );
@@ -196,7 +217,10 @@ void main() {
       destination: (_, _) async => phone.dir.path,
     );
     phone.manager.transfers = phone.engine;
-    final phoneConnected = nextEvent<DeviceConnectedEvent>(phone.manager, timeout: const Duration(seconds: 15));
+    final phoneConnected = nextEvent<DeviceConnectedEvent>(
+      phone.manager,
+      timeout: const Duration(seconds: 15),
+    );
     await phone.manager.start();
     await hubReconnected;
     await phoneConnected;

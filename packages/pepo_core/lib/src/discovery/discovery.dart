@@ -35,28 +35,28 @@ class PeerCandidate {
   final DateTime seenAt;
 
   Map<String, dynamic> toJson() => {
-        'deviceId': deviceId,
-        'fp16': shortFingerprint,
-        'name': name,
-        'addresses': addresses,
-        'port': port,
-        'platform': platform.code,
-        'role': role.code,
-        'source': source.name,
-        'seenAt': seenAt.toUtc().toIso8601String(),
-      };
+    'deviceId': deviceId,
+    'fp16': shortFingerprint,
+    'name': name,
+    'addresses': addresses,
+    'port': port,
+    'platform': platform.code,
+    'role': role.code,
+    'source': source.name,
+    'seenAt': seenAt.toUtc().toIso8601String(),
+  };
 
   factory PeerCandidate.fromJson(Map<String, dynamic> j) => PeerCandidate(
-        deviceId: j['deviceId'] as String,
-        shortFingerprint: j['fp16'] as String? ?? '',
-        name: j['name'] as String? ?? '',
-        addresses: (j['addresses'] as List<dynamic>? ?? const []).cast<String>(),
-        port: j['port'] as int,
-        platform: DevicePlatform.fromCode(j['platform'] as String?),
-        role: DeviceRole.fromCode(j['role'] as String?),
-        source: DiscoverySource.values.byName(j['source'] as String? ?? 'udp'),
-        seenAt: DateTime.parse(j['seenAt'] as String),
-      );
+    deviceId: j['deviceId'] as String,
+    shortFingerprint: j['fp16'] as String? ?? '',
+    name: j['name'] as String? ?? '',
+    addresses: (j['addresses'] as List<dynamic>? ?? const []).cast<String>(),
+    port: j['port'] as int,
+    platform: DevicePlatform.fromCode(j['platform'] as String?),
+    role: DeviceRole.fromCode(j['role'] as String?),
+    source: DiscoverySource.values.byName(j['source'] as String? ?? 'udp'),
+    seenAt: DateTime.parse(j['seenAt'] as String),
+  );
 }
 
 /// What this device announces.
@@ -81,13 +81,13 @@ class DiscoveryAdvert {
   String get shortFingerprint => fingerprint.substring(0, 16);
 
   DiscoveryAdvert copyWith({String? name, int? port, DeviceRole? role}) => DiscoveryAdvert(
-        deviceId: deviceId,
-        fingerprint: fingerprint,
-        name: name ?? this.name,
-        port: port ?? this.port,
-        platform: platform,
-        role: role ?? this.role,
-      );
+    deviceId: deviceId,
+    fingerprint: fingerprint,
+    name: name ?? this.name,
+    port: port ?? this.port,
+    platform: platform,
+    role: role ?? this.role,
+  );
 }
 
 /// Finds peers on the local network. Implementations: [UdpBeacon] (pure

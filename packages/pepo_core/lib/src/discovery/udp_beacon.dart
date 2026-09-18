@@ -18,8 +18,7 @@ const int defaultBeaconPort = 47474;
 /// multicast lock). Not used on iOS (needs an entitlement); there the
 /// platform layer provides Bonjour.
 class UdpBeacon implements Discovery {
-  UdpBeacon({this.port = defaultBeaconPort, int? targetPort})
-      : targetPort = targetPort ?? port;
+  UdpBeacon({this.port = defaultBeaconPort, int? targetPort}) : targetPort = targetPort ?? port;
 
   /// Port we listen on for probes.
   final int port;
@@ -177,15 +176,15 @@ class UdpBeacon implements Discovery {
   }
 
   static Map<String, dynamic> _message(String type, DiscoveryAdvert a) => {
-        'v': 1,
-        't': type,
-        'id': a.deviceId,
-        'fp16': a.shortFingerprint,
-        'name': a.name,
-        'port': a.port,
-        'platform': a.platform.code,
-        'role': a.role.code,
-      };
+    'v': 1,
+    't': type,
+    'id': a.deviceId,
+    'fp16': a.shortFingerprint,
+    'name': a.name,
+    'port': a.port,
+    'platform': a.platform.code,
+    'role': a.role.code,
+  };
 }
 
 /// Local IPv4 addresses worth advertising (QR code, hello).

@@ -63,20 +63,21 @@ class GuestSession {
   int get totalBytes => files.fold(0, (a, f) => a + f.size);
 
   /// URLs for every local address.
-  List<String> urls(List<String> addresses, int port) =>
-      [for (final a in addresses) 'http://$a:$port/s/$token'];
+  List<String> urls(List<String> addresses, int port) => [
+    for (final a in addresses) 'http://$a:$port/s/$token',
+  ];
 
   Map<String, dynamic> toJson() => {
-        'token': token,
-        'mode': mode.name,
-        'expiresAt': expiresAt.toUtc().toIso8601String(),
-        'files': files.map((f) => f.toJson()).toList(),
-        'message': ?message,
-        'boundRemote': ?boundRemote,
-        'downloads': downloads,
-        'uploads': uploads,
-        'cancelled': cancelled,
-      };
+    'token': token,
+    'mode': mode.name,
+    'expiresAt': expiresAt.toUtc().toIso8601String(),
+    'files': files.map((f) => f.toJson()).toList(),
+    'message': ?message,
+    'boundRemote': ?boundRemote,
+    'downloads': downloads,
+    'uploads': uploads,
+    'cancelled': cancelled,
+  };
 }
 
 /// Plain-HTTP LAN server for "share with anyone" (guests without the app).
@@ -140,7 +141,9 @@ class GuestShareServer {
     for (final path in paths) {
       final f = File(path);
       if (!await f.exists()) continue;
-      files.add(GuestFile(id: 'f${i++}', path: path, name: p.basename(path), size: await f.length()));
+      files.add(
+        GuestFile(id: 'f${i++}', path: path, name: p.basename(path), size: await f.length()),
+      );
     }
     return _start(GuestMode.send, files, message);
   }
@@ -179,9 +182,18 @@ class GuestShareServer {
     _session = null;
   }
 
-  void _emit(GuestSession s, GuestEventKind kind, {String? fileName, int? bytes, String? remote, String? path}) {
+  void _emit(
+    GuestSession s,
+    GuestEventKind kind, {
+    String? fileName,
+    int? bytes,
+    String? remote,
+    String? path,
+  }) {
     if (!_events.isClosed) {
-      _events.add(GuestShareEvent(s, kind, fileName: fileName, bytes: bytes, remote: remote, path: path));
+      _events.add(
+        GuestShareEvent(s, kind, fileName: fileName, bytes: bytes, remote: remote, path: path),
+      );
     }
   }
 
@@ -197,11 +209,19 @@ class GuestShareServer {
       final s = _session;
       final remote = normalizeAddress(req.connectionInfo?.remoteAddress.address ?? '?');
       if (s == null || s.token != token || s.isExpired) {
-        await _html(res, HttpStatus.gone, guestErrorPage('El enlace ha caducado. Pide otro en el PC.'));
+        await _html(
+          res,
+          HttpStatus.gone,
+          guestErrorPage('El enlace ha caducado. Pide otro en el PC.'),
+        );
         return;
       }
       if (s.boundRemote != null && s.boundRemote != remote) {
-        await _html(res, HttpStatus.forbidden, guestErrorPage('Este enlace ya se está usando en otro dispositivo.'));
+        await _html(
+          res,
+          HttpStatus.forbidden,
+          guestErrorPage('Este enlace ya se está usando en otro dispositivo.'),
+        );
         return;
       }
       if (segments.length == 2) {
@@ -225,7 +245,9 @@ class GuestShareServer {
         await _serveFile(req, s, segments[3], remote);
         return;
       }
-      if (segments[2] == 'upload' && s.mode == GuestMode.receive && (req.method == 'PUT' || req.method == 'POST')) {
+      if (segments[2] == 'upload' &&
+          s.mode == GuestMode.receive &&
+          (req.method == 'PUT' || req.method == 'POST')) {
         await _receiveUpload(req, s, remote);
         return;
       }
@@ -280,7 +302,10 @@ class GuestShareServer {
     }
     res.headers.contentType = ContentType.binary;
     res.headers.set(HttpHeaders.acceptRangesHeader, 'bytes');
-    res.headers.set('Content-Disposition', 'attachment; filename="${_asciiName(gf.name)}"; filename*=UTF-8\'\'${Uri.encodeComponent(gf.name)}');
+    res.headers.set(
+      'Content-Disposition',
+      'attachment; filename="${_asciiName(gf.name)}"; filename*=UTF-8\'\'${Uri.encodeComponent(gf.name)}',
+    );
     res.contentLength = end - start + 1;
     await res.addStream(file.openRead(start, end + 1));
     await res.close();
@@ -299,7 +324,8 @@ class GuestShareServer {
 
   Future<void> _receiveUpload(HttpRequest req, GuestSession s, String remote) async {
     final res = req.response;
-    final rawName = req.uri.queryParameters['name'] ?? req.headers.value('X-File-Name') ?? 'archivo';
+    final rawName =
+        req.uri.queryParameters['name'] ?? req.headers.value('X-File-Name') ?? 'archivo';
     final name = NameSanitizer.sanitize(rawName);
     final declared = req.contentLength;
     if (declared > maxUploadBytes) {
@@ -321,7 +347,14 @@ class GuestShareServer {
       await sink.close();
       await tmp.rename(finalPath);
       s.uploads++;
-      _emit(s, GuestEventKind.uploaded, fileName: p.basename(finalPath), bytes: received, remote: remote, path: finalPath);
+      _emit(
+        s,
+        GuestEventKind.uploaded,
+        fileName: p.basename(finalPath),
+        bytes: received,
+        remote: remote,
+        path: finalPath,
+      );
       res.statusCode = HttpStatus.ok;
       res.headers.contentType = ContentType.json;
       res.write(jsonEncode({'ok': true, 'name': p.basename(finalPath), 'bytes': received}));
@@ -332,7 +365,9 @@ class GuestShareServer {
         await tmp.delete();
       } catch (_) {}
       _emit(s, GuestEventKind.uploadFailed, fileName: name, remote: remote);
-      res.statusCode = e is HttpException ? HttpStatus.requestEntityTooLarge : HttpStatus.internalServerError;
+      res.statusCode = e is HttpException
+          ? HttpStatus.requestEntityTooLarge
+          : HttpStatus.internalServerError;
       await res.close();
     }
   }
