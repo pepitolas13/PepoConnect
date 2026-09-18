@@ -2,14 +2,14 @@ import 'package:flutter/widgets.dart';
 
 import 'motion.dart';
 
-/// Cross-fades between sections: the new child fades in while sliding up
-/// 8 px (180 ms), the old one fades out quickly (90 ms).
+/// Dissolves between two pieces of content: the new child fades in on top
+/// while rising [slide] px (ease-out, 180 ms); the old one stays put
+/// underneath and dims linearly over the same 180 ms, so the background
+/// never shows bare between the two (under 11 % shows through, briefly) and
+/// the old content is a short tail rather than a double exposure.
 ///
 /// Give each child a distinct [Key] (or pass [childKey]) so the switcher
-/// knows when the content actually changed. Use [FadeSlideSwitcher.entrance]
-/// when the child must stay a single instance (e.g. a navigation shell with
-/// global keys): it replays the entrance whenever [trigger] changes and
-/// never keeps the previous child around.
+/// knows when the content actually changed.
 class FadeSlideSwitcher extends StatelessWidget {
   const FadeSlideSwitcher({
     super.key,
@@ -17,82 +17,44 @@ class FadeSlideSwitcher extends StatelessWidget {
     this.childKey,
     this.alignment = Alignment.topLeft,
     this.slide = 8,
-  }) : trigger = null;
-
-  const FadeSlideSwitcher.entrance({
-    super.key,
-    required Object this.trigger,
-    required this.child,
-    this.slide = 8,
-  }) : childKey = null,
-       alignment = Alignment.topLeft;
+  });
 
   final Widget child;
   final Key? childKey;
   final AlignmentGeometry alignment;
   final double slide;
-  final Object? trigger;
 
   @override
   Widget build(BuildContext context) {
-    if (trigger != null) {
-      return _Entrance(trigger: trigger!, slide: slide, child: child);
-    }
     final motion = Motion.of(context);
     final keyed = childKey == null ? child : KeyedSubtree(key: childKey, child: child);
     return AnimatedSwitcher(
       duration: motion.page,
-      reverseDuration: motion.d(const Duration(milliseconds: 90)),
+      reverseDuration: motion.page,
       switchInCurve: Motion.standard,
-      switchOutCurve: Motion.exit,
+      // The outgoing child's controller runs 1 → 0: its opacity is 1 - t.
+      switchOutCurve: Curves.linear,
       layoutBuilder: (current, previous) =>
           Stack(alignment: alignment, children: [...previous, ?current]),
-      transitionBuilder: (child, animation) => _fadeSlide(animation, slide, child),
+      transitionBuilder: (child, animation) => fadeSlide(animation, slide, child),
       child: keyed,
     );
   }
 }
 
-Widget _fadeSlide(Animation<double> animation, double slide, Widget child) => FadeTransition(
+/// Fade with the rise of an entering child. A child on its way out (its
+/// animation running in reverse) fades in place, so the two never cross.
+Widget fadeSlide(Animation<double> animation, double slide, Widget child) => FadeTransition(
   opacity: animation,
   child: AnimatedBuilder(
     animation: animation,
-    builder: (context, child) =>
-        Transform.translate(offset: Offset(0, slide * (1 - animation.value)), child: child),
+    builder: (context, child) {
+      final leaving = animation.status == AnimationStatus.reverse;
+      return Transform.translate(
+        offset: leaving ? Offset.zero : Offset(0, slide * (1 - animation.value)),
+        child: child,
+      );
+    },
     child: child,
   ),
 );
-
-class _Entrance extends StatefulWidget {
-  const _Entrance({required this.trigger, required this.slide, required this.child});
-
-  final Object trigger;
-  final double slide;
-  final Widget child;
-
-  @override
-  State<_Entrance> createState() => _EntranceState();
-}
-
-class _EntranceState extends State<_Entrance> with SingleTickerProviderStateMixin {
-  late final AnimationController _controller = AnimationController(vsync: this, value: 1);
-
-  @override
-  void didUpdateWidget(_Entrance oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (oldWidget.trigger != widget.trigger) {
-      final motion = Motion.of(context);
-      _controller.value = 0;
-      _controller.animateTo(1, duration: motion.page, curve: Motion.standard);
-    }
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) => _fadeSlide(_controller, widget.slide, widget.child);
-}

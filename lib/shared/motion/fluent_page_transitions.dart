@@ -3,8 +3,8 @@ import 'package:flutter/material.dart';
 
 import 'motion.dart';
 
-/// Route transition used on every platform except iOS: fade + 8 px slide,
-/// 200 ms in, quicker out. iOS keeps the Cupertino push.
+/// Route transition used on every platform except iOS: a dissolve with an
+/// 8 px rise, 200 ms in and 160 ms out. iOS keeps the Cupertino push.
 class FluentPageTransitionsBuilder extends PageTransitionsBuilder {
   const FluentPageTransitionsBuilder();
 
@@ -19,48 +19,60 @@ class FluentPageTransitionsBuilder extends PageTransitionsBuilder {
     Animation<double> secondaryAnimation,
     Widget child,
   ) {
-    final motion = Motion.of(context);
-    return fluentTransition(motion, animation, secondaryAnimation, child);
+    return fluentTransition(
+      animation,
+      secondaryAnimation,
+      child,
+      slide: route.fullscreenDialog ? 0 : 8,
+    );
   }
 }
 
-/// The shared transition: the incoming page fades in and rises 8 px; the page
-/// underneath fades out (and sinks 4 px) at the same time, so with a
-/// transparent Mica background the two never show through each other. With
-/// motion off the curves still resolve to the end state on the first frame
-/// because the route duration is zero.
+/// The shared transition: a dissolve that never shows the window background.
+///
+/// The page that ends up on screen moves fast (ease-out) while the one that
+/// ends up hidden goes slower, so at every frame one of the two is mostly
+/// opaque and neither lingers long enough to read as a double exposure.
+///
+/// Push: this page fades in and rises [slide] px over the page below, which
+/// stays put and dims linearly; what shows through both is at most
+/// (1 - t)³ · t, under 11 % and only around a quarter of the way in. Pop:
+/// the page below is back at once (1 - t³) and this page dissolves with a
+/// symmetric ease-in-out, so the grid under the viewer is already there
+/// while the photo flies home; under 8 % shows through. With motion off the
+/// route duration is zero and the curves resolve to the end state on the
+/// first frame. `transitions_test.dart` checks both bounds.
 Widget fluentTransition(
-  Motion motion,
   Animation<double> animation,
   Animation<double> secondaryAnimation,
-  Widget child,
-) {
-  // Fade-through, like Windows 11: the page below is gone in the first half,
-  // the new one appears from 30 % on (and on the way back the top page
-  // vanishes in the first half while the page below returns).
+  Widget child, {
+  double slide = 8,
+}) {
   final fade = CurvedAnimation(
     parent: animation,
-    curve: const Interval(0.3, 1, curve: Motion.standard),
-    reverseCurve: const Interval(0.5, 1, curve: Motion.exit),
+    curve: Motion.standard,
+    reverseCurve: Curves.easeInOutCubic,
   );
-  final slide = Tween<Offset>(begin: const Offset(0, 8), end: Offset.zero).animate(fade);
+  final rise = Tween<Offset>(begin: Offset(0, slide), end: Offset.zero).animate(fade);
+  // secondaryAnimation: 0 → 1 while another route covers this one: a linear
+  // dim on push, uncovered at once (ease-in of the reversing value) on pop.
   final covered = CurvedAnimation(
     parent: secondaryAnimation,
-    curve: const Interval(0, 0.5, curve: Motion.exit),
-    reverseCurve: const Interval(0, 0.6, curve: Motion.standard),
+    curve: Curves.linear,
+    reverseCurve: Motion.exit,
   );
   final hide = Tween<double>(begin: 1, end: 0).animate(covered);
-  final sink = Tween<Offset>(begin: Offset.zero, end: const Offset(0, -4)).animate(covered);
   return FadeTransition(
     opacity: fade,
     child: FadeTransition(
       opacity: hide,
-      child: AnimatedBuilder(
-        animation: Listenable.merge([slide, sink]),
-        builder: (context, child) =>
-            Transform.translate(offset: slide.value + sink.value, child: child),
-        child: child,
-      ),
+      child: slide == 0
+          ? child
+          : AnimatedBuilder(
+              animation: rise,
+              builder: (context, child) => Transform.translate(offset: rise.value, child: child),
+              child: child,
+            ),
     ),
   );
 }
@@ -78,6 +90,8 @@ class FluentPage<T> extends Page<T> {
   });
 
   final Widget child;
+
+  /// Full-screen dialogs (the viewer) dissolve in place, without the rise.
   final bool fullscreenDialog;
   final bool opaque;
 
@@ -109,7 +123,7 @@ class _FluentPageRoute<T> extends PageRoute<T> {
 
   @override
   Duration get reverseTransitionDuration =>
-      Motion.of(navigator!.context).d(const Duration(milliseconds: 120));
+      Motion.of(navigator!.context).d(const Duration(milliseconds: 160));
 
   @override
   Widget buildPage(
@@ -134,6 +148,11 @@ class _FluentPageRoute<T> extends PageRoute<T> {
         child,
       );
     }
-    return fluentTransition(Motion.of(context), animation, secondaryAnimation, child);
+    return fluentTransition(
+      animation,
+      secondaryAnimation,
+      child,
+      slide: fullscreenDialog ? 0 : 8,
+    );
   }
 }

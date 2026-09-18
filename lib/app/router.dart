@@ -8,6 +8,7 @@ import '../features/pairing/pairing_page.dart';
 import '../features/settings/settings_page.dart';
 import '../features/transfers/transfers_page.dart';
 import '../features/viewer/viewer_page.dart';
+import '../shared/motion/branch_cross_fade.dart';
 import '../shared/motion/fluent_page_transitions.dart';
 import 'shell/app_shell.dart';
 
@@ -24,14 +25,16 @@ abstract final class AppRoutes {
       '/viewer/${Uri.encodeComponent(deviceId)}/${Uri.encodeComponent(id)}';
 }
 
-/// The four shell branches plus the top-level routes.
+/// The four shell branches plus the top-level routes. Sections dissolve into
+/// each other ([BranchCrossFade]) instead of swapping in an IndexedStack.
 List<RouteBase> appRoutes({
   ShellActions actions = const ShellActions(),
   GlobalKey<NavigatorState>? rootNavigatorKey,
 }) => [
-  StatefulShellRoute.indexedStack(
+  StatefulShellRoute(
     builder: (context, state, navigationShell) =>
         AppShell(navigationShell: navigationShell, actions: actions),
+    navigatorContainerBuilder: BranchCrossFade.builder,
     branches: [
       StatefulShellBranch(
         routes: [

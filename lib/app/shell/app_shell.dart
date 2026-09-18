@@ -10,7 +10,6 @@ import 'package:go_router/go_router.dart';
 import 'package:pepo_core/pepo_core.dart' show DeviceView, TransferRecord, TransferState;
 
 import '../../shared/i18n/l10n.dart';
-import '../../shared/motion/fade_slide_switcher.dart';
 import '../../shared/motion/motion.dart';
 import '../../shared/motion/pressable.dart';
 import '../../shared/theme/tokens.dart';
@@ -323,12 +322,11 @@ class _AppShellState extends ConsumerState<AppShell> with WidgetsBindingObserver
         final layout = ShellLayout.of(width);
         final panelOpen = _panelOpen(width, settings);
 
-        final content = FadeSlideSwitcher.entrance(
-          trigger: current,
-          child: Theme(
-            data: Theme.of(context).copyWith(scaffoldBackgroundColor: Colors.transparent),
-            child: _shell,
-          ),
+        // Section changes dissolve inside the shell's branch container
+        // (BranchCrossFade, set up in the router).
+        final content = Theme(
+          data: Theme.of(context).copyWith(scaffoldBackgroundColor: Colors.transparent),
+          child: _shell,
         );
 
         final statusBar = transfers.active.isEmpty
