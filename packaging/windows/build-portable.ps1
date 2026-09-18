@@ -37,7 +37,12 @@ if (-not $SkipVcRedist) {
 # 3) Launcher (build.rs packs the bundle from PEPO_BUNDLE_DIR).
 $env:PEPO_BUNDLE_DIR = $Bundle
 $manifest = Join-Path $root 'windows-launcher\Cargo.toml'
+# cargo reports progress on stderr; under Windows PowerShell 5.1 that would become a terminating
+# error with 'Stop', so relax it for this call and rely on the exit code.
+$eap = $ErrorActionPreference
+$ErrorActionPreference = 'Continue'
 & cargo build --release --manifest-path $manifest
+$ErrorActionPreference = $eap
 if ($LASTEXITCODE -ne 0) { throw "cargo build failed (exit $LASTEXITCODE)" }
 $launcher = Join-Path $root 'windows-launcher\target\release\PepoConnect.exe'
 if (-not (Test-Path $launcher)) { throw "Launcher not produced: $launcher" }
