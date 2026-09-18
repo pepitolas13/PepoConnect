@@ -156,6 +156,7 @@ class _TransfersMobileState extends ConsumerState<TransfersMobile> {
                             deviceName: deviceLabel(devices, r.deviceId),
                             thumbnail: r.sourceId == null ? null : lookup(r.deviceId, r.sourceId!),
                             onPause: () => notifier.pause(r.id),
+                            onResume: () => notifier.resume(r.id),
                             onCancel: () => notifier.cancel(r.id),
                           ),
                         ),

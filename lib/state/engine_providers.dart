@@ -138,7 +138,7 @@ class TransfersNotifier extends Notifier<TransfersState> {
     unawaited(_loadHistory());
     ref.listen(engineEventsProvider, (_, next) {
       final e = next.value;
-      if (e is TransferChangedEvent) _apply(e.record);
+      if (e is TransferChangedEvent) _apply(e.record, removed: e.removed);
     });
     final engine = ref.read(engineProvider);
     return TransfersState(
@@ -151,9 +151,16 @@ class TransfersNotifier extends Notifier<TransfersState> {
     if (ref.mounted) state = state.copyWith(history: items);
   }
 
-  void _apply(TransferRecord r) {
+  void _apply(TransferRecord r, {bool removed = false}) {
     final active = List<TransferRecord>.of(state.active);
     final i = active.indexWhere((t) => t.id == r.id);
+    if (removed) {
+      if (i >= 0) {
+        active.removeAt(i);
+        state = state.copyWith(active: active);
+      }
+      return;
+    }
     if (r.state.isTerminal) {
       if (i >= 0) active.removeAt(i);
       final history = [r, ...state.history.where((t) => t.id != r.id)].take(historyCap).toList();
@@ -175,6 +182,8 @@ class TransfersNotifier extends Notifier<TransfersState> {
   Future<void> cancel(int id) => ref.read(engineProvider).cancelTransfer(id);
 
   Future<void> pause(int id) => ref.read(engineProvider).cancelTransfer(id, pause: true);
+
+  Future<void> resume(int id) => ref.read(engineProvider).resumeTransfer(id);
 
   void removeFromHistory(int id) {
     final history = state.history.where((t) => t.id != id).toList();

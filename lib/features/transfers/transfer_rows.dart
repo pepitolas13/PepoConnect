@@ -86,7 +86,7 @@ class TransferLeading extends StatelessWidget {
 }
 
 /// Row of the "In progress" section: name, device, thin progress bar,
-/// speed and ETA, pause and cancel.
+/// speed and ETA, pause/resume and cancel.
 class ActiveTransferRow extends StatelessWidget {
   const ActiveTransferRow({
     super.key,
@@ -94,6 +94,7 @@ class ActiveTransferRow extends StatelessWidget {
     required this.deviceName,
     this.thumbnail,
     this.onPause,
+    this.onResume,
     this.onCancel,
   });
 
@@ -101,6 +102,7 @@ class ActiveTransferRow extends StatelessWidget {
   final String deviceName;
   final Uint8List? thumbnail;
   final VoidCallback? onPause;
+  final VoidCallback? onResume;
   final VoidCallback? onCancel;
 
   @override
@@ -167,6 +169,12 @@ class ActiveTransferRow extends StatelessWidget {
               icon: FluentIcons.pause_16_regular,
               tooltip: t.pauseTransfer,
               onPressed: onPause,
+            ),
+          if (onResume != null && r.state == TransferState.paused)
+            FluentIconButton(
+              icon: FluentIcons.play_16_regular,
+              tooltip: t.resumeTransfer,
+              onPressed: onResume,
             ),
           if (onCancel != null)
             FluentIconButton(

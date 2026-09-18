@@ -98,6 +98,16 @@ class FakeTransfersNotifier extends TransfersNotifier {
     state = state.copyWith(active: state.active.toList());
   }
 
+  @override
+  Future<void> resume(int id) async {
+    state = state.copyWith(
+      active: [
+        for (final t in state.active)
+          if (t.id == id) (t.copy()..state = TransferState.active) else t,
+      ],
+    );
+  }
+
   /// Moves every active transfer forward by [fraction] of its size.
   void tick([double fraction = 0.1]) {
     final active = <TransferRecord>[];

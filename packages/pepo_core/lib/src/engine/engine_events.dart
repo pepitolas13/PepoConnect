@@ -35,6 +35,7 @@ sealed class EngineEvent {
         return TransferChangedEvent(
           TransferRecord.fromJson(j['record'] as Map<String, dynamic>),
           progressOnly: j['progressOnly'] as bool? ?? false,
+          removed: j['removed'] as bool? ?? false,
         );
       case 'gallery':
         return GalleryChangedEvent(
@@ -145,15 +146,19 @@ class PairingChangedEvent extends EngineEvent {
 }
 
 class TransferChangedEvent extends EngineEvent {
-  const TransferChangedEvent(this.record, {this.progressOnly = false});
+  const TransferChangedEvent(this.record, {this.progressOnly = false, this.removed = false});
   final TransferRecord record;
   final bool progressOnly;
+
+  /// The record was dropped (superseded by a resumption under another id).
+  final bool removed;
 
   @override
   Map<String, dynamic> toJson() => {
     'e': 'transfer',
     'record': record.toJson(),
     'progressOnly': progressOnly,
+    'removed': removed,
   };
 }
 

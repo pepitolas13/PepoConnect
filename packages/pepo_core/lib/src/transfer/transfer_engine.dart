@@ -116,31 +116,50 @@ class TransferEngine {
     return record.copy();
   }
 
-  /// Re-queues paused outgoing transfers to [deviceId] (after a reconnect).
+  /// Re-queues every paused outgoing transfer to [deviceId] (after a reconnect).
   Future<void> resumePending(String deviceId) async {
-    final all = await store.all();
-    for (final r in all) {
-      if (r.deviceId != deviceId ||
-          r.direction != TransferDirection.send ||
-          r.state != TransferState.paused ||
-          r.sourcePath == null ||
-          _outgoing.containsKey(r.id)) {
-        continue;
+    for (final r in await store.all()) {
+      if (r.deviceId == deviceId && r.direction == TransferDirection.send) {
+        await _requeue(r);
       }
-      if (!await File(r.sourcePath!).exists()) {
-        await store.remove(r.id);
-        continue;
-      }
-      await store.remove(r.id);
-      await send(
-        deviceId: deviceId,
-        path: r.sourcePath!,
-        name: r.name,
-        mime: r.mime,
-        mediaKind: r.mediaKind,
-        sourceId: r.sourceId,
-      );
     }
+  }
+
+  /// Re-queues one paused outgoing transfer under the same id, so the receiver
+  /// continues from the bytes it kept. Returns null when [id] is not a paused
+  /// outgoing transfer, or its source file is gone (the record is dropped).
+  Future<TransferRecord?> resume(int id) async {
+    final live = _outgoing[id]?.record;
+    final r = live ?? (await store.all()).where((r) => r.id == id).firstOrNull;
+    return r == null ? null : _requeue(r);
+  }
+
+  Future<TransferRecord?> _requeue(TransferRecord stored) async {
+    final r = _outgoing[stored.id]?.record ?? stored;
+    if (r.direction != TransferDirection.send ||
+        r.state != TransferState.paused ||
+        r.sourcePath == null) {
+      return null;
+    }
+    if (!await File(r.sourcePath!).exists()) {
+      _outgoing.remove(r.id);
+      await store.remove(r.id);
+      r.state = TransferState.failed;
+      r.error = 'source file missing';
+      _emit(r);
+      return null;
+    }
+    r.state = TransferState.queued;
+    r.bytesDone = 0;
+    r.bytesPerSecond = 0;
+    r.error = null;
+    final out = _Outgoing(r);
+    _outgoing[r.id] = out;
+    _queues.putIfAbsent(r.deviceId, () => []).add(out);
+    await store.save(r);
+    _emit(r);
+    _pump(r.deviceId);
+    return r.copy();
   }
 
   void _pump(String deviceId) {
@@ -400,6 +419,7 @@ class TransferEngine {
           }
         }
         await store.remove(previous.id);
+        if (previous.id != record.id) _emit(previous, removed: true);
       }
     }
     tempPath ??= NameSanitizer.uniquePath(dir, '$name.pepopart');
@@ -606,8 +626,9 @@ class TransferEngine {
     return id;
   }
 
-  void _emit(TransferRecord r, {bool progressOnly = false}) {
-    if (!_events.isClosed) _events.add(TransferEvent(r.copy(), progressOnly: progressOnly));
+  void _emit(TransferRecord r, {bool progressOnly = false, bool removed = false}) {
+    if (_events.isClosed) return;
+    _events.add(TransferEvent(r.copy(), progressOnly: progressOnly, removed: removed));
   }
 
   static String _guessMime(String path) {

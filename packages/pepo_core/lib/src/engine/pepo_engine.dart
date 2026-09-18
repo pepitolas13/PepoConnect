@@ -212,7 +212,7 @@ class PepoEngine {
     );
     _subs.add(
       transfers.events.listen((e) {
-        _emit(TransferChangedEvent(e.record, progressOnly: e.progressOnly));
+        _emit(TransferChangedEvent(e.record, progressOnly: e.progressOnly, removed: e.removed));
         if (e.record.state == TransferState.done &&
             e.record.direction == TransferDirection.receive) {
           _log.fine('received ${e.record.name} → ${e.record.finalPath}');
@@ -474,6 +474,22 @@ class PepoEngine {
 
   Future<void> cancelTransfer(int id, {bool pause = false}) =>
       transfers.cancel(id, reason: pause ? CancelReason.pause : CancelReason.abort);
+
+  /// Resumes a paused transfer. Outgoing ones are re-queued under the same id;
+  /// a paused download of a gallery item is requested from the device again.
+  /// Returns false when there is nothing to resume from this side.
+  Future<bool> resumeTransfer(int id) async {
+    if (await transfers.resume(id) != null) return true;
+    final r = (await transfers.store.all()).where((r) => r.id == id).firstOrNull;
+    if (r == null ||
+        r.direction != TransferDirection.receive ||
+        r.state != TransferState.paused ||
+        r.sourceId == null) {
+      return false;
+    }
+    await downloadItems(r.deviceId, [r.sourceId!]);
+    return true;
+  }
 
   List<TransferRecord> get activeTransfers => transfers.transfers;
 

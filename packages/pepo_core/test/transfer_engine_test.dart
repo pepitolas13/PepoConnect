@@ -328,6 +328,43 @@ void main() {
     expect(pair.phoneChannels.opened, lessThanOrEqualTo(3));
   });
 
+  test('resume(id) re-queues the paused transfer under the same id', () async {
+    final src = await writeRandom(pair.phoneDir, 'again.bin', 12 * 1024 * 1024, seed: 11);
+    final t = await pair.phoneEngine.send(deviceId: pair.hubId.deviceId, path: src.path);
+    await pair.hubEngine.events
+        .firstWhere((e) => e.record.id == t.id && e.record.bytesDone > 2 * 1024 * 1024)
+        .timeout(const Duration(seconds: 20));
+    final phonePaused = pair.phoneEngine.events
+        .firstWhere((e) => e.record.id == t.id && e.record.state == TransferState.paused)
+        .timeout(const Duration(seconds: 20));
+    await pair.phoneEngine.cancel(t.id, reason: CancelReason.pause);
+    await phonePaused;
+    // The hub keeps a partial file; wait until its record is paused too.
+    await Future<void>.delayed(const Duration(milliseconds: 200));
+    final kept = await Directory(pair.hubDir.path)
+        .list()
+        .where((e) => e.path.endsWith('.pepopart'))
+        .toList();
+    expect(kept, hasLength(1));
+    final keptBytes = await File(kept.single.path).length();
+
+    expect(await pair.phoneEngine.resume(t.id + 1), isNull, reason: 'unknown id');
+    final hubIds = <int>{};
+    final sub = pair.hubEngine.events.listen((e) => hubIds.add(e.record.id));
+    final resumed = await pair.phoneEngine.resume(t.id);
+    expect(resumed, isNotNull);
+    expect(resumed!.id, t.id, reason: 'same record id on the sender');
+    expect(await pair.phoneEngine.resume(t.id), isNull, reason: 'already running');
+    final r = await waitTerminal(pair.phoneEngine, t.id);
+    await sub.cancel();
+    expect(r.state, TransferState.done, reason: r.error);
+    expect(hubIds, equals({t.id}), reason: 'same record id on the receiver');
+    expect(await sameContent(src, File(p.join(pair.hubDir.path, 'again.bin'))), isTrue);
+    expect(keptBytes, greaterThan(0));
+    final hubDone = (await pair.hubStore.all()).where((x) => x.id == t.id).toList();
+    expect(hubDone.where((x) => x.state == TransferState.paused), isEmpty);
+  });
+
   test('pause mid-way and resume from the kept offset', () async {
     final src = await writeRandom(pair.phoneDir, 'big.bin', 16 * 1024 * 1024, seed: 7);
     final t = await pair.phoneEngine.send(deviceId: pair.hubId.deviceId, path: src.path);

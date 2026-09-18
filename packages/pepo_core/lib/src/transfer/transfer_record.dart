@@ -144,11 +144,15 @@ class TransferRecord {
 
 /// Published whenever a transfer changes. [record] is a snapshot.
 class TransferEvent {
-  TransferEvent(this.record, {this.progressOnly = false});
+  TransferEvent(this.record, {this.progressOnly = false, this.removed = false});
   final TransferRecord record;
 
   /// True for throttled progress ticks (no state change).
   final bool progressOnly;
+
+  /// True when [record] was dropped without finishing: a paused transfer that
+  /// was superseded by its own resumption under another id.
+  final bool removed;
 }
 
 /// Persists transfer records so paused/interrupted transfers can resume.
