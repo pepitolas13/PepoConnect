@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!-- TEAM_ID and PROFILE_NAME are replaced by packaging/ios/sign-and-export.sh -->
+	<key>method</key>
+	<string>ad-hoc</string>
+	<key>teamID</key>
+	<string>TEAM_ID</string>
+	<key>signingStyle</key>
+	<string>manual</string>
+	<key>provisioningProfiles</key>
+	<dict>
+		<key>org.pepoconnect.app</key>
+		<string>PROFILE_NAME</string>
+	</dict>
+	<key>stripSwiftSymbols</key>
+	<true/>
+	<key>compileBitcode</key>
+	<false/>
+</dict>
+</plist>

@@ -1,0 +1,32 @@
+[package]
+name = "pepoconnect-launcher"
+version = "0.1.0"
+edition = "2021"
+publish = false
+description = "Single-file Windows launcher for PepoConnect: embeds the Flutter bundle and extracts it on first run."
+build = "build.rs"
+
+[[bin]]
+name = "PepoConnect"
+path = "src/main.rs"
+
+[dependencies]
+zstd = { version = "0.14", default-features = false }
+tar = "0.4"
+windows-sys = { version = "0.61", features = [
+    "Win32_Foundation",
+    "Win32_UI_WindowsAndMessaging",
+] }
+
+[build-dependencies]
+zstd = { version = "0.14", default-features = false }
+tar = "0.4"
+blake3 = "1"
+winresource = "0.1"
+
+[profile.release]
+opt-level = 3
+lto = "fat"
+codegen-units = 1
+panic = "abort"
+strip = true

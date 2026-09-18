@@ -89,13 +89,13 @@ BEGIN
     BEGIN
         BLOCK "040904e4"
         BEGIN
-            VALUE "CompanyName", "org.pepoconnect" "\0"
-            VALUE "FileDescription", "pepoconnect" "\0"
+            VALUE "CompanyName", "PepoTech" "\0"
+            VALUE "FileDescription", "PepoConnect" "\0"
             VALUE "FileVersion", VERSION_AS_STRING "\0"
-            VALUE "InternalName", "pepoconnect" "\0"
-            VALUE "LegalCopyright", "Copyright (C) 2026 org.pepoconnect. All rights reserved." "\0"
+            VALUE "InternalName", "PepoConnect" "\0"
+            VALUE "LegalCopyright", "Copyright (C) 2026 PepoTech. All rights reserved." "\0"
             VALUE "OriginalFilename", "pepoconnect.exe" "\0"
-            VALUE "ProductName", "pepoconnect" "\0"
+            VALUE "ProductName", "PepoConnect" "\0"
             VALUE "ProductVersion", VERSION_AS_STRING "\0"
         END
     END

@@ -3,9 +3,22 @@
 #
 
 list(APPEND FLUTTER_PLUGIN_LIST
+  battery_plus
+  bonsoir_windows
+  connectivity_plus
+  desktop_drop
+  flutter_acrylic
+  local_notifier
+  screen_retriever_windows
+  tray_manager
+  url_launcher_windows
+  window_manager
+  windows_single_instance
 )
 
 list(APPEND FLUTTER_FFI_PLUGIN_LIST
+  flutter_local_notifications_windows
+  jni
 )
 
 set(PLUGIN_BUNDLED_LIBRARIES)

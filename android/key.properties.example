@@ -1,0 +1,10 @@
+# Release signing for PepoConnect.
+# Copy this file to android/key.properties (git-ignored) and fill in your values.
+# storeFile is resolved relative to android/app unless it is an absolute path.
+#
+# Create a keystore once with:
+#   keytool -genkey -v -keystore release.jks -keyalg RSA -keysize 2048 -validity 10000 -alias pepoconnect
+storeFile=release.jks
+storePassword=CHANGE_ME
+keyAlias=pepoconnect
+keyPassword=CHANGE_ME

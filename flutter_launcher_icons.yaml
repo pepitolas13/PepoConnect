@@ -1,0 +1,35 @@
+# App icons for every platform: `dart run flutter_launcher_icons`
+#
+# Source PNGs (generated separately; this file only consumes them):
+#   assets/icon/icon-1024.png        1024x1024 full icon (opaque background)
+#   assets/icon/icon-foreground.png  Android adaptive foreground, 1024x1024 with
+#                                    transparent background (keep the glyph inside
+#                                    the central ~66% safe zone)
+#   assets/icon/icon-mono.png        Android 13+ themed icon (monochrome, alpha only)
+#
+# Linux is NOT supported by flutter_launcher_icons: the Linux packaging scripts
+# (packaging/linux/*.sh) copy assets/icon/pepoconnect-256.png and
+# assets/icon/pepoconnect-512.png by hand (see docs/packaging.md).
+flutter_launcher_icons:
+  image_path: "assets/icon/icon-1024.png"
+
+  android: true
+  min_sdk_android: 29
+  adaptive_icon_background: "#0A3D8F"
+  adaptive_icon_foreground: "assets/icon/icon-foreground.png"
+  adaptive_icon_monochrome: "assets/icon/icon-mono.png"
+
+  ios: true
+  remove_alpha_ios: true
+  background_color_ios: "#0A3D8F"
+
+  windows:
+    generate: true
+    image_path: "assets/icon/icon-1024.png"
+    icon_size: 256
+
+  macos:
+    generate: false
+
+  web:
+    generate: false
