@@ -2145,6 +2145,12 @@ abstract class AppLocalizations {
   /// **'Seleccionar {group}'**
   String galSelectGroup(String group);
 
+  /// No description provided for @galSelectNew.
+  ///
+  /// In es, this message translates to:
+  /// **'Seleccionar nuevas'**
+  String get galSelectNew;
+
   /// No description provided for @galDownloadStarted.
   ///
   /// In es, this message translates to:

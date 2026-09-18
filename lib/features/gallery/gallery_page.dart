@@ -211,11 +211,28 @@ class _GalleryPageState extends ConsumerState<GalleryPage> {
   ) {
     if (!_selection.contains(key)) _select(_selection.only(key));
     final targets = _selection.entriesFrom(entries);
+    final t = context.t;
     showContextMenu(
       context,
       position: position,
-      items: _actions(scope).menuItems(targets, onOpenViewer: () => _open(e)),
+      items: [
+        ..._actions(scope).menuItems(targets, onOpenViewer: () => _open(e)),
+        if (entries.any((x) => x.isNew)) ...[
+          const MenuDivider(),
+          MenuItem(label: t.galSelectNew, onTap: () => _selectNew(entries)),
+        ],
+      ],
     );
+  }
+
+  /// Selects every item still marked as new, so they can be downloaded in
+  /// one go (also Ctrl+Shift+N).
+  void _selectNew(List<GalleryEntry> entries) {
+    final keys = [
+      for (final e in entries)
+        if (e.isNew) galleryEntryKey(e),
+    ];
+    if (keys.isNotEmpty) _select(const GallerySelection.empty().withAll(keys));
   }
 
   void _open(GalleryEntry e, {bool session = false}) {
@@ -354,6 +371,8 @@ class _GalleryPageState extends ConsumerState<GalleryPage> {
           ctrl(LogicalKeyboardKey.keyA): () {
             if (entries.isNotEmpty) _select(_selection.withAll(ordered));
           },
+          SingleActivator(LogicalKeyboardKey.keyN, control: !meta, meta: meta, shift: true): () =>
+              _selectNew(entries),
           const SingleActivator(LogicalKeyboardKey.escape): () {
             if (_selection.isNotEmpty) _select(const GallerySelection.empty());
           },

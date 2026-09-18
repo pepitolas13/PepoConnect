@@ -1,3 +1,4 @@
+import 'package:flutter/gestures.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:pepo_core/pepo_core.dart';
@@ -107,6 +108,34 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text(label), findsNothing);
     expect(find.text('Todos los dispositivos'), findsOneWidget);
+  }, variant: desktopVariant);
+
+  testWidgets('"Seleccionar nuevas" selects only the new items', (tester) async {
+    final now = DateTime.now();
+    final entries = sampleEntries(now);
+    await pumpFeature(
+      tester,
+      child: const GalleryPage(),
+      overrides: featureOverrides(devices: sampleDevices(), entries: entries),
+    );
+    // Right-click any tile: the menu offers to select the new ones.
+    await tester.tap(find.byType(GalleryTile).last, buttons: kSecondaryMouseButton);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Seleccionar nuevas'));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('1 seleccionado'), findsOneWidget);
+    // Clicking the (only) selected tile clears the selection and focuses the
+    // grid; Ctrl+Shift+N then selects the new ones from the keyboard.
+    await tester.tap(find.byType(GalleryTile).first);
+    await tester.pumpAndSettle();
+    expect(find.textContaining('seleccionado'), findsNothing);
+    await tester.sendKeyDownEvent(LogicalKeyboardKey.controlLeft);
+    await tester.sendKeyDownEvent(LogicalKeyboardKey.shiftLeft);
+    await tester.sendKeyEvent(LogicalKeyboardKey.keyN);
+    await tester.sendKeyUpEvent(LogicalKeyboardKey.shiftLeft);
+    await tester.sendKeyUpEvent(LogicalKeyboardKey.controlLeft);
+    await tester.pumpAndSettle();
+    expect(find.textContaining('1 seleccionado'), findsOneWidget);
   }, variant: desktopVariant);
 
   testWidgets('offline device shows the connect hint', (tester) async {

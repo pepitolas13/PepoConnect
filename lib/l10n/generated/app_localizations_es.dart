@@ -1251,6 +1251,9 @@ class AppLocalizationsEs extends AppLocalizations {
   }
 
   @override
+  String get galSelectNew => 'Seleccionar nuevas';
+
+  @override
   String galDownloadStarted(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,

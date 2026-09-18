@@ -814,6 +814,7 @@
   },
   "galDeleteFailed": "No se pudo eliminar del móvil",
   "galSelectGroup": "Seleccionar {group}",
+  "galSelectNew": "Seleccionar nuevas",
   "@galSelectGroup": {
     "placeholders": {
       "group": {

@@ -342,6 +342,7 @@
   "galDownloadFailed": "Could not download {file}",
   "galDeleteFailed": "Could not delete from the phone",
   "galSelectGroup": "Select {group}",
+  "galSelectNew": "Select new",
   "galDownloadStarted": "{count, plural, =1{Downloading 1 item} other{Downloading {count} items}}",
   "galOfflineBody": "Photos will appear as soon as it connects",
   "vwDevice": "Device",
