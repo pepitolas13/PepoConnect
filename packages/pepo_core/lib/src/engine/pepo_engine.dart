@@ -408,8 +408,9 @@ class PepoEngine {
   /// Pairs using scanned/pasted QR text. Returns the new device.
   Future<PairedDevice> pairWithQrText(String text) async {
     final payload = QrPayload.tryParse(text);
-    if (payload == null)
+    if (payload == null) {
       throw HandshakeException('not a PepoConnect code', code: ErrorCode.badRequest);
+    }
     final device = await sessions.pairWithQr(payload);
     await _ensureFolderName(device);
     return device;

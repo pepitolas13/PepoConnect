@@ -286,8 +286,9 @@ class MediaSourceFs extends MediaSource {
     _entries[id] = _Entry(item, path);
     _thumbMemory.remove(id);
     _rebuild();
-    if (!_changes.isClosed)
+    if (!_changes.isClosed) {
       _changes.add(MediaChange(added: [item], removed: existing == null ? const [] : [id]));
+    }
   }
 
   void _removePath(String path) {
