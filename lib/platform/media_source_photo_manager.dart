@@ -143,8 +143,11 @@ class MediaSourcePhotoManager extends MediaSource {
   Future<void> _pollTick() async {
     // Only poll when the observer seems dead (some OEMs break it).
     final last = _lastObserverEvent;
-    if (_notifying && last != null && DateTime.now().difference(last) < const Duration(minutes: 5))
+    if (_notifying &&
+        last != null &&
+        DateTime.now().difference(last) < const Duration(minutes: 5)) {
       return;
+    }
     await _diff();
   }
 
@@ -200,8 +203,9 @@ class MediaSourcePhotoManager extends MediaSource {
     DateTime? since,
   }) async {
     final root = _all;
-    if (root == null)
+    if (root == null) {
       return MediaPage(items: const [], total: 0, nextPage: null, indexVersion: _indexVersion);
+    }
     final total = await root.assetCountAsync;
     final assets = await root.getAssetListPaged(page: page, size: pageSize);
     final items = <MediaItem>[];
