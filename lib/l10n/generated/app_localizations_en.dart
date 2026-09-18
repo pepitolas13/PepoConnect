@@ -1086,4 +1086,474 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get shortcutEscape => 'Esc closes menus and selections';
+
+  @override
+  String get trShareWithAnyone => 'Share with anyone';
+
+  @override
+  String get trGuestSend => 'Send';
+
+  @override
+  String get trGuestReceive => 'Receive';
+
+  @override
+  String get trGuestSendBody =>
+      'Whoever opens the link can download these files from a browser, without installing anything';
+
+  @override
+  String get trGuestReceiveBody => 'Whoever opens the link can send you files from a browser';
+
+  @override
+  String get trGuestNoFiles => 'Add at least one file';
+
+  @override
+  String get trGuestMessage => 'Message (optional)';
+
+  @override
+  String get trGuestCreateLink => 'Create link';
+
+  @override
+  String get trGuestReadyTitle => 'Your files are ready';
+
+  @override
+  String get trGuestReceiveReadyTitle => 'Ready to receive';
+
+  @override
+  String get trGuestScanHint =>
+      'Scan the QR code or open the link from a device on the same Wi-Fi network';
+
+  @override
+  String get trGuestCopyLink => 'Copy link';
+
+  @override
+  String trGuestExpiresIn(String time) {
+    return 'The link expires in $time';
+  }
+
+  @override
+  String get trGuestExpired => 'The link has expired';
+
+  @override
+  String get trGuestNewLink => 'Create another link';
+
+  @override
+  String get trGuestWaiting => 'Nobody has opened the link yet';
+
+  @override
+  String trGuestOpenedBy(String remote) {
+    return 'Opened by $remote';
+  }
+
+  @override
+  String trGuestDownloaded(String file) {
+    return '$file downloaded';
+  }
+
+  @override
+  String trGuestReceived(String file) {
+    return '$file received';
+  }
+
+  @override
+  String trGuestUploadFailed(String file) {
+    return 'Could not receive $file';
+  }
+
+  @override
+  String get trGuestNoAddress => 'No local network found';
+
+  @override
+  String get trGuestFailed => 'Could not create the link';
+
+  @override
+  String get trHistory => 'History';
+
+  @override
+  String get trSendFailed => 'Could not send';
+
+  @override
+  String get trExecutableSendAnyway => 'Send anyway';
+
+  @override
+  String get trDroppedNothing => 'No files to send';
+
+  @override
+  String get trNoPcConnected => 'Connect a PC to send files';
+
+  @override
+  String get galYourPhone => 'Your phone';
+
+  @override
+  String get galYourTablet => 'Your tablet';
+
+  @override
+  String get galYourPc => 'Your PC';
+
+  @override
+  String get galFullThumbnails => 'Full thumbnails';
+
+  @override
+  String get galTileSize => 'Thumbnail size';
+
+  @override
+  String get galSession => 'Session';
+
+  @override
+  String get galSessionTooltip => 'Session mode: the viewer jumps to every new photo';
+
+  @override
+  String galSavedCopies(int count, String folder) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count files saved to $folder',
+      one: '1 file saved to $folder',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String galSaveFailed(String file) {
+    return 'Could not save $file';
+  }
+
+  @override
+  String galDownloadFailed(String file) {
+    return 'Could not download $file';
+  }
+
+  @override
+  String get galDeleteFailed => 'Could not delete from the phone';
+
+  @override
+  String galSelectGroup(String group) {
+    return 'Select $group';
+  }
+
+  @override
+  String galDownloadStarted(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Downloading $count items',
+      one: 'Downloading 1 item',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get galOfflineBody => 'Photos will appear as soon as it connects';
+
+  @override
+  String get vwDevice => 'Device';
+
+  @override
+  String get vwDate => 'Date';
+
+  @override
+  String get vwResolution => 'Resolution';
+
+  @override
+  String get vwDownloading => 'Downloading…';
+
+  @override
+  String vwSessionCounter(int photos, int downloaded) {
+    String _temp0 = intl.Intl.pluralLogic(
+      photos,
+      locale: localeName,
+      other: '$photos photos',
+      one: '1 photo',
+    );
+    String _temp1 = intl.Intl.pluralLogic(
+      downloaded,
+      locale: localeName,
+      other: '$downloaded downloaded',
+      one: '1 downloaded',
+    );
+    return 'Session · $_temp0 · $_temp1';
+  }
+
+  @override
+  String get vwSessionWaiting => 'Waiting for new photos…';
+
+  @override
+  String get vwSessionHint => 'Space: download · Esc: exit';
+
+  @override
+  String get vwSessionExit => 'Exit session';
+
+  @override
+  String vwPosition(int index, int total) {
+    return '$index of $total';
+  }
+
+  @override
+  String get vwNotFound => 'This item is no longer in the gallery';
+
+  @override
+  String get vwPreviewFailed => 'Could not load the preview';
+
+  @override
+  String get vwVideoOpenFailed => 'Could not open the video';
+
+  @override
+  String get vwStateOnPhone => 'Only on the phone';
+
+  @override
+  String get setStorage => 'Storage';
+
+  @override
+  String get setThisPhone => 'This phone';
+
+  @override
+  String get setRenameDeviceTitle => 'Rename device';
+
+  @override
+  String setForgetConfirm(String device) {
+    return 'Forget \"$device\"?';
+  }
+
+  @override
+  String get setForgetBody => 'You will have to pair it again';
+
+  @override
+  String setLastConnection(String when) {
+    return 'Last connection: $when';
+  }
+
+  @override
+  String get setThemeBody => 'Choose how PepoConnect looks';
+
+  @override
+  String get setStartWithSystem => 'Start PepoConnect with the system';
+
+  @override
+  String get setStartWithSystemBody => 'Starts minimised, in the tray';
+
+  @override
+  String get setSeparateByDeviceBody => 'Creates a subfolder for each phone';
+
+  @override
+  String get setAllowExecutablesBody => 'Unison blocked them; here you only get a warning';
+
+  @override
+  String get setResetLocation => 'Reset';
+
+  @override
+  String get setDefaultLocation => 'Default folder';
+
+  @override
+  String get setChooseFolder => 'Choose where to save received files';
+
+  @override
+  String get setBackgroundService => 'Background service';
+
+  @override
+  String get setBackgroundServiceBody => 'Keeps the connection to the PC';
+
+  @override
+  String get setAutoSendPhotos => 'Send new photos automatically';
+
+  @override
+  String get setAutoSendPhotosBody => 'Every photo you take reaches the main PC right away';
+
+  @override
+  String get setDefaultHub => 'Main PC';
+
+  @override
+  String get setDefaultHubBody => 'Receives new photos and whatever you share';
+
+  @override
+  String get setDefaultHubNone => 'Not chosen';
+
+  @override
+  String get setDefaultHubRequired => 'Choose a main PC first';
+
+  @override
+  String get setPermissions => 'Permissions';
+
+  @override
+  String get setPermissionPhotos => 'Photos and videos';
+
+  @override
+  String get setPermissionPhotosBody => 'To show your gallery on the PC';
+
+  @override
+  String get setPermissionNotificationsBody => 'To tell you what comes in and goes out';
+
+  @override
+  String get setPermissionBattery => 'No battery restriction';
+
+  @override
+  String get setPermissionBatteryBody => 'So the connection survives with the screen off';
+
+  @override
+  String get setAllow => 'Allow';
+
+  @override
+  String get setGranted => 'Granted';
+
+  @override
+  String get setDeviceId => 'This device\'s ID';
+
+  @override
+  String get setCheckUpdates => 'Check for updates';
+
+  @override
+  String get setUpToDate => 'You have the latest version';
+
+  @override
+  String setUpdateAvailable(String version) {
+    return 'A new version is available: $version';
+  }
+
+  @override
+  String get setUpdateFailed => 'Could not check';
+
+  @override
+  String get setUpdateFailedBody => 'Check your internet connection and try again later';
+
+  @override
+  String get setViewOnGitHub => 'View on GitHub';
+
+  @override
+  String get setSourceCode => 'Source code on GitHub';
+
+  @override
+  String get setResetConfirm => 'Reset settings?';
+
+  @override
+  String get setResetBody => 'Everything goes back to the defaults. Paired devices are kept';
+
+  @override
+  String get setResetDone => 'Settings reset';
+
+  @override
+  String get onbHowTitle => 'How do you want to use PepoConnect?';
+
+  @override
+  String get onbConnectPhone => 'Connect your phone';
+
+  @override
+  String get onbConnectPhoneBody => 'See its photos and pass files around';
+
+  @override
+  String get onbAddPhone => 'Add phone';
+
+  @override
+  String get onbShareTitle => 'Share with anyone';
+
+  @override
+  String get onbShareBody => 'Send or receive files with a link, nothing to install';
+
+  @override
+  String get onbSkipForNow => 'Skip for now';
+
+  @override
+  String get onbSlide1 => 'Move photos and files between this phone and your PC';
+
+  @override
+  String get onbSlide2 => 'Every new photo shows up on the PC right away';
+
+  @override
+  String get onbSlide3 => 'All over your network, encrypted, no accounts';
+
+  @override
+  String get onbPermissionsTitle => 'Required permissions';
+
+  @override
+  String get onbPermissionsBody => 'PepoConnect needs them to keep working with the screen off';
+
+  @override
+  String get onbPermissionsSkipWarning => 'Without them, photos will not reach the PC on their own';
+
+  @override
+  String get onbContinue => 'Continue';
+
+  @override
+  String onbPageOf(int current, int total) {
+    return 'Page $current of $total';
+  }
+
+  @override
+  String get pairInstallTitle => 'Install PepoConnect on the phone';
+
+  @override
+  String get pairDownloadApp => 'Download the app';
+
+  @override
+  String get pairScanStep => 'Open the app and scan this code';
+
+  @override
+  String pairExpiresInTime(String time) {
+    return 'Expires in $time';
+  }
+
+  @override
+  String get pairGenerateAnother => 'Generate another code';
+
+  @override
+  String get pairOtherPc => 'Connect to another PC';
+
+  @override
+  String pairYourPc(String address) {
+    return 'Your PC: $address';
+  }
+
+  @override
+  String get pairCodeHint => 'Type it on the other PC under Pair › Enter code';
+
+  @override
+  String get pairEnterCodeTitle => 'Enter code';
+
+  @override
+  String get pairManualAddress => 'PC address (IP:port)';
+
+  @override
+  String get pairConnect => 'Pair';
+
+  @override
+  String get pairSelectPc => 'Choose the PC';
+
+  @override
+  String get pairScanTitle => 'Scan the code on the PC';
+
+  @override
+  String get pairScanHint => 'Open PepoConnect on the PC and go to Add device';
+
+  @override
+  String get pairEnterManually => 'Enter manually';
+
+  @override
+  String get pairPasteLink => 'Paste the pepoconnect://… link here';
+
+  @override
+  String get pairPairing => 'Pairing…';
+
+  @override
+  String get pairTorch => 'Torch';
+
+  @override
+  String get pairLinkExpired => 'The link has expired. Generate a new code on the PC';
+
+  @override
+  String get pairNotACode => 'That is not a PepoConnect code';
+
+  @override
+  String get pairWrongCode => 'Wrong code. Check the six digits';
+
+  @override
+  String get pairPcNotFound => 'Cannot find the PC. Check that both are on the same Wi-Fi network';
+
+  @override
+  String get pairIdentityChanged => 'The PC\'s identity has changed. Look for it again';
+
+  @override
+  String get pairCameraDenied => 'No camera access';
+
+  @override
+  String get pairAddressInvalid => 'Type a valid address, for example 192.168.1.20:47473';
+
+  @override
+  String get pairCodeInvalid => 'The code has six digits';
 }

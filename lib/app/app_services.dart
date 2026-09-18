@@ -108,9 +108,11 @@ class AppServices with WidgetsBindingObserver {
     engine.reconnectAll();
     final source = engine.ownMediaSource;
     if (source is MediaSourcePhotoManager && source.permissionMissing) {
-      unawaited(MediaSourcePhotoManager.hasPermission().then((ok) {
-        if (ok) return source.restart();
-      }));
+      unawaited(
+        MediaSourcePhotoManager.hasPermission().then((ok) {
+          if (ok) return source.restart();
+        }),
+      );
     }
     if (!isDesktop && settings.clipboardSharing) {
       unawaited(_clipboard?.sendNow(onlyIfChanged: true));

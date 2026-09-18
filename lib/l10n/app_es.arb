@@ -2,7 +2,6 @@
   "@@locale": "es",
   "appName": "PepoConnect",
   "appTagline": "Fotos y archivos entre el móvil y el PC, al instante",
-
   "ok": "Aceptar",
   "cancel": "Cancelar",
   "close": "Cerrar",
@@ -39,7 +38,6 @@
   "saveAs": "Guardar como…",
   "download": "Descargar",
   "openFolder": "Abrir carpeta",
-
   "navTransfers": "Transferencias",
   "navGallery": "Galería",
   "navActivity": "Actividad",
@@ -48,7 +46,9 @@
   "navShortcutHint": "Ctrl+{number}",
   "@navShortcutHint": {
     "placeholders": {
-      "number": {"type": "int"}
+      "number": {
+        "type": "int"
+      }
     }
   },
   "hubTooltip": "Dispositivos",
@@ -58,7 +58,9 @@
   "lastSync": "Última sincronización: {when}",
   "@lastSync": {
     "placeholders": {
-      "when": {"type": "String"}
+      "when": {
+        "type": "String"
+      }
     }
   },
   "neverSynced": "Sin sincronizar todavía",
@@ -67,26 +69,31 @@
   "manageDevices": "Gestionar dispositivos",
   "doNotDisturb": "No molestar",
   "doNotDisturbBody": "Silencia los avisos hasta que lo desactives",
-
   "statusConnected": "Conectado",
   "statusOffline": "Sin conexión",
   "statusConnecting": "Conectando…",
   "deviceConnected": "{device} conectado",
   "@deviceConnected": {
     "placeholders": {
-      "device": {"type": "String"}
+      "device": {
+        "type": "String"
+      }
     }
   },
   "deviceDisconnected": "{device} desconectado",
   "@deviceDisconnected": {
     "placeholders": {
-      "device": {"type": "String"}
+      "device": {
+        "type": "String"
+      }
     }
   },
   "batteryLevel": "{percent} %",
   "@batteryLevel": {
     "placeholders": {
-      "percent": {"type": "int"}
+      "percent": {
+        "type": "int"
+      }
     }
   },
   "batteryCharging": "Cargando",
@@ -100,7 +107,9 @@
   "forgetDeviceConfirm": "¿Quitar {device}?",
   "@forgetDeviceConfirm": {
     "placeholders": {
-      "device": {"type": "String"}
+      "device": {
+        "type": "String"
+      }
     }
   },
   "forgetDeviceBody": "Tendrás que volver a emparejarlo para usarlo",
@@ -110,52 +119,69 @@
   "deviceOptions": "Opciones de {device}",
   "@deviceOptions": {
     "placeholders": {
-      "device": {"type": "String"}
+      "device": {
+        "type": "String"
+      }
     }
   },
   "reconnect": "Volver a conectar",
-
   "transfersTitle": "Transferir archivos",
   "transfersSubtitle": "Arrastra o añade archivos para enviarlos a tu dispositivo",
   "addFiles": "Añadir archivos…",
   "dropHere": "Suelta para enviar a {device}",
   "@dropHere": {
     "placeholders": {
-      "device": {"type": "String"}
+      "device": {
+        "type": "String"
+      }
     }
   },
   "dropAnywhere": "Suelta los archivos aquí",
   "sentTo": "{percent} % enviado a {device}",
   "@sentTo": {
     "placeholders": {
-      "percent": {"type": "int"},
-      "device": {"type": "String"}
+      "percent": {
+        "type": "int"
+      },
+      "device": {
+        "type": "String"
+      }
     }
   },
   "receivedFrom": "{percent} % recibido de {device}",
   "@receivedFrom": {
     "placeholders": {
-      "percent": {"type": "int"},
-      "device": {"type": "String"}
+      "percent": {
+        "type": "int"
+      },
+      "device": {
+        "type": "String"
+      }
     }
   },
   "sendingTo": "Enviando a {device}",
   "@sendingTo": {
     "placeholders": {
-      "device": {"type": "String"}
+      "device": {
+        "type": "String"
+      }
     }
   },
   "receivingFrom": "Recibiendo de {device}",
   "@receivingFrom": {
     "placeholders": {
-      "device": {"type": "String"}
+      "device": {
+        "type": "String"
+      }
     }
   },
   "transferComplete": "Transferencia completada",
   "transferFailed": "No se pudo transferir {file}",
   "@transferFailed": {
     "placeholders": {
-      "file": {"type": "String"}
+      "file": {
+        "type": "String"
+      }
     }
   },
   "transferCancelled": "Transferencia cancelada",
@@ -168,7 +194,9 @@
   "transfersActiveCount": "{count, plural, =1{1 transferencia en curso} other{{count} transferencias en curso}}",
   "@transfersActiveCount": {
     "placeholders": {
-      "count": {"type": "int"}
+      "count": {
+        "type": "int"
+      }
     }
   },
   "cancelTransfer": "Cancelar",
@@ -179,19 +207,25 @@
   "filesCount": "{count, plural, =1{1 archivo} other{{count} archivos}}",
   "@filesCount": {
     "placeholders": {
-      "count": {"type": "int"}
+      "count": {
+        "type": "int"
+      }
     }
   },
   "sendingFiles": "{count, plural, =1{Enviando 1 archivo} other{Enviando {count} archivos}}",
   "@sendingFiles": {
     "placeholders": {
-      "count": {"type": "int"}
+      "count": {
+        "type": "int"
+      }
     }
   },
   "sendToDevice": "Enviar a {device}",
   "@sendToDevice": {
     "placeholders": {
-      "device": {"type": "String"}
+      "device": {
+        "type": "String"
+      }
     }
   },
   "chooseDevice": "Elige un dispositivo",
@@ -201,33 +235,44 @@
   "executableWarning": "{file} es un ejecutable. ¿Enviarlo igualmente?",
   "@executableWarning": {
     "placeholders": {
-      "file": {"type": "String"}
+      "file": {
+        "type": "String"
+      }
     }
   },
   "speedAndEta": "{speed}/s · quedan {eta}",
   "@speedAndEta": {
     "placeholders": {
-      "speed": {"type": "String"},
-      "eta": {"type": "String"}
+      "speed": {
+        "type": "String"
+      },
+      "eta": {
+        "type": "String"
+      }
     }
   },
   "etaSeconds": "{count, plural, =1{1 s} other{{count} s}}",
   "@etaSeconds": {
     "placeholders": {
-      "count": {"type": "int"}
+      "count": {
+        "type": "int"
+      }
     }
   },
   "etaMinutes": "{count, plural, =1{1 min} other{{count} min}}",
   "@etaMinutes": {
     "placeholders": {
-      "count": {"type": "int"}
+      "count": {
+        "type": "int"
+      }
     }
   },
-
   "galleryOf": "Galería de {device}",
   "@galleryOf": {
     "placeholders": {
-      "device": {"type": "String"}
+      "device": {
+        "type": "String"
+      }
     }
   },
   "allDevices": "Todos los dispositivos",
@@ -244,21 +289,29 @@
   "selectedCount": "{count, plural, =1{1 seleccionado} other{{count} seleccionados}}",
   "@selectedCount": {
     "placeholders": {
-      "count": {"type": "int"}
+      "count": {
+        "type": "int"
+      }
     }
   },
   "selectedCountSize": "{count, plural, =1{1 seleccionado ({size})} other{{count} seleccionados ({size})}}",
   "@selectedCountSize": {
     "placeholders": {
-      "count": {"type": "int"},
-      "size": {"type": "String"}
+      "count": {
+        "type": "int"
+      },
+      "size": {
+        "type": "String"
+      }
     }
   },
   "deleteFromPhone": "Eliminar del móvil",
   "deleteFromPhoneConfirm": "{count, plural, =1{¿Eliminar 1 elemento del móvil?} other{¿Eliminar {count} elementos del móvil?}}",
   "@deleteFromPhoneConfirm": {
     "placeholders": {
-      "count": {"type": "int"}
+      "count": {
+        "type": "int"
+      }
     }
   },
   "deleteFromPhoneBody": "Se borran del móvil. La copia del PC, si la hay, no se toca",
@@ -271,20 +324,26 @@
   "newPhotosCount": "{count, plural, =1{1 foto nueva} other{{count} fotos nuevas}}",
   "@newPhotosCount": {
     "placeholders": {
-      "count": {"type": "int"}
+      "count": {
+        "type": "int"
+      }
     }
   },
   "downloadedTo": "Guardado en {path}",
   "@downloadedTo": {
     "placeholders": {
-      "path": {"type": "String"}
+      "path": {
+        "type": "String"
+      }
     }
   },
   "galleryRefreshTooltip": "Actualizar la galería",
   "galleryItemsCount": "{count, plural, =1{1 elemento} other{{count} elementos}}",
   "@galleryItemsCount": {
     "placeholders": {
-      "count": {"type": "int"}
+      "count": {
+        "type": "int"
+      }
     }
   },
   "galleryGroupToday": "Hoy",
@@ -292,7 +351,6 @@
   "galleryGroupThisWeek": "Esta semana",
   "galleryGroupThisMonth": "Este mes",
   "dismissNew": "Quitar la marca de nuevo",
-
   "viewerTitle": "Visor",
   "viewerPrevious": "Anterior",
   "viewerNext": "Siguiente",
@@ -304,21 +362,26 @@
   "viewerTakenOn": "Hecha el {date}",
   "@viewerTakenOn": {
     "placeholders": {
-      "date": {"type": "String"}
+      "date": {
+        "type": "String"
+      }
     }
   },
   "viewerDimensions": "{width} × {height}",
   "@viewerDimensions": {
     "placeholders": {
-      "width": {"type": "int"},
-      "height": {"type": "int"}
+      "width": {
+        "type": "int"
+      },
+      "height": {
+        "type": "int"
+      }
     }
   },
   "viewerFileSize": "Tamaño",
   "viewerFileName": "Nombre",
   "viewerPlay": "Reproducir",
   "viewerLoadingFull": "Cargando la foto a tamaño completo…",
-
   "settingsTitle": "Ajustes",
   "settingsGeneral": "General",
   "settingsNotifications": "Notificaciones",
@@ -354,7 +417,9 @@
   "version": "Versión {version}",
   "@version": {
     "placeholders": {
-      "version": {"type": "String"}
+      "version": {
+        "type": "String"
+      }
     }
   },
   "aboutBody": "Fotos y archivos entre el móvil y el PC, en tu red local. Nada pasa por internet",
@@ -369,7 +434,6 @@
   "openDownloadsFolder": "Abrir la carpeta de descargas",
   "resetSettings": "Restablecer ajustes",
   "settingsSaved": "Ajustes guardados",
-
   "pairTitle": "Empareja tu móvil y tu PC",
   "pairSubtitle": "Los dos deben estar en la misma red Wi-Fi",
   "pairStep1": "Instala PepoConnect en el móvil y toca Añadir PC",
@@ -377,7 +441,9 @@
   "pairStepNumber": "Paso {number}",
   "@pairStepNumber": {
     "placeholders": {
-      "number": {"type": "int"}
+      "number": {
+        "type": "int"
+      }
     }
   },
   "pairCheckCode": "Comprueba el código",
@@ -392,7 +458,9 @@
   "pairExpiresIn": "Caduca en {seconds} s",
   "@pairExpiresIn": {
     "placeholders": {
-      "seconds": {"type": "int"}
+      "seconds": {
+        "type": "int"
+      }
     }
   },
   "pairExpired": "El código ha caducado",
@@ -410,23 +478,28 @@
   "pairConnecting": "Conectando con {device}…",
   "@pairConnecting": {
     "placeholders": {
-      "device": {"type": "String"}
+      "device": {
+        "type": "String"
+      }
     }
   },
   "pairingWith": "Emparejando con {device}",
   "@pairingWith": {
     "placeholders": {
-      "device": {"type": "String"}
+      "device": {
+        "type": "String"
+      }
     }
   },
   "pairRequestTitle": "{device} quiere emparejarse",
   "@pairRequestTitle": {
     "placeholders": {
-      "device": {"type": "String"}
+      "device": {
+        "type": "String"
+      }
     }
   },
   "pairCameraPermission": "PepoConnect necesita la cámara para leer el QR",
-
   "mobileReceived": "Recibidos",
   "mobileSent": "Enviados",
   "mobileSendToPc": "Enviar al PC",
@@ -442,72 +515,97 @@
   "mobileServiceNotification": "PepoConnect está conectado con {device}",
   "@mobileServiceNotification": {
     "placeholders": {
-      "device": {"type": "String"}
+      "device": {
+        "type": "String"
+      }
     }
   },
   "mobileServiceIdle": "PepoConnect espera al PC",
-
   "activityTitle": "Actividad",
   "activityNewPhoto": "Foto nueva en {device}",
   "@activityNewPhoto": {
     "placeholders": {
-      "device": {"type": "String"}
+      "device": {
+        "type": "String"
+      }
     }
   },
   "activityNewVideo": "Vídeo nuevo en {device}",
   "@activityNewVideo": {
     "placeholders": {
-      "device": {"type": "String"}
+      "device": {
+        "type": "String"
+      }
     }
   },
   "activityReceived": "Recibido {file} de {device}",
   "@activityReceived": {
     "placeholders": {
-      "file": {"type": "String"},
-      "device": {"type": "String"}
+      "file": {
+        "type": "String"
+      },
+      "device": {
+        "type": "String"
+      }
     }
   },
   "activitySent": "Enviado {file} a {device}",
   "@activitySent": {
     "placeholders": {
-      "file": {"type": "String"},
-      "device": {"type": "String"}
+      "file": {
+        "type": "String"
+      },
+      "device": {
+        "type": "String"
+      }
     }
   },
   "activityFailed": "No se pudo transferir {file}",
   "@activityFailed": {
     "placeholders": {
-      "file": {"type": "String"}
+      "file": {
+        "type": "String"
+      }
     }
   },
   "activityConnected": "{device} conectado",
   "@activityConnected": {
     "placeholders": {
-      "device": {"type": "String"}
+      "device": {
+        "type": "String"
+      }
     }
   },
   "activityDisconnected": "{device} desconectado",
   "@activityDisconnected": {
     "placeholders": {
-      "device": {"type": "String"}
+      "device": {
+        "type": "String"
+      }
     }
   },
   "activityPaired": "{device} emparejado",
   "@activityPaired": {
     "placeholders": {
-      "device": {"type": "String"}
+      "device": {
+        "type": "String"
+      }
     }
   },
   "activityForgotten": "{device} quitado",
   "@activityForgotten": {
     "placeholders": {
-      "device": {"type": "String"}
+      "device": {
+        "type": "String"
+      }
     }
   },
   "activityClipboard": "Texto copiado de {device}",
   "@activityClipboard": {
     "placeholders": {
-      "device": {"type": "String"}
+      "device": {
+        "type": "String"
+      }
     }
   },
   "activityEmpty": "Sin actividad reciente",
@@ -515,12 +613,13 @@
   "unreadCount": "{count, plural, =1{1 sin leer} other{{count} sin leer}}",
   "@unreadCount": {
     "placeholders": {
-      "count": {"type": "int"}
+      "count": {
+        "type": "int"
+      }
     }
   },
   "activityPanelShow": "Mostrar actividad",
   "activityPanelHide": "Ocultar actividad",
-
   "toastNewPhoto": "Foto nueva",
   "toastNewVideo": "Vídeo nuevo",
   "toastSaved": "Guardado en el PC",
@@ -528,41 +627,52 @@
   "toastSentTo": "Enviado a {device}",
   "@toastSentTo": {
     "placeholders": {
-      "device": {"type": "String"}
+      "device": {
+        "type": "String"
+      }
     }
   },
   "toastReceivedFrom": "Recibido de {device}",
   "@toastReceivedFrom": {
     "placeholders": {
-      "device": {"type": "String"}
+      "device": {
+        "type": "String"
+      }
     }
   },
   "toastDeviceConnected": "{device} conectado",
   "@toastDeviceConnected": {
     "placeholders": {
-      "device": {"type": "String"}
+      "device": {
+        "type": "String"
+      }
     }
   },
   "toastDeviceOffline": "{device} sin conexión",
   "@toastDeviceOffline": {
     "placeholders": {
-      "device": {"type": "String"}
+      "device": {
+        "type": "String"
+      }
     }
   },
   "toastDeleted": "{count, plural, =1{1 elemento eliminado del móvil} other{{count} elementos eliminados del móvil}}",
   "@toastDeleted": {
     "placeholders": {
-      "count": {"type": "int"}
+      "count": {
+        "type": "int"
+      }
     }
   },
   "toastClipboardReceived": "Texto copiado desde {device}",
   "@toastClipboardReceived": {
     "placeholders": {
-      "device": {"type": "String"}
+      "device": {
+        "type": "String"
+      }
     }
   },
   "toastUndo": "Deshacer",
-
   "errorGeneric": "Algo ha fallado",
   "errorNetwork": "Sin conexión con el dispositivo",
   "errorNotPaired": "Este dispositivo ya no está emparejado",
@@ -577,7 +687,6 @@
   "errorCode": "Código incorrecto",
   "errorDetails": "Detalles",
   "errorCopyDetails": "Copiar detalles",
-
   "onboardingTitle": "Tu móvil, en el PC",
   "onboardingBody": "Las fotos que hagas aparecen aquí al instante. Y puedes enviar archivos en los dos sentidos",
   "onboardingStart": "Empezar",
@@ -585,10 +694,283 @@
   "onboardingNamePrompt": "¿Cómo se llama este PC?",
   "onboardingFolderPrompt": "¿Dónde guardamos lo que llegue?",
   "onboardingLocalOnly": "Todo va por tu red local. Nada sale a internet",
-
   "shortcutsTitle": "Atajos de teclado",
   "shortcutSections": "Ctrl+1 a Ctrl+4 cambian de sección",
   "shortcutSettings": "Ctrl+, abre Ajustes",
   "shortcutRefresh": "F5 actualiza",
-  "shortcutEscape": "Esc cierra menús y selecciones"
+  "shortcutEscape": "Esc cierra menús y selecciones",
+  "trShareWithAnyone": "Compartir con cualquiera",
+  "trGuestSend": "Enviar",
+  "trGuestReceive": "Recibir",
+  "trGuestSendBody": "Quien abra el enlace podrá descargar estos archivos desde el navegador, sin instalar nada",
+  "trGuestReceiveBody": "Quien abra el enlace podrá enviarte archivos desde el navegador",
+  "trGuestNoFiles": "Añade al menos un archivo",
+  "trGuestMessage": "Mensaje (opcional)",
+  "trGuestCreateLink": "Crear enlace",
+  "trGuestReadyTitle": "Tus archivos están listos",
+  "trGuestReceiveReadyTitle": "Listo para recibir",
+  "trGuestScanHint": "Escanea el QR o abre el enlace desde un dispositivo en la misma red Wi-Fi",
+  "trGuestCopyLink": "Copiar enlace",
+  "trGuestExpiresIn": "El enlace caduca en {time}",
+  "@trGuestExpiresIn": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "trGuestExpired": "El enlace ha caducado",
+  "trGuestNewLink": "Crear otro enlace",
+  "trGuestWaiting": "Nadie ha abierto el enlace todavía",
+  "trGuestOpenedBy": "Abierto por {remote}",
+  "@trGuestOpenedBy": {
+    "placeholders": {
+      "remote": {
+        "type": "String"
+      }
+    }
+  },
+  "trGuestDownloaded": "Descargado {file}",
+  "@trGuestDownloaded": {
+    "placeholders": {
+      "file": {
+        "type": "String"
+      }
+    }
+  },
+  "trGuestReceived": "Recibido {file}",
+  "@trGuestReceived": {
+    "placeholders": {
+      "file": {
+        "type": "String"
+      }
+    }
+  },
+  "trGuestUploadFailed": "No se pudo recibir {file}",
+  "@trGuestUploadFailed": {
+    "placeholders": {
+      "file": {
+        "type": "String"
+      }
+    }
+  },
+  "trGuestNoAddress": "No se ha encontrado ninguna red local",
+  "trGuestFailed": "No se pudo crear el enlace",
+  "trHistory": "Historial",
+  "trSendFailed": "No se pudo enviar",
+  "trExecutableSendAnyway": "Enviar igualmente",
+  "trDroppedNothing": "No hay archivos que enviar",
+  "trNoPcConnected": "Conecta un PC para enviar archivos",
+  "galYourPhone": "Tu móvil",
+  "galYourTablet": "Tu tablet",
+  "galYourPc": "Tu PC",
+  "galFullThumbnails": "Miniaturas completas",
+  "galTileSize": "Tamaño de las miniaturas",
+  "galSession": "Sesión",
+  "galSessionTooltip": "Modo sesión: el visor salta a cada foto nueva",
+  "galSavedCopies": "{count, plural, =1{1 archivo guardado en {folder}} other{{count} archivos guardados en {folder}}}",
+  "@galSavedCopies": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "folder": {
+        "type": "String"
+      }
+    }
+  },
+  "galSaveFailed": "No se pudo guardar {file}",
+  "@galSaveFailed": {
+    "placeholders": {
+      "file": {
+        "type": "String"
+      }
+    }
+  },
+  "galDownloadFailed": "No se pudo descargar {file}",
+  "@galDownloadFailed": {
+    "placeholders": {
+      "file": {
+        "type": "String"
+      }
+    }
+  },
+  "galDeleteFailed": "No se pudo eliminar del móvil",
+  "galSelectGroup": "Seleccionar {group}",
+  "@galSelectGroup": {
+    "placeholders": {
+      "group": {
+        "type": "String"
+      }
+    }
+  },
+  "galDownloadStarted": "{count, plural, =1{Descargando 1 elemento} other{Descargando {count} elementos}}",
+  "@galDownloadStarted": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "galOfflineBody": "Las fotos aparecerán en cuanto se conecte",
+  "vwDevice": "Dispositivo",
+  "vwDate": "Fecha",
+  "vwResolution": "Resolución",
+  "vwDownloading": "Descargando…",
+  "vwSessionCounter": "Sesión · {photos, plural, =1{1 foto} other{{photos} fotos}} · {downloaded, plural, =1{1 descargada} other{{downloaded} descargadas}}",
+  "@vwSessionCounter": {
+    "placeholders": {
+      "photos": {
+        "type": "int"
+      },
+      "downloaded": {
+        "type": "int"
+      }
+    }
+  },
+  "vwSessionWaiting": "Esperando fotos nuevas…",
+  "vwSessionHint": "Espacio: descargar · Esc: salir",
+  "vwSessionExit": "Salir de la sesión",
+  "vwPosition": "{index} de {total}",
+  "@vwPosition": {
+    "placeholders": {
+      "index": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "vwNotFound": "Este elemento ya no está en la galería",
+  "vwPreviewFailed": "No se pudo cargar la vista previa",
+  "vwVideoOpenFailed": "No se pudo abrir el vídeo",
+  "vwStateOnPhone": "Solo en el móvil",
+  "setStorage": "Almacenamiento",
+  "setThisPhone": "Este móvil",
+  "setRenameDeviceTitle": "Cambiar el nombre del dispositivo",
+  "setForgetConfirm": "¿Quieres olvidar \"{device}\"?",
+  "@setForgetConfirm": {
+    "placeholders": {
+      "device": {
+        "type": "String"
+      }
+    }
+  },
+  "setForgetBody": "Tendrás que emparejarlo de nuevo",
+  "setLastConnection": "Última conexión: {when}",
+  "@setLastConnection": {
+    "placeholders": {
+      "when": {
+        "type": "String"
+      }
+    }
+  },
+  "setThemeBody": "Elige cómo se ve PepoConnect",
+  "setStartWithSystem": "Iniciar PepoConnect con el sistema",
+  "setStartWithSystemBody": "Arranca minimizado, en la bandeja",
+  "setSeparateByDeviceBody": "Crea una subcarpeta por cada móvil",
+  "setAllowExecutablesBody": "Unison los bloqueaba; aquí solo se avisa",
+  "setResetLocation": "Restablecer",
+  "setDefaultLocation": "Carpeta predeterminada",
+  "setChooseFolder": "Elige dónde guardar los archivos recibidos",
+  "setBackgroundService": "Servicio en segundo plano",
+  "setBackgroundServiceBody": "Mantiene la conexión con el PC",
+  "setAutoSendPhotos": "Enviar fotos nuevas automáticamente",
+  "setAutoSendPhotosBody": "Cada foto que hagas llega al PC principal al momento",
+  "setDefaultHub": "PC principal",
+  "setDefaultHubBody": "Recibe las fotos nuevas y lo que compartas",
+  "setDefaultHubNone": "Sin elegir",
+  "setDefaultHubRequired": "Elige primero un PC principal",
+  "setPermissions": "Permisos",
+  "setPermissionPhotos": "Fotos y vídeos",
+  "setPermissionPhotosBody": "Para mostrar la galería en el PC",
+  "setPermissionNotificationsBody": "Para avisar de lo que llega y sale",
+  "setPermissionBattery": "Sin restricción de batería",
+  "setPermissionBatteryBody": "Para no perder la conexión con la pantalla apagada",
+  "setAllow": "Permitir",
+  "setGranted": "Concedido",
+  "setDeviceId": "ID de este dispositivo",
+  "setCheckUpdates": "Comprobar actualizaciones",
+  "setUpToDate": "Tienes la última versión",
+  "setUpdateAvailable": "Hay una versión nueva: {version}",
+  "@setUpdateAvailable": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "setUpdateFailed": "No se pudo comprobar",
+  "setUpdateFailedBody": "Revisa la conexión a internet e inténtalo más tarde",
+  "setViewOnGitHub": "Ver en GitHub",
+  "setSourceCode": "Código fuente en GitHub",
+  "setResetConfirm": "¿Restablecer los ajustes?",
+  "setResetBody": "Vuelven a los valores iniciales. Los dispositivos emparejados se conservan",
+  "setResetDone": "Ajustes restablecidos",
+  "onbHowTitle": "¿Cómo quieres usar PepoConnect?",
+  "onbConnectPhone": "Conecta tu móvil",
+  "onbConnectPhoneBody": "Mira sus fotos y pásate archivos",
+  "onbAddPhone": "Añadir móvil",
+  "onbShareTitle": "Comparte con cualquiera",
+  "onbShareBody": "Envía o recibe archivos con un enlace, sin instalar nada",
+  "onbSkipForNow": "Saltar por ahora",
+  "onbSlide1": "Pasa fotos y archivos entre este móvil y tu PC",
+  "onbSlide2": "Cada foto nueva aparece en el PC al momento",
+  "onbSlide3": "Todo por tu red, cifrado, sin cuentas",
+  "onbPermissionsTitle": "Permisos necesarios",
+  "onbPermissionsBody": "PepoConnect los necesita para seguir funcionando con la pantalla apagada",
+  "onbPermissionsSkipWarning": "Sin ellos, las fotos no llegarán solas al PC",
+  "onbContinue": "Continuar",
+  "onbPageOf": "Página {current} de {total}",
+  "@onbPageOf": {
+    "placeholders": {
+      "current": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "pairInstallTitle": "Instala PepoConnect en el móvil",
+  "pairDownloadApp": "Descargar la app",
+  "pairScanStep": "Abre la app y escanea este código",
+  "pairExpiresInTime": "Caduca en {time}",
+  "@pairExpiresInTime": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "pairGenerateAnother": "Generar otro código",
+  "pairOtherPc": "Conectar con otro PC",
+  "pairYourPc": "Tu PC: {address}",
+  "@pairYourPc": {
+    "placeholders": {
+      "address": {
+        "type": "String"
+      }
+    }
+  },
+  "pairCodeHint": "Escríbelo en el otro PC en Emparejar › Introducir código",
+  "pairEnterCodeTitle": "Introducir código",
+  "pairManualAddress": "Dirección del PC (IP:puerto)",
+  "pairConnect": "Emparejar",
+  "pairSelectPc": "Elige el PC",
+  "pairScanTitle": "Escanea el código del PC",
+  "pairScanHint": "Abre PepoConnect en el PC y ve a Añadir dispositivo",
+  "pairEnterManually": "Introducir a mano",
+  "pairPasteLink": "Pega aquí el enlace pepoconnect://…",
+  "pairPairing": "Emparejando…",
+  "pairTorch": "Linterna",
+  "pairLinkExpired": "El enlace ha caducado. Genera otro código en el PC",
+  "pairNotACode": "Eso no es un código de PepoConnect",
+  "pairWrongCode": "Código incorrecto. Comprueba los seis dígitos",
+  "pairPcNotFound": "No se encuentra el PC. Comprueba que los dos están en la misma red Wi-Fi",
+  "pairIdentityChanged": "La identidad del PC ha cambiado. Vuelve a buscarlo",
+  "pairCameraDenied": "Sin acceso a la cámara",
+  "pairAddressInvalid": "Escribe una dirección válida, por ejemplo 192.168.1.20:47473",
+  "pairCodeInvalid": "El código tiene seis dígitos"
 }

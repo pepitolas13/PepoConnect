@@ -2,7 +2,6 @@
   "@@locale": "en",
   "appName": "PepoConnect",
   "appTagline": "Photos and files between your phone and PC, instantly",
-
   "ok": "OK",
   "cancel": "Cancel",
   "close": "Close",
@@ -39,7 +38,6 @@
   "saveAs": "Save as…",
   "download": "Download",
   "openFolder": "Open folder",
-
   "navTransfers": "Transfers",
   "navGallery": "Gallery",
   "navActivity": "Activity",
@@ -57,7 +55,6 @@
   "manageDevices": "Manage devices",
   "doNotDisturb": "Do not disturb",
   "doNotDisturbBody": "Mutes notifications until you turn it off",
-
   "statusConnected": "Connected",
   "statusOffline": "Offline",
   "statusConnecting": "Connecting…",
@@ -79,7 +76,6 @@
   "pairFirstDevice": "Pair your phone to get started",
   "deviceOptions": "Options for {device}",
   "reconnect": "Reconnect",
-
   "transfersTitle": "Transfer files",
   "transfersSubtitle": "Drag or add files to send them to your device",
   "addFiles": "Add files…",
@@ -115,7 +111,6 @@
   "speedAndEta": "{speed}/s · {eta} left",
   "etaSeconds": "{count, plural, =1{1 s} other{{count} s}}",
   "etaMinutes": "{count, plural, =1{1 min} other{{count} min}}",
-
   "galleryOf": "{device} gallery",
   "allDevices": "All devices",
   "photos": "Photos",
@@ -148,7 +143,6 @@
   "galleryGroupThisWeek": "This week",
   "galleryGroupThisMonth": "This month",
   "dismissNew": "Clear the new mark",
-
   "viewerTitle": "Viewer",
   "viewerPrevious": "Previous",
   "viewerNext": "Next",
@@ -163,7 +157,6 @@
   "viewerFileName": "Name",
   "viewerPlay": "Play",
   "viewerLoadingFull": "Loading the full-size photo…",
-
   "settingsTitle": "Settings",
   "settingsGeneral": "General",
   "settingsNotifications": "Notifications",
@@ -209,7 +202,6 @@
   "openDownloadsFolder": "Open the downloads folder",
   "resetSettings": "Reset settings",
   "settingsSaved": "Settings saved",
-
   "pairTitle": "Pair your phone and PC",
   "pairSubtitle": "Both need to be on the same Wi-Fi network",
   "pairStep1": "Install PepoConnect on the phone and tap Add PC",
@@ -241,7 +233,6 @@
   "pairingWith": "Pairing with {device}",
   "pairRequestTitle": "{device} wants to pair",
   "pairCameraPermission": "PepoConnect needs the camera to read the QR",
-
   "mobileReceived": "Received",
   "mobileSent": "Sent",
   "mobileSendToPc": "Send to PC",
@@ -256,7 +247,6 @@
   "mobileAddPc": "Add PC",
   "mobileServiceNotification": "PepoConnect is connected to {device}",
   "mobileServiceIdle": "PepoConnect is waiting for the PC",
-
   "activityTitle": "Activity",
   "activityNewPhoto": "New photo on {device}",
   "activityNewVideo": "New video on {device}",
@@ -273,7 +263,6 @@
   "unreadCount": "{count, plural, =1{1 unread} other{{count} unread}}",
   "activityPanelShow": "Show activity",
   "activityPanelHide": "Hide activity",
-
   "toastNewPhoto": "New photo",
   "toastNewVideo": "New video",
   "toastSaved": "Saved to the PC",
@@ -285,7 +274,6 @@
   "toastDeleted": "{count, plural, =1{1 item deleted from the phone} other{{count} items deleted from the phone}}",
   "toastClipboardReceived": "Text copied from {device}",
   "toastUndo": "Undo",
-
   "errorGeneric": "Something went wrong",
   "errorNetwork": "No connection to the device",
   "errorNotPaired": "This device is no longer paired",
@@ -300,7 +288,6 @@
   "errorCode": "Wrong code",
   "errorDetails": "Details",
   "errorCopyDetails": "Copy details",
-
   "onboardingTitle": "Your phone, on your PC",
   "onboardingBody": "Photos you take show up here instantly. And you can send files both ways",
   "onboardingStart": "Get started",
@@ -308,10 +295,190 @@
   "onboardingNamePrompt": "What is this PC called?",
   "onboardingFolderPrompt": "Where should we save what arrives?",
   "onboardingLocalOnly": "Everything stays on your local network. Nothing goes online",
-
   "shortcutsTitle": "Keyboard shortcuts",
   "shortcutSections": "Ctrl+1 to Ctrl+4 switch section",
   "shortcutSettings": "Ctrl+, opens Settings",
   "shortcutRefresh": "F5 refreshes",
-  "shortcutEscape": "Esc closes menus and selections"
+  "shortcutEscape": "Esc closes menus and selections",
+  "trShareWithAnyone": "Share with anyone",
+  "trGuestSend": "Send",
+  "trGuestReceive": "Receive",
+  "trGuestSendBody": "Whoever opens the link can download these files from a browser, without installing anything",
+  "trGuestReceiveBody": "Whoever opens the link can send you files from a browser",
+  "trGuestNoFiles": "Add at least one file",
+  "trGuestMessage": "Message (optional)",
+  "trGuestCreateLink": "Create link",
+  "trGuestReadyTitle": "Your files are ready",
+  "trGuestReceiveReadyTitle": "Ready to receive",
+  "trGuestScanHint": "Scan the QR code or open the link from a device on the same Wi-Fi network",
+  "trGuestCopyLink": "Copy link",
+  "trGuestExpiresIn": "The link expires in {time}",
+  "trGuestExpired": "The link has expired",
+  "trGuestNewLink": "Create another link",
+  "trGuestWaiting": "Nobody has opened the link yet",
+  "trGuestOpenedBy": "Opened by {remote}",
+  "trGuestDownloaded": "{file} downloaded",
+  "trGuestReceived": "{file} received",
+  "trGuestUploadFailed": "Could not receive {file}",
+  "trGuestNoAddress": "No local network found",
+  "trGuestFailed": "Could not create the link",
+  "trHistory": "History",
+  "trSendFailed": "Could not send",
+  "trExecutableSendAnyway": "Send anyway",
+  "trDroppedNothing": "No files to send",
+  "trNoPcConnected": "Connect a PC to send files",
+  "galYourPhone": "Your phone",
+  "galYourTablet": "Your tablet",
+  "galYourPc": "Your PC",
+  "galFullThumbnails": "Full thumbnails",
+  "galTileSize": "Thumbnail size",
+  "galSession": "Session",
+  "galSessionTooltip": "Session mode: the viewer jumps to every new photo",
+  "galSavedCopies": "{count, plural, =1{1 file saved to {folder}} other{{count} files saved to {folder}}}",
+  "galSaveFailed": "Could not save {file}",
+  "galDownloadFailed": "Could not download {file}",
+  "galDeleteFailed": "Could not delete from the phone",
+  "galSelectGroup": "Select {group}",
+  "galDownloadStarted": "{count, plural, =1{Downloading 1 item} other{Downloading {count} items}}",
+  "galOfflineBody": "Photos will appear as soon as it connects",
+  "vwDevice": "Device",
+  "vwDate": "Date",
+  "vwResolution": "Resolution",
+  "vwDownloading": "Downloading…",
+  "vwSessionCounter": "Session · {photos, plural, =1{1 photo} other{{photos} photos}} · {downloaded, plural, =1{1 downloaded} other{{downloaded} downloaded}}",
+  "vwSessionWaiting": "Waiting for new photos…",
+  "vwSessionHint": "Space: download · Esc: exit",
+  "vwSessionExit": "Exit session",
+  "vwPosition": "{index} of {total}",
+  "vwNotFound": "This item is no longer in the gallery",
+  "vwPreviewFailed": "Could not load the preview",
+  "vwVideoOpenFailed": "Could not open the video",
+  "vwStateOnPhone": "Only on the phone",
+  "setStorage": "Storage",
+  "setThisPhone": "This phone",
+  "setRenameDeviceTitle": "Rename device",
+  "setForgetConfirm": "Forget \"{device}\"?",
+  "@setForgetConfirm": {
+    "placeholders": {
+      "device": {
+        "type": "String"
+      }
+    }
+  },
+  "setForgetBody": "You will have to pair it again",
+  "setLastConnection": "Last connection: {when}",
+  "@setLastConnection": {
+    "placeholders": {
+      "when": {
+        "type": "String"
+      }
+    }
+  },
+  "setThemeBody": "Choose how PepoConnect looks",
+  "setStartWithSystem": "Start PepoConnect with the system",
+  "setStartWithSystemBody": "Starts minimised, in the tray",
+  "setSeparateByDeviceBody": "Creates a subfolder for each phone",
+  "setAllowExecutablesBody": "Unison blocked them; here you only get a warning",
+  "setResetLocation": "Reset",
+  "setDefaultLocation": "Default folder",
+  "setChooseFolder": "Choose where to save received files",
+  "setBackgroundService": "Background service",
+  "setBackgroundServiceBody": "Keeps the connection to the PC",
+  "setAutoSendPhotos": "Send new photos automatically",
+  "setAutoSendPhotosBody": "Every photo you take reaches the main PC right away",
+  "setDefaultHub": "Main PC",
+  "setDefaultHubBody": "Receives new photos and whatever you share",
+  "setDefaultHubNone": "Not chosen",
+  "setDefaultHubRequired": "Choose a main PC first",
+  "setPermissions": "Permissions",
+  "setPermissionPhotos": "Photos and videos",
+  "setPermissionPhotosBody": "To show your gallery on the PC",
+  "setPermissionNotificationsBody": "To tell you what comes in and goes out",
+  "setPermissionBattery": "No battery restriction",
+  "setPermissionBatteryBody": "So the connection survives with the screen off",
+  "setAllow": "Allow",
+  "setGranted": "Granted",
+  "setDeviceId": "This device's ID",
+  "setCheckUpdates": "Check for updates",
+  "setUpToDate": "You have the latest version",
+  "setUpdateAvailable": "A new version is available: {version}",
+  "@setUpdateAvailable": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "setUpdateFailed": "Could not check",
+  "setUpdateFailedBody": "Check your internet connection and try again later",
+  "setViewOnGitHub": "View on GitHub",
+  "setSourceCode": "Source code on GitHub",
+  "setResetConfirm": "Reset settings?",
+  "setResetBody": "Everything goes back to the defaults. Paired devices are kept",
+  "setResetDone": "Settings reset",
+  "onbHowTitle": "How do you want to use PepoConnect?",
+  "onbConnectPhone": "Connect your phone",
+  "onbConnectPhoneBody": "See its photos and pass files around",
+  "onbAddPhone": "Add phone",
+  "onbShareTitle": "Share with anyone",
+  "onbShareBody": "Send or receive files with a link, nothing to install",
+  "onbSkipForNow": "Skip for now",
+  "onbSlide1": "Move photos and files between this phone and your PC",
+  "onbSlide2": "Every new photo shows up on the PC right away",
+  "onbSlide3": "All over your network, encrypted, no accounts",
+  "onbPermissionsTitle": "Required permissions",
+  "onbPermissionsBody": "PepoConnect needs them to keep working with the screen off",
+  "onbPermissionsSkipWarning": "Without them, photos will not reach the PC on their own",
+  "onbContinue": "Continue",
+  "onbPageOf": "Page {current} of {total}",
+  "@onbPageOf": {
+    "placeholders": {
+      "current": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "pairInstallTitle": "Install PepoConnect on the phone",
+  "pairDownloadApp": "Download the app",
+  "pairScanStep": "Open the app and scan this code",
+  "pairExpiresInTime": "Expires in {time}",
+  "@pairExpiresInTime": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "pairGenerateAnother": "Generate another code",
+  "pairOtherPc": "Connect to another PC",
+  "pairYourPc": "Your PC: {address}",
+  "@pairYourPc": {
+    "placeholders": {
+      "address": {
+        "type": "String"
+      }
+    }
+  },
+  "pairCodeHint": "Type it on the other PC under Pair › Enter code",
+  "pairEnterCodeTitle": "Enter code",
+  "pairManualAddress": "PC address (IP:port)",
+  "pairConnect": "Pair",
+  "pairSelectPc": "Choose the PC",
+  "pairScanTitle": "Scan the code on the PC",
+  "pairScanHint": "Open PepoConnect on the PC and go to Add device",
+  "pairEnterManually": "Enter manually",
+  "pairPasteLink": "Paste the pepoconnect://… link here",
+  "pairPairing": "Pairing…",
+  "pairTorch": "Torch",
+  "pairLinkExpired": "The link has expired. Generate a new code on the PC",
+  "pairNotACode": "That is not a PepoConnect code",
+  "pairWrongCode": "Wrong code. Check the six digits",
+  "pairPcNotFound": "Cannot find the PC. Check that both are on the same Wi-Fi network",
+  "pairIdentityChanged": "The PC's identity has changed. Look for it again",
+  "pairCameraDenied": "No camera access",
+  "pairAddressInvalid": "Type a valid address, for example 192.168.1.20:47473",
+  "pairCodeInvalid": "The code has six digits"
 }

@@ -1,8 +1,13 @@
+import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:flutter_riverpod/misc.dart' show Override;
 import 'package:pepo_core/pepo_core.dart';
 
+import '../app/app_services.dart';
+import '../features/gallery/thumbnail_lookup.dart';
+import '../shared/motion/toast.dart';
+import '../state/activity.dart';
 import '../state/app_settings.dart';
 import '../state/engine_providers.dart';
 
@@ -170,17 +175,35 @@ TransferRecord fakeTransfer({
   bytesPerSecond: 8 * 1024 * 1024,
 );
 
-/// Standard set of overrides for a shell without an engine.
+/// Every provider a page can touch, without an engine: settings, devices,
+/// transfers, gallery, activity, thumbnails and toasts. [unread] pins the
+/// unread counter; leave it null so it follows [activity].
 List<Override> fakeOverrides({
   AppSettings settings = const AppSettings(),
   List<DeviceView>? devices,
   TransfersState transfers = const TransfersState(),
-  int unread = 0,
+  int? unread,
+  List<GalleryEntry> entries = const [],
+  Map<String, Uint8List> thumbnails = const {},
+  bool galleryLoaded = true,
+  List<ActivityEntry> activity = const [],
+  ToastService? toasts,
 }) => [
   settingsProvider.overrideWith(() => FakeSettingsNotifier(settings)),
   devicesProvider.overrideWith(() => FakeDevicesNotifier(devices ?? sampleDevices())),
   transfersProvider.overrideWith(() => FakeTransfersNotifier(transfers)),
-  unreadActivityProvider.overrideWithValue(unread),
+  galleryProvider.overrideWith2(
+    (deviceId) => FakeGalleryNotifier(
+      deviceId,
+      entries: entries,
+      thumbnails: thumbnails,
+      loaded: galleryLoaded,
+    ),
+  ),
+  activityProvider.overrideWith(() => FakeActivityNotifier(activity)),
+  if (unread != null) unreadActivityProvider.overrideWithValue(unread),
+  thumbnailLookupProvider.overrideWithValue((deviceId, id) => thumbnails[id]),
+  toastServiceProvider.overrideWithValue(toasts ?? ToastService()),
 ];
 
 List<DeviceView> sampleDevices() => [
@@ -204,3 +227,134 @@ List<DeviceView> sampleDevices() => [
     lastSeen: DateTime(2026, 3, 12, 18, 4),
   ),
 ];
+
+/// A 1×1 transparent PNG.
+final Uint8List tinyPng = base64Decode(
+  'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==',
+);
+
+/// Device id as padded by [fakeDevice].
+String fakeDeviceId(String id) => id.padRight(16, '0');
+
+/// Gallery without an engine: fixed entries, thumbnails from [thumbnails].
+class FakeGalleryNotifier extends GalleryNotifier {
+  FakeGalleryNotifier(
+    super.deviceId, {
+    this.entries = const [],
+    this.thumbnails = const {},
+    this.loaded = true,
+  });
+
+  final List<GalleryEntry> entries;
+  final Map<String, Uint8List> thumbnails;
+  final bool loaded;
+  final List<GalleryEntry> downloaded = [];
+  final List<GalleryEntry> deleted = [];
+  int refreshes = 0;
+
+  @override
+  GalleryState build() {
+    final scoped = deviceId == null
+        ? entries
+        : entries.where((e) => e.deviceId == deviceId).toList();
+    return GalleryState(entries: scoped, total: scoped.length, loaded: loaded);
+  }
+
+  @override
+  Future<void> refresh() async {
+    refreshes++;
+  }
+
+  @override
+  Future<void> loadMore() async {}
+
+  @override
+  Future<void> setFilter(Set<MediaKind>? kinds) async {}
+
+  @override
+  Future<Uint8List?> thumbnail(GalleryEntry e) async => thumbnails[e.id];
+
+  @override
+  Future<Uint8List?> preview(GalleryEntry e) async => null;
+
+  @override
+  Future<void> download(Iterable<GalleryEntry> entries) async => downloaded.addAll(entries);
+
+  @override
+  Future<void> dismiss(GalleryEntry e) async {}
+
+  @override
+  Future<List<String>> deleteOnDevice(Iterable<GalleryEntry> entries) async {
+    deleted.addAll(entries);
+    return [for (final e in entries) e.id];
+  }
+}
+
+/// Activity without a store.
+class FakeActivityNotifier extends ActivityNotifier {
+  FakeActivityNotifier([this.initial = const []]);
+
+  final List<ActivityEntry> initial;
+
+  @override
+  List<ActivityEntry> build() => initial;
+
+  @override
+  void markAllRead() {
+    state = [for (final a in state) a.read ? a : a.copyWith(read: true)];
+  }
+
+  @override
+  void clear() => state = const [];
+}
+
+GalleryEntry fakeEntry({
+  required String id,
+  required DateTime takenAt,
+  String deviceId = 'pixel8',
+  String? name,
+  MediaKind kind = MediaKind.image,
+  int size = 3 * 1024 * 1024,
+  MediaState state = MediaState.previewed,
+  String? localPath,
+  int? durationMs,
+}) => GalleryEntry(
+  deviceId: fakeDeviceId(deviceId),
+  item: MediaItem(
+    id: id,
+    kind: kind,
+    name: name ?? (kind == MediaKind.video ? 'VID_$id.mp4' : 'IMG_$id.jpg'),
+    width: 4000,
+    height: 3000,
+    takenAt: takenAt.toUtc(),
+    size: size,
+    mime: kind == MediaKind.video ? 'video/mp4' : 'image/jpeg',
+    durationMs: durationMs,
+  ),
+  state: state,
+  localPath: localPath,
+);
+
+ActivityEntry fakeActivity({
+  required String id,
+  required DateTime at,
+  ActivityKind kind = ActivityKind.newPhoto,
+  String deviceId = 'pixel8',
+  String deviceName = 'Pixel 8',
+  String? fileName,
+  String? mediaId,
+  String? path,
+  String? text,
+  bool read = false,
+}) => ActivityEntry(
+  id: id,
+  at: at,
+  kind: kind,
+  deviceId: fakeDeviceId(deviceId),
+  deviceName: deviceName,
+  fileName: fileName,
+  mediaId: mediaId,
+  path: path,
+  text: text,
+  read: read,
+);

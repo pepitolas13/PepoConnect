@@ -1892,6 +1892,822 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Esc cierra menús y selecciones'**
   String get shortcutEscape;
+
+  /// No description provided for @trShareWithAnyone.
+  ///
+  /// In es, this message translates to:
+  /// **'Compartir con cualquiera'**
+  String get trShareWithAnyone;
+
+  /// No description provided for @trGuestSend.
+  ///
+  /// In es, this message translates to:
+  /// **'Enviar'**
+  String get trGuestSend;
+
+  /// No description provided for @trGuestReceive.
+  ///
+  /// In es, this message translates to:
+  /// **'Recibir'**
+  String get trGuestReceive;
+
+  /// No description provided for @trGuestSendBody.
+  ///
+  /// In es, this message translates to:
+  /// **'Quien abra el enlace podrá descargar estos archivos desde el navegador, sin instalar nada'**
+  String get trGuestSendBody;
+
+  /// No description provided for @trGuestReceiveBody.
+  ///
+  /// In es, this message translates to:
+  /// **'Quien abra el enlace podrá enviarte archivos desde el navegador'**
+  String get trGuestReceiveBody;
+
+  /// No description provided for @trGuestNoFiles.
+  ///
+  /// In es, this message translates to:
+  /// **'Añade al menos un archivo'**
+  String get trGuestNoFiles;
+
+  /// No description provided for @trGuestMessage.
+  ///
+  /// In es, this message translates to:
+  /// **'Mensaje (opcional)'**
+  String get trGuestMessage;
+
+  /// No description provided for @trGuestCreateLink.
+  ///
+  /// In es, this message translates to:
+  /// **'Crear enlace'**
+  String get trGuestCreateLink;
+
+  /// No description provided for @trGuestReadyTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Tus archivos están listos'**
+  String get trGuestReadyTitle;
+
+  /// No description provided for @trGuestReceiveReadyTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Listo para recibir'**
+  String get trGuestReceiveReadyTitle;
+
+  /// No description provided for @trGuestScanHint.
+  ///
+  /// In es, this message translates to:
+  /// **'Escanea el QR o abre el enlace desde un dispositivo en la misma red Wi-Fi'**
+  String get trGuestScanHint;
+
+  /// No description provided for @trGuestCopyLink.
+  ///
+  /// In es, this message translates to:
+  /// **'Copiar enlace'**
+  String get trGuestCopyLink;
+
+  /// No description provided for @trGuestExpiresIn.
+  ///
+  /// In es, this message translates to:
+  /// **'El enlace caduca en {time}'**
+  String trGuestExpiresIn(String time);
+
+  /// No description provided for @trGuestExpired.
+  ///
+  /// In es, this message translates to:
+  /// **'El enlace ha caducado'**
+  String get trGuestExpired;
+
+  /// No description provided for @trGuestNewLink.
+  ///
+  /// In es, this message translates to:
+  /// **'Crear otro enlace'**
+  String get trGuestNewLink;
+
+  /// No description provided for @trGuestWaiting.
+  ///
+  /// In es, this message translates to:
+  /// **'Nadie ha abierto el enlace todavía'**
+  String get trGuestWaiting;
+
+  /// No description provided for @trGuestOpenedBy.
+  ///
+  /// In es, this message translates to:
+  /// **'Abierto por {remote}'**
+  String trGuestOpenedBy(String remote);
+
+  /// No description provided for @trGuestDownloaded.
+  ///
+  /// In es, this message translates to:
+  /// **'Descargado {file}'**
+  String trGuestDownloaded(String file);
+
+  /// No description provided for @trGuestReceived.
+  ///
+  /// In es, this message translates to:
+  /// **'Recibido {file}'**
+  String trGuestReceived(String file);
+
+  /// No description provided for @trGuestUploadFailed.
+  ///
+  /// In es, this message translates to:
+  /// **'No se pudo recibir {file}'**
+  String trGuestUploadFailed(String file);
+
+  /// No description provided for @trGuestNoAddress.
+  ///
+  /// In es, this message translates to:
+  /// **'No se ha encontrado ninguna red local'**
+  String get trGuestNoAddress;
+
+  /// No description provided for @trGuestFailed.
+  ///
+  /// In es, this message translates to:
+  /// **'No se pudo crear el enlace'**
+  String get trGuestFailed;
+
+  /// No description provided for @trHistory.
+  ///
+  /// In es, this message translates to:
+  /// **'Historial'**
+  String get trHistory;
+
+  /// No description provided for @trSendFailed.
+  ///
+  /// In es, this message translates to:
+  /// **'No se pudo enviar'**
+  String get trSendFailed;
+
+  /// No description provided for @trExecutableSendAnyway.
+  ///
+  /// In es, this message translates to:
+  /// **'Enviar igualmente'**
+  String get trExecutableSendAnyway;
+
+  /// No description provided for @trDroppedNothing.
+  ///
+  /// In es, this message translates to:
+  /// **'No hay archivos que enviar'**
+  String get trDroppedNothing;
+
+  /// No description provided for @trNoPcConnected.
+  ///
+  /// In es, this message translates to:
+  /// **'Conecta un PC para enviar archivos'**
+  String get trNoPcConnected;
+
+  /// No description provided for @galYourPhone.
+  ///
+  /// In es, this message translates to:
+  /// **'Tu móvil'**
+  String get galYourPhone;
+
+  /// No description provided for @galYourTablet.
+  ///
+  /// In es, this message translates to:
+  /// **'Tu tablet'**
+  String get galYourTablet;
+
+  /// No description provided for @galYourPc.
+  ///
+  /// In es, this message translates to:
+  /// **'Tu PC'**
+  String get galYourPc;
+
+  /// No description provided for @galFullThumbnails.
+  ///
+  /// In es, this message translates to:
+  /// **'Miniaturas completas'**
+  String get galFullThumbnails;
+
+  /// No description provided for @galTileSize.
+  ///
+  /// In es, this message translates to:
+  /// **'Tamaño de las miniaturas'**
+  String get galTileSize;
+
+  /// No description provided for @galSession.
+  ///
+  /// In es, this message translates to:
+  /// **'Sesión'**
+  String get galSession;
+
+  /// No description provided for @galSessionTooltip.
+  ///
+  /// In es, this message translates to:
+  /// **'Modo sesión: el visor salta a cada foto nueva'**
+  String get galSessionTooltip;
+
+  /// No description provided for @galSavedCopies.
+  ///
+  /// In es, this message translates to:
+  /// **'{count, plural, =1{1 archivo guardado en {folder}} other{{count} archivos guardados en {folder}}}'**
+  String galSavedCopies(int count, String folder);
+
+  /// No description provided for @galSaveFailed.
+  ///
+  /// In es, this message translates to:
+  /// **'No se pudo guardar {file}'**
+  String galSaveFailed(String file);
+
+  /// No description provided for @galDownloadFailed.
+  ///
+  /// In es, this message translates to:
+  /// **'No se pudo descargar {file}'**
+  String galDownloadFailed(String file);
+
+  /// No description provided for @galDeleteFailed.
+  ///
+  /// In es, this message translates to:
+  /// **'No se pudo eliminar del móvil'**
+  String get galDeleteFailed;
+
+  /// No description provided for @galSelectGroup.
+  ///
+  /// In es, this message translates to:
+  /// **'Seleccionar {group}'**
+  String galSelectGroup(String group);
+
+  /// No description provided for @galDownloadStarted.
+  ///
+  /// In es, this message translates to:
+  /// **'{count, plural, =1{Descargando 1 elemento} other{Descargando {count} elementos}}'**
+  String galDownloadStarted(int count);
+
+  /// No description provided for @galOfflineBody.
+  ///
+  /// In es, this message translates to:
+  /// **'Las fotos aparecerán en cuanto se conecte'**
+  String get galOfflineBody;
+
+  /// No description provided for @vwDevice.
+  ///
+  /// In es, this message translates to:
+  /// **'Dispositivo'**
+  String get vwDevice;
+
+  /// No description provided for @vwDate.
+  ///
+  /// In es, this message translates to:
+  /// **'Fecha'**
+  String get vwDate;
+
+  /// No description provided for @vwResolution.
+  ///
+  /// In es, this message translates to:
+  /// **'Resolución'**
+  String get vwResolution;
+
+  /// No description provided for @vwDownloading.
+  ///
+  /// In es, this message translates to:
+  /// **'Descargando…'**
+  String get vwDownloading;
+
+  /// No description provided for @vwSessionCounter.
+  ///
+  /// In es, this message translates to:
+  /// **'Sesión · {photos, plural, =1{1 foto} other{{photos} fotos}} · {downloaded, plural, =1{1 descargada} other{{downloaded} descargadas}}'**
+  String vwSessionCounter(int photos, int downloaded);
+
+  /// No description provided for @vwSessionWaiting.
+  ///
+  /// In es, this message translates to:
+  /// **'Esperando fotos nuevas…'**
+  String get vwSessionWaiting;
+
+  /// No description provided for @vwSessionHint.
+  ///
+  /// In es, this message translates to:
+  /// **'Espacio: descargar · Esc: salir'**
+  String get vwSessionHint;
+
+  /// No description provided for @vwSessionExit.
+  ///
+  /// In es, this message translates to:
+  /// **'Salir de la sesión'**
+  String get vwSessionExit;
+
+  /// No description provided for @vwPosition.
+  ///
+  /// In es, this message translates to:
+  /// **'{index} de {total}'**
+  String vwPosition(int index, int total);
+
+  /// No description provided for @vwNotFound.
+  ///
+  /// In es, this message translates to:
+  /// **'Este elemento ya no está en la galería'**
+  String get vwNotFound;
+
+  /// No description provided for @vwPreviewFailed.
+  ///
+  /// In es, this message translates to:
+  /// **'No se pudo cargar la vista previa'**
+  String get vwPreviewFailed;
+
+  /// No description provided for @vwVideoOpenFailed.
+  ///
+  /// In es, this message translates to:
+  /// **'No se pudo abrir el vídeo'**
+  String get vwVideoOpenFailed;
+
+  /// No description provided for @vwStateOnPhone.
+  ///
+  /// In es, this message translates to:
+  /// **'Solo en el móvil'**
+  String get vwStateOnPhone;
+
+  /// No description provided for @setStorage.
+  ///
+  /// In es, this message translates to:
+  /// **'Almacenamiento'**
+  String get setStorage;
+
+  /// No description provided for @setThisPhone.
+  ///
+  /// In es, this message translates to:
+  /// **'Este móvil'**
+  String get setThisPhone;
+
+  /// No description provided for @setRenameDeviceTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Cambiar el nombre del dispositivo'**
+  String get setRenameDeviceTitle;
+
+  /// No description provided for @setForgetConfirm.
+  ///
+  /// In es, this message translates to:
+  /// **'¿Quieres olvidar \"{device}\"?'**
+  String setForgetConfirm(String device);
+
+  /// No description provided for @setForgetBody.
+  ///
+  /// In es, this message translates to:
+  /// **'Tendrás que emparejarlo de nuevo'**
+  String get setForgetBody;
+
+  /// No description provided for @setLastConnection.
+  ///
+  /// In es, this message translates to:
+  /// **'Última conexión: {when}'**
+  String setLastConnection(String when);
+
+  /// No description provided for @setThemeBody.
+  ///
+  /// In es, this message translates to:
+  /// **'Elige cómo se ve PepoConnect'**
+  String get setThemeBody;
+
+  /// No description provided for @setStartWithSystem.
+  ///
+  /// In es, this message translates to:
+  /// **'Iniciar PepoConnect con el sistema'**
+  String get setStartWithSystem;
+
+  /// No description provided for @setStartWithSystemBody.
+  ///
+  /// In es, this message translates to:
+  /// **'Arranca minimizado, en la bandeja'**
+  String get setStartWithSystemBody;
+
+  /// No description provided for @setSeparateByDeviceBody.
+  ///
+  /// In es, this message translates to:
+  /// **'Crea una subcarpeta por cada móvil'**
+  String get setSeparateByDeviceBody;
+
+  /// No description provided for @setAllowExecutablesBody.
+  ///
+  /// In es, this message translates to:
+  /// **'Unison los bloqueaba; aquí solo se avisa'**
+  String get setAllowExecutablesBody;
+
+  /// No description provided for @setResetLocation.
+  ///
+  /// In es, this message translates to:
+  /// **'Restablecer'**
+  String get setResetLocation;
+
+  /// No description provided for @setDefaultLocation.
+  ///
+  /// In es, this message translates to:
+  /// **'Carpeta predeterminada'**
+  String get setDefaultLocation;
+
+  /// No description provided for @setChooseFolder.
+  ///
+  /// In es, this message translates to:
+  /// **'Elige dónde guardar los archivos recibidos'**
+  String get setChooseFolder;
+
+  /// No description provided for @setBackgroundService.
+  ///
+  /// In es, this message translates to:
+  /// **'Servicio en segundo plano'**
+  String get setBackgroundService;
+
+  /// No description provided for @setBackgroundServiceBody.
+  ///
+  /// In es, this message translates to:
+  /// **'Mantiene la conexión con el PC'**
+  String get setBackgroundServiceBody;
+
+  /// No description provided for @setAutoSendPhotos.
+  ///
+  /// In es, this message translates to:
+  /// **'Enviar fotos nuevas automáticamente'**
+  String get setAutoSendPhotos;
+
+  /// No description provided for @setAutoSendPhotosBody.
+  ///
+  /// In es, this message translates to:
+  /// **'Cada foto que hagas llega al PC principal al momento'**
+  String get setAutoSendPhotosBody;
+
+  /// No description provided for @setDefaultHub.
+  ///
+  /// In es, this message translates to:
+  /// **'PC principal'**
+  String get setDefaultHub;
+
+  /// No description provided for @setDefaultHubBody.
+  ///
+  /// In es, this message translates to:
+  /// **'Recibe las fotos nuevas y lo que compartas'**
+  String get setDefaultHubBody;
+
+  /// No description provided for @setDefaultHubNone.
+  ///
+  /// In es, this message translates to:
+  /// **'Sin elegir'**
+  String get setDefaultHubNone;
+
+  /// No description provided for @setDefaultHubRequired.
+  ///
+  /// In es, this message translates to:
+  /// **'Elige primero un PC principal'**
+  String get setDefaultHubRequired;
+
+  /// No description provided for @setPermissions.
+  ///
+  /// In es, this message translates to:
+  /// **'Permisos'**
+  String get setPermissions;
+
+  /// No description provided for @setPermissionPhotos.
+  ///
+  /// In es, this message translates to:
+  /// **'Fotos y vídeos'**
+  String get setPermissionPhotos;
+
+  /// No description provided for @setPermissionPhotosBody.
+  ///
+  /// In es, this message translates to:
+  /// **'Para mostrar la galería en el PC'**
+  String get setPermissionPhotosBody;
+
+  /// No description provided for @setPermissionNotificationsBody.
+  ///
+  /// In es, this message translates to:
+  /// **'Para avisar de lo que llega y sale'**
+  String get setPermissionNotificationsBody;
+
+  /// No description provided for @setPermissionBattery.
+  ///
+  /// In es, this message translates to:
+  /// **'Sin restricción de batería'**
+  String get setPermissionBattery;
+
+  /// No description provided for @setPermissionBatteryBody.
+  ///
+  /// In es, this message translates to:
+  /// **'Para no perder la conexión con la pantalla apagada'**
+  String get setPermissionBatteryBody;
+
+  /// No description provided for @setAllow.
+  ///
+  /// In es, this message translates to:
+  /// **'Permitir'**
+  String get setAllow;
+
+  /// No description provided for @setGranted.
+  ///
+  /// In es, this message translates to:
+  /// **'Concedido'**
+  String get setGranted;
+
+  /// No description provided for @setDeviceId.
+  ///
+  /// In es, this message translates to:
+  /// **'ID de este dispositivo'**
+  String get setDeviceId;
+
+  /// No description provided for @setCheckUpdates.
+  ///
+  /// In es, this message translates to:
+  /// **'Comprobar actualizaciones'**
+  String get setCheckUpdates;
+
+  /// No description provided for @setUpToDate.
+  ///
+  /// In es, this message translates to:
+  /// **'Tienes la última versión'**
+  String get setUpToDate;
+
+  /// No description provided for @setUpdateAvailable.
+  ///
+  /// In es, this message translates to:
+  /// **'Hay una versión nueva: {version}'**
+  String setUpdateAvailable(String version);
+
+  /// No description provided for @setUpdateFailed.
+  ///
+  /// In es, this message translates to:
+  /// **'No se pudo comprobar'**
+  String get setUpdateFailed;
+
+  /// No description provided for @setUpdateFailedBody.
+  ///
+  /// In es, this message translates to:
+  /// **'Revisa la conexión a internet e inténtalo más tarde'**
+  String get setUpdateFailedBody;
+
+  /// No description provided for @setViewOnGitHub.
+  ///
+  /// In es, this message translates to:
+  /// **'Ver en GitHub'**
+  String get setViewOnGitHub;
+
+  /// No description provided for @setSourceCode.
+  ///
+  /// In es, this message translates to:
+  /// **'Código fuente en GitHub'**
+  String get setSourceCode;
+
+  /// No description provided for @setResetConfirm.
+  ///
+  /// In es, this message translates to:
+  /// **'¿Restablecer los ajustes?'**
+  String get setResetConfirm;
+
+  /// No description provided for @setResetBody.
+  ///
+  /// In es, this message translates to:
+  /// **'Vuelven a los valores iniciales. Los dispositivos emparejados se conservan'**
+  String get setResetBody;
+
+  /// No description provided for @setResetDone.
+  ///
+  /// In es, this message translates to:
+  /// **'Ajustes restablecidos'**
+  String get setResetDone;
+
+  /// No description provided for @onbHowTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'¿Cómo quieres usar PepoConnect?'**
+  String get onbHowTitle;
+
+  /// No description provided for @onbConnectPhone.
+  ///
+  /// In es, this message translates to:
+  /// **'Conecta tu móvil'**
+  String get onbConnectPhone;
+
+  /// No description provided for @onbConnectPhoneBody.
+  ///
+  /// In es, this message translates to:
+  /// **'Mira sus fotos y pásate archivos'**
+  String get onbConnectPhoneBody;
+
+  /// No description provided for @onbAddPhone.
+  ///
+  /// In es, this message translates to:
+  /// **'Añadir móvil'**
+  String get onbAddPhone;
+
+  /// No description provided for @onbShareTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Comparte con cualquiera'**
+  String get onbShareTitle;
+
+  /// No description provided for @onbShareBody.
+  ///
+  /// In es, this message translates to:
+  /// **'Envía o recibe archivos con un enlace, sin instalar nada'**
+  String get onbShareBody;
+
+  /// No description provided for @onbSkipForNow.
+  ///
+  /// In es, this message translates to:
+  /// **'Saltar por ahora'**
+  String get onbSkipForNow;
+
+  /// No description provided for @onbSlide1.
+  ///
+  /// In es, this message translates to:
+  /// **'Pasa fotos y archivos entre este móvil y tu PC'**
+  String get onbSlide1;
+
+  /// No description provided for @onbSlide2.
+  ///
+  /// In es, this message translates to:
+  /// **'Cada foto nueva aparece en el PC al momento'**
+  String get onbSlide2;
+
+  /// No description provided for @onbSlide3.
+  ///
+  /// In es, this message translates to:
+  /// **'Todo por tu red, cifrado, sin cuentas'**
+  String get onbSlide3;
+
+  /// No description provided for @onbPermissionsTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Permisos necesarios'**
+  String get onbPermissionsTitle;
+
+  /// No description provided for @onbPermissionsBody.
+  ///
+  /// In es, this message translates to:
+  /// **'PepoConnect los necesita para seguir funcionando con la pantalla apagada'**
+  String get onbPermissionsBody;
+
+  /// No description provided for @onbPermissionsSkipWarning.
+  ///
+  /// In es, this message translates to:
+  /// **'Sin ellos, las fotos no llegarán solas al PC'**
+  String get onbPermissionsSkipWarning;
+
+  /// No description provided for @onbContinue.
+  ///
+  /// In es, this message translates to:
+  /// **'Continuar'**
+  String get onbContinue;
+
+  /// No description provided for @onbPageOf.
+  ///
+  /// In es, this message translates to:
+  /// **'Página {current} de {total}'**
+  String onbPageOf(int current, int total);
+
+  /// No description provided for @pairInstallTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Instala PepoConnect en el móvil'**
+  String get pairInstallTitle;
+
+  /// No description provided for @pairDownloadApp.
+  ///
+  /// In es, this message translates to:
+  /// **'Descargar la app'**
+  String get pairDownloadApp;
+
+  /// No description provided for @pairScanStep.
+  ///
+  /// In es, this message translates to:
+  /// **'Abre la app y escanea este código'**
+  String get pairScanStep;
+
+  /// No description provided for @pairExpiresInTime.
+  ///
+  /// In es, this message translates to:
+  /// **'Caduca en {time}'**
+  String pairExpiresInTime(String time);
+
+  /// No description provided for @pairGenerateAnother.
+  ///
+  /// In es, this message translates to:
+  /// **'Generar otro código'**
+  String get pairGenerateAnother;
+
+  /// No description provided for @pairOtherPc.
+  ///
+  /// In es, this message translates to:
+  /// **'Conectar con otro PC'**
+  String get pairOtherPc;
+
+  /// No description provided for @pairYourPc.
+  ///
+  /// In es, this message translates to:
+  /// **'Tu PC: {address}'**
+  String pairYourPc(String address);
+
+  /// No description provided for @pairCodeHint.
+  ///
+  /// In es, this message translates to:
+  /// **'Escríbelo en el otro PC en Emparejar › Introducir código'**
+  String get pairCodeHint;
+
+  /// No description provided for @pairEnterCodeTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Introducir código'**
+  String get pairEnterCodeTitle;
+
+  /// No description provided for @pairManualAddress.
+  ///
+  /// In es, this message translates to:
+  /// **'Dirección del PC (IP:puerto)'**
+  String get pairManualAddress;
+
+  /// No description provided for @pairConnect.
+  ///
+  /// In es, this message translates to:
+  /// **'Emparejar'**
+  String get pairConnect;
+
+  /// No description provided for @pairSelectPc.
+  ///
+  /// In es, this message translates to:
+  /// **'Elige el PC'**
+  String get pairSelectPc;
+
+  /// No description provided for @pairScanTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Escanea el código del PC'**
+  String get pairScanTitle;
+
+  /// No description provided for @pairScanHint.
+  ///
+  /// In es, this message translates to:
+  /// **'Abre PepoConnect en el PC y ve a Añadir dispositivo'**
+  String get pairScanHint;
+
+  /// No description provided for @pairEnterManually.
+  ///
+  /// In es, this message translates to:
+  /// **'Introducir a mano'**
+  String get pairEnterManually;
+
+  /// No description provided for @pairPasteLink.
+  ///
+  /// In es, this message translates to:
+  /// **'Pega aquí el enlace pepoconnect://…'**
+  String get pairPasteLink;
+
+  /// No description provided for @pairPairing.
+  ///
+  /// In es, this message translates to:
+  /// **'Emparejando…'**
+  String get pairPairing;
+
+  /// No description provided for @pairTorch.
+  ///
+  /// In es, this message translates to:
+  /// **'Linterna'**
+  String get pairTorch;
+
+  /// No description provided for @pairLinkExpired.
+  ///
+  /// In es, this message translates to:
+  /// **'El enlace ha caducado. Genera otro código en el PC'**
+  String get pairLinkExpired;
+
+  /// No description provided for @pairNotACode.
+  ///
+  /// In es, this message translates to:
+  /// **'Eso no es un código de PepoConnect'**
+  String get pairNotACode;
+
+  /// No description provided for @pairWrongCode.
+  ///
+  /// In es, this message translates to:
+  /// **'Código incorrecto. Comprueba los seis dígitos'**
+  String get pairWrongCode;
+
+  /// No description provided for @pairPcNotFound.
+  ///
+  /// In es, this message translates to:
+  /// **'No se encuentra el PC. Comprueba que los dos están en la misma red Wi-Fi'**
+  String get pairPcNotFound;
+
+  /// No description provided for @pairIdentityChanged.
+  ///
+  /// In es, this message translates to:
+  /// **'La identidad del PC ha cambiado. Vuelve a buscarlo'**
+  String get pairIdentityChanged;
+
+  /// No description provided for @pairCameraDenied.
+  ///
+  /// In es, this message translates to:
+  /// **'Sin acceso a la cámara'**
+  String get pairCameraDenied;
+
+  /// No description provided for @pairAddressInvalid.
+  ///
+  /// In es, this message translates to:
+  /// **'Escribe una dirección válida, por ejemplo 192.168.1.20:47473'**
+  String get pairAddressInvalid;
+
+  /// No description provided for @pairCodeInvalid.
+  ///
+  /// In es, this message translates to:
+  /// **'El código tiene seis dígitos'**
+  String get pairCodeInvalid;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {
