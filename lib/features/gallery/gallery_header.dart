@@ -161,6 +161,14 @@ class GalleryHeader extends StatelessWidget {
         onPressed: () => _openView(anchor),
       ),
     );
+    // Narrow rows keep the width for the device name.
+    final viewCompact = Builder(
+      builder: (anchor) => FluentIconButton(
+        icon: FluentIcons.grid_20_regular,
+        tooltip: t.view,
+        onPressed: () => _openView(anchor),
+      ),
+    );
     final summaryText = summary == null
         ? null
         : Text(
@@ -209,7 +217,7 @@ class GalleryHeader extends StatelessWidget {
                   const Spacer(),
                   refresh,
                   const SizedBox(width: Space.xs),
-                  view,
+                  viewCompact,
                   const SizedBox(width: Space.xs),
                   FluentIconButton(
                     icon: FluentIcons.camera_20_regular,
