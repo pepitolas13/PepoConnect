@@ -42,7 +42,6 @@ class MediaSourcePhotoManager extends MediaSource {
     debounce: debounce,
     settleDelays: settleDelays,
   );
-  DateTime? _lastObserverEvent;
   Timer? _poll;
   bool _running = false;
   bool _notifying = false;
@@ -136,6 +135,10 @@ class MediaSourcePhotoManager extends MediaSource {
       onlyAll: true,
       type: pm.RequestType.common,
       filterOption: pm.FilterOptionGroup(
+        // This path lives as long as the engine (also in the background).
+        // The default max is DateTime.now(), which freezes every later query
+        // at startup and hides photos/videos created until the next restart.
+        createTimeCond: pm.DateTimeCond.def().copyWith(ignore: true),
         orders: [const pm.OrderOption(type: pm.OrderOptionType.createDate, asc: false)],
         containsPathModified: true,
       ),
@@ -158,18 +161,12 @@ class MediaSourcePhotoManager extends MediaSource {
   }
 
   void _onChange(MethodCall call) {
-    _lastObserverEvent = DateTime.now();
     _rescan.signal();
   }
 
   Future<void> _pollTick() async {
-    // Only poll when the observer seems dead (some OEMs break it).
-    final last = _lastObserverEvent;
-    if (_notifying &&
-        last != null &&
-        DateTime.now().difference(last) < const Duration(minutes: 5)) {
-      return;
-    }
+    // A working observer can still miss an individual commit notification.
+    // Never disable recovery for minutes just because another event arrived.
     await _rescan.run();
   }
 
