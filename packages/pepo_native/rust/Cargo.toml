@@ -2,6 +2,7 @@
 name = "pepo_native"
 version = "0.3.0"
 edition = "2021"
+license = "GPL-3.0-only"
 description = "PepoConnect fast lane: encrypted bulk file transfer over TCP (AES-256-GCM, xxh3), driven from Dart over FFI."
 publish = false
 

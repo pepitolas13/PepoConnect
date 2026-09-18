@@ -12,6 +12,7 @@ import '../net/peer_connection.dart';
 import '../protocol/message_types.dart';
 import '../protocol/models.dart';
 import 'chunked_file_reader.dart';
+import 'executable_names.dart';
 import 'name_sanitizer.dart';
 import 'transfer_record.dart';
 
@@ -38,8 +39,28 @@ abstract class ChannelProvider {
 typedef DestinationResolver = Future<String> Function(String deviceId, FileOffer offer);
 
 /// Whether an incoming offer is accepted. Defaults to accepting everything
-/// from paired devices.
+/// from paired devices. Executables are checked before this, see
+/// [TransferEngine.allowExecutables].
 typedef OfferPolicy = Future<bool> Function(String deviceId, FileOffer offer);
+
+/// An incoming offer this side turned down. Nothing is recorded for it; the
+/// sender sees a failed transfer whose error is [reason].
+class RejectedOffer {
+  const RejectedOffer({
+    required this.deviceId,
+    required this.name,
+    required this.size,
+    required this.reason,
+  });
+
+  final String deviceId;
+  final String name;
+  final int size;
+
+  /// [ErrorCode.executable] when the file is a program and the setting is
+  /// off, [ErrorCode.rejected] when the [OfferPolicy] said no.
+  final String reason;
+}
 
 /// Moves files between paired devices with resume, integrity check and
 /// backpressure. One instance serves all peers.
@@ -49,6 +70,7 @@ class TransferEngine {
     required this.store,
     required this.destination,
     OfferPolicy? policy,
+    this.allowExecutables = false,
     this.maxActivePerDevice = 3,
     this.chunkSize = 256 * 1024,
     this.progressInterval = const Duration(milliseconds: 100),
@@ -59,11 +81,17 @@ class TransferEngine {
   final TransferStore store;
   final DestinationResolver destination;
   final OfferPolicy policy;
+
+  /// Programs (`.exe`, `.msi`, `.apk`...) are neither queued nor accepted
+  /// unless this is on. Each device decides for itself, so both ends have
+  /// to allow them for one to go through. See [ExecutableNames].
+  bool allowExecutables;
   final int maxActivePerDevice;
   final int chunkSize;
   final Duration progressInterval;
 
   final _events = StreamController<TransferEvent>.broadcast();
+  final _rejected = StreamController<RejectedOffer>.broadcast();
   final Map<int, _Outgoing> _outgoing = {};
   final Map<int, _Incoming> _incoming = {};
   final Map<String, List<_Outgoing>> _queues = {};
@@ -88,6 +116,10 @@ class TransferEngine {
   /// Every state change and throttled progress tick.
   Stream<TransferEvent> get events => _events.stream;
 
+  /// Offers turned down here (executables while the setting is off, or the
+  /// policy said no). They never become a [TransferRecord].
+  Stream<RejectedOffer> get rejectedOffers => _rejected.stream;
+
   /// Snapshots of all transfers known to the engine (active, queued, recent).
   List<TransferRecord> get transfers => [
     ..._outgoing.values.map((o) => o.record.copy()),
@@ -100,6 +132,8 @@ class TransferEngine {
   // Sending
 
   /// Queues [path] to be sent to [deviceId]. Returns the record snapshot.
+  /// Throws [ExecutableBlockedException] for a program while
+  /// [allowExecutables] is off.
   Future<TransferRecord> send({
     required String deviceId,
     required String path,
@@ -113,11 +147,15 @@ class TransferEngine {
     if (stat.type != FileSystemEntityType.file) {
       throw FileSystemException('not a file', path);
     }
+    final fileName = NameSanitizer.sanitize(name ?? p.basename(path));
+    if (!allowExecutables && ExecutableNames.isExecutable(fileName)) {
+      throw ExecutableBlockedException(fileName);
+    }
     final record = TransferRecord(
       id: _allocateId(),
       deviceId: deviceId,
       direction: TransferDirection.send,
-      name: NameSanitizer.sanitize(name ?? p.basename(path)),
+      name: fileName,
       size: stat.size,
       mime: mime ?? _guessMime(path),
       createdAt: DateTime.now(),
@@ -456,6 +494,23 @@ class TransferEngine {
     _bulkSubs[bulk] = sub;
   }
 
+  void _reject(
+    String deviceId,
+    PeerConnection control,
+    ControlMessage m,
+    FileOffer offer,
+    String name,
+    String reason,
+  ) {
+    _log.info('rejected $name from $deviceId: $reason');
+    control.respond(m.reqId, MsgType.fileReject, data: {'x': offer.transferId, 'reason': reason});
+    if (!_rejected.isClosed) {
+      _rejected.add(
+        RejectedOffer(deviceId: deviceId, name: name, size: offer.size, reason: reason),
+      );
+    }
+  }
+
   Future<void> _onOffer(String deviceId, PeerConnection control, ControlMessage m) async {
     final FileOffer offer;
     try {
@@ -468,12 +523,15 @@ class TransferEngine {
       control.respondError(m.reqId, ErrorCode.badRequest, 'bad size');
       return;
     }
+    // The name that would land on disk is the one that matters
+    // (`setup.exe.` loses its trailing dot).
+    final name = NameSanitizer.sanitize(offer.name);
+    if (!allowExecutables && ExecutableNames.isExecutable(name)) {
+      _reject(deviceId, control, m, offer, name, ErrorCode.executable);
+      return;
+    }
     if (!await policy(deviceId, offer)) {
-      control.respond(
-        m.reqId,
-        MsgType.fileReject,
-        data: {'x': offer.transferId, 'reason': 'rejected'},
-      );
+      _reject(deviceId, control, m, offer, name, ErrorCode.rejected);
       return;
     }
     final String dir;
@@ -484,7 +542,6 @@ class TransferEngine {
       control.respondError(m.reqId, ErrorCode.io, 'cannot create destination: $e');
       return;
     }
-    final name = NameSanitizer.sanitize(offer.name);
     final record = TransferRecord(
       id: offer.transferId,
       deviceId: deviceId,
@@ -849,6 +906,7 @@ class TransferEngine {
       await _pauseIncoming(inc);
     }
     await _events.close();
+    await _rejected.close();
   }
 
   bool get isDisposed => _disposed;

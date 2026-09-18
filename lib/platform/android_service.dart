@@ -1,110 +1,42 @@
 import 'dart:io';
-import 'dart:ui' show Color;
-
-import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 
 import 'pepo_native.dart';
 
-/// Keeps the Android process alive while connected so photos keep flowing
-/// with the screen off. The engine itself runs in the main isolate; the
-/// service only holds the foreground notification, wake/Wi-Fi locks and the
-/// multicast lock.
+/// The Android foreground service (`PepoForegroundService.kt`) that keeps the
+/// process, and with it the engine in this isolate, alive while the app is
+/// not on screen: persistent notification, wake / Wi-Fi / multicast locks.
 ///
-/// Limitation of this design: if the user swipes the app away from Recents
-/// the UI isolate is destroyed and the connection drops until the app is
-/// opened again.
+/// Nothing runs in the service. With it up, the window can be closed or
+/// swiped away and Dart keeps going; if Android kills the process anyway,
+/// or the phone reboots, the service comes back on its own and boots the
+/// engine headless, so the PC gets its phone back without anyone opening
+/// the app (`main()` runs and the UI attaches later).
 class AndroidService {
   const AndroidService._();
 
   static bool get isSupported => Platform.isAndroid;
-  static bool _initialized = false;
 
-  /// Status-bar icon of the service notification. Without it the plugin falls
-  /// back to the launcher icon, which Android flattens to a white blob. The
-  /// meta-data in AndroidManifest.xml points at
-  /// `res/drawable-*/ic_stat_pepoconnect.png` (tool/brand/render_icons.py).
-  static const _notificationIcon = NotificationIcon(
-    metaDataName: 'org.pepoconnect.app.NOTIFICATION_ICON',
-    backgroundColor: Color(0xFF0A3D8F),
-  );
-
-  static Future<void> init() async {
-    if (!isSupported || _initialized) return;
-    _initialized = true;
-    FlutterForegroundTask.init(
-      androidNotificationOptions: AndroidNotificationOptions(
-        channelId: 'pepoconnect.service',
-        channelName: 'PepoConnect en segundo plano',
-        channelDescription: 'Mantiene la conexión con el PC',
-        channelImportance: NotificationChannelImportance.LOW,
-        priority: NotificationPriority.LOW,
-        onlyAlertOnce: true,
-      ),
-      iosNotificationOptions: const IOSNotificationOptions(
-        showNotification: false,
-        playSound: false,
-      ),
-      foregroundTaskOptions: ForegroundTaskOptions(
-        eventAction: ForegroundTaskEventAction.nothing(),
-        autoRunOnBoot: false,
-        allowWakeLock: true,
-        allowWifiLock: true,
-        allowAutoRestart: true,
-      ),
-    );
-  }
-
-  static Future<bool> start({required String title, required String text}) async {
+  /// Starts the service, or updates its notification if it already runs.
+  /// [idleText] is what the notification shows when the service comes back
+  /// on its own, before anything is connected.
+  static Future<bool> start({
+    required String title,
+    required String text,
+    required String idleText,
+  }) async {
     if (!isSupported) return false;
-    await init();
-    await PepoNative.acquireMulticastLock();
-    if (await FlutterForegroundTask.isRunningService) {
-      await FlutterForegroundTask.updateService(notificationTitle: title, notificationText: text);
-      return true;
-    }
-    final result = await FlutterForegroundTask.startService(
-      serviceId: 47473,
-      notificationTitle: title,
-      notificationText: text,
-      notificationIcon: _notificationIcon,
-      callback: pepoServiceCallback,
-    );
-    return result is ServiceRequestSuccess;
+    return PepoNative.serviceStart(title: title, text: text, idle: idleText);
   }
 
   static Future<void> update({required String title, required String text}) async {
     if (!isSupported) return;
-    if (await FlutterForegroundTask.isRunningService) {
-      await FlutterForegroundTask.updateService(notificationTitle: title, notificationText: text);
-    }
+    await PepoNative.serviceUpdate(title: title, text: text);
   }
 
   static Future<void> stop() async {
     if (!isSupported) return;
-    await PepoNative.releaseMulticastLock();
-    if (await FlutterForegroundTask.isRunningService) {
-      await FlutterForegroundTask.stopService();
-    }
+    await PepoNative.serviceStop();
   }
 
-  static Future<bool> isRunning() async =>
-      isSupported && await FlutterForegroundTask.isRunningService;
-}
-
-/// Entry point of the service isolate. It does nothing but exist: the
-/// engine lives in the main isolate.
-@pragma('vm:entry-point')
-void pepoServiceCallback() {
-  FlutterForegroundTask.setTaskHandler(_KeepAliveHandler());
-}
-
-class _KeepAliveHandler extends TaskHandler {
-  @override
-  Future<void> onStart(DateTime timestamp, TaskStarter starter) async {}
-
-  @override
-  void onRepeatEvent(DateTime timestamp) {}
-
-  @override
-  Future<void> onDestroy(DateTime timestamp, bool isTimeout) async {}
+  static Future<bool> isRunning() async => isSupported && await PepoNative.serviceRunning();
 }

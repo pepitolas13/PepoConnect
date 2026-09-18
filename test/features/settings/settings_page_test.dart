@@ -4,6 +4,7 @@ import 'package:pepoconnect/app/router.dart';
 import 'package:pepoconnect/features/settings/settings_page.dart';
 import 'package:pepoconnect/features/settings/settings_widgets.dart';
 import 'package:pepoconnect/shared/widgets/pepo_dialog.dart';
+import 'package:pepoconnect/shared/widgets/toggle_switch.dart';
 import 'package:pepoconnect/state/app_settings.dart';
 
 import '../pairing/test_support.dart';
@@ -33,6 +34,30 @@ void main() {
     final container = containerOf(tester, SettingsPage);
     expect(container.read(settingsProvider).themeMode, AppThemeMode.dark);
     expect(tester.widget<ThemeCard>(find.widgetWithText(ThemeCard, 'Oscuro')).selected, isTrue);
+  });
+
+  testWidgets('executables are off by default and the row says what that means', (tester) async {
+    // Tall enough for the storage section, which sits at the bottom.
+    await pumpApp(
+      tester,
+      overrides: featureOverrides(),
+      router: testRouter(initialLocation: AppRoutes.settings),
+      size: const Size(1200, 2400),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.textContaining('no se envían ni se reciben programas'), findsOneWidget);
+    final row = find.ancestor(
+      of: find.text('Permitir ejecutables'),
+      matching: find.byType(SettingsRow),
+    );
+    final toggle = find.descendant(of: row, matching: find.byType(ToggleSwitch));
+    expect(tester.widget<ToggleSwitch>(toggle).value, isFalse);
+
+    await tester.tap(toggle);
+    await tester.pumpAndSettle();
+    expect(containerOf(tester, SettingsPage).read(settingsProvider).allowExecutables, isTrue);
+    expect(tester.widget<ToggleSwitch>(toggle).value, isTrue);
   });
 
   testWidgets('lists the paired devices with a remove button and forgets one', (tester) async {

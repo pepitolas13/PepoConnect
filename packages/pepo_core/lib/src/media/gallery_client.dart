@@ -83,8 +83,7 @@ class MemoryMediaStateStore implements MediaStateStore {
   Future<DateTime?> loadSeenUntil(String deviceId) async => _seenUntil[deviceId];
 
   @override
-  Future<void> saveSeenUntil(String deviceId, DateTime until) async =>
-      _seenUntil[deviceId] = until;
+  Future<void> saveSeenUntil(String deviceId, DateTime until) async => _seenUntil[deviceId] = until;
 }
 
 /// What changed in a device gallery.

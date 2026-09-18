@@ -93,6 +93,168 @@ abstract class AppLocalizations {
   /// A list of this localizations delegate's supported locales.
   static const List<Locale> supportedLocales = <Locale>[Locale('en'), Locale('es')];
 
+  /// No description provided for @updateNotifications.
+  ///
+  /// In es, this message translates to:
+  /// **'Avisos de actualizaciones'**
+  String get updateNotifications;
+
+  /// No description provided for @updateNotificationsBody.
+  ///
+  /// In es, this message translates to:
+  /// **'Mostrar un aviso cuando haya una versión nueva. Aunque lo desactives, seguiremos comprobando las actualizaciones cada día.'**
+  String get updateNotificationsBody;
+
+  /// No description provided for @updateDailyBody.
+  ///
+  /// In es, this message translates to:
+  /// **'Buscamos actualizaciones cada 24 horas mientras PepoConnect está abierto, también en la bandeja, y al volver a abrirlo si toca comprobar.'**
+  String get updateDailyBody;
+
+  /// No description provided for @updateInstall.
+  ///
+  /// In es, this message translates to:
+  /// **'Actualizar'**
+  String get updateInstall;
+
+  /// No description provided for @updateContinue.
+  ///
+  /// In es, this message translates to:
+  /// **'Continuar instalación'**
+  String get updateContinue;
+
+  /// No description provided for @updateLater.
+  ///
+  /// In es, this message translates to:
+  /// **'Ahora no'**
+  String get updateLater;
+
+  /// No description provided for @updateDontNotify.
+  ///
+  /// In es, this message translates to:
+  /// **'No mostrar más avisos de actualizaciones'**
+  String get updateDontNotify;
+
+  /// No description provided for @updateDesktopBody.
+  ///
+  /// In es, this message translates to:
+  /// **'Se descargará y verificará la nueva versión. PepoConnect se reiniciará para instalarla y conservará tus ajustes y dispositivos.'**
+  String get updateDesktopBody;
+
+  /// No description provided for @updateAndroidBody.
+  ///
+  /// In es, this message translates to:
+  /// **'La app descargará y verificará la actualización. Android te pedirá confirmar la instalación.'**
+  String get updateAndroidBody;
+
+  /// No description provided for @updateFlatpakBody.
+  ///
+  /// In es, this message translates to:
+  /// **'Se descargará y verificará la actualización. Confirma la instalación en el gestor de software y vuelve a abrir PepoConnect.'**
+  String get updateFlatpakBody;
+
+  /// No description provided for @updateIosBody.
+  ///
+  /// In es, this message translates to:
+  /// **'Esta versión de iPhone se instala con AltStore o Sideloadly. iOS no permite que este paquete sin firmar se actualice solo: instala la nueva versión con la misma cuenta para conservar tus datos.'**
+  String get updateIosBody;
+
+  /// No description provided for @updateUnavailableBody.
+  ///
+  /// In es, this message translates to:
+  /// **'Aún no hay un paquete compatible y verificable para esta instalación. Puedes consultar la versión publicada y las instrucciones de instalación.'**
+  String get updateUnavailableBody;
+
+  /// No description provided for @updateInstructions.
+  ///
+  /// In es, this message translates to:
+  /// **'Ver instrucciones'**
+  String get updateInstructions;
+
+  /// No description provided for @updateDetails.
+  ///
+  /// In es, this message translates to:
+  /// **'Ver novedades'**
+  String get updateDetails;
+
+  /// No description provided for @updateDownloading.
+  ///
+  /// In es, this message translates to:
+  /// **'Descargando actualización…'**
+  String get updateDownloading;
+
+  /// No description provided for @updateVerifying.
+  ///
+  /// In es, this message translates to:
+  /// **'Verificando la descarga…'**
+  String get updateVerifying;
+
+  /// No description provided for @updateInstalling.
+  ///
+  /// In es, this message translates to:
+  /// **'Preparando la instalación…'**
+  String get updateInstalling;
+
+  /// No description provided for @updateCancelDownload.
+  ///
+  /// In es, this message translates to:
+  /// **'Cancelar descarga'**
+  String get updateCancelDownload;
+
+  /// No description provided for @updatePermissionBody.
+  ///
+  /// In es, this message translates to:
+  /// **'Permite que PepoConnect instale aplicaciones en la pantalla de Android. Al volver, continuaremos automáticamente. También puedes pulsar «Continuar instalación».'**
+  String get updatePermissionBody;
+
+  /// No description provided for @updateInstallerOpened.
+  ///
+  /// In es, this message translates to:
+  /// **'El instalador está abierto. Confirma la actualización; si lo cerraste, puedes volver a abrirlo con «Actualizar».'**
+  String get updateInstallerOpened;
+
+  /// No description provided for @updateInstallFailed.
+  ///
+  /// In es, this message translates to:
+  /// **'No se ha podido actualizar'**
+  String get updateInstallFailed;
+
+  /// No description provided for @updateDownloadFailed.
+  ///
+  /// In es, this message translates to:
+  /// **'La descarga no se completó. Comprueba la conexión y el espacio disponible y vuelve a intentarlo.'**
+  String get updateDownloadFailed;
+
+  /// No description provided for @updateVerificationFailed.
+  ///
+  /// In es, this message translates to:
+  /// **'La actualización no ha superado las comprobaciones de integridad y compatibilidad. No se ha instalado nada. Consulta las instrucciones de esta versión.'**
+  String get updateVerificationFailed;
+
+  /// No description provided for @updatePermissionFailed.
+  ///
+  /// In es, this message translates to:
+  /// **'No hay permiso para actualizar esta instalación. Comprueba los permisos de su carpeta o del instalador y vuelve a intentarlo.'**
+  String get updatePermissionFailed;
+
+  /// No description provided for @updateGenericFailed.
+  ///
+  /// In es, this message translates to:
+  /// **'No se pudo preparar la actualización. Tu instalación actual sigue disponible. Vuelve a intentarlo o consulta las instrucciones de la versión.'**
+  String get updateGenericFailed;
+
+  /// No description provided for @updateBusyBody.
+  ///
+  /// In es, this message translates to:
+  /// **'Termina o pausa las transferencias y cierra los enlaces de invitado antes de actualizar.'**
+  String get updateBusyBody;
+
+  /// No description provided for @updateOpenFailed.
+  ///
+  /// In es, this message translates to:
+  /// **'No se ha podido abrir el enlace. Comprueba que tienes un navegador disponible.'**
+  String get updateOpenFailed;
+
   /// No description provided for @appName.
   ///
   /// In es, this message translates to:
@@ -732,14 +894,50 @@ abstract class AppLocalizations {
   /// No description provided for @executableBlocked.
   ///
   /// In es, this message translates to:
-  /// **'PepoConnect no envía programas ejecutables'**
+  /// **'PepoConnect no envía programas hasta que lo permitas en Ajustes'**
   String get executableBlocked;
 
-  /// No description provided for @executableWarning.
+  /// No description provided for @executableBlockedOne.
   ///
   /// In es, this message translates to:
-  /// **'{file} es un ejecutable. ¿Enviarlo igualmente?'**
-  String executableWarning(String file);
+  /// **'No se ha enviado {file}'**
+  String executableBlockedOne(String file);
+
+  /// No description provided for @executableBlockedMany.
+  ///
+  /// In es, this message translates to:
+  /// **'No se han enviado {count} ejecutables'**
+  String executableBlockedMany(int count);
+
+  /// No description provided for @executableBlockedBody.
+  ///
+  /// In es, this message translates to:
+  /// **'PepoConnect no envía programas (.exe, .msi, .apk…) hasta que actives «Permitir ejecutables» en Ajustes › Almacenamiento, en este dispositivo y en el que los recibe.'**
+  String get executableBlockedBody;
+
+  /// No description provided for @executableOpenSettings.
+  ///
+  /// In es, this message translates to:
+  /// **'Abrir ajustes'**
+  String get executableOpenSettings;
+
+  /// No description provided for @executableRefusedTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'No se ha aceptado {file} de {device}'**
+  String executableRefusedTitle(String file, String device);
+
+  /// No description provided for @executableRefusedBody.
+  ///
+  /// In es, this message translates to:
+  /// **'Los ejecutables están desactivados. Actívalos en Ajustes › Almacenamiento si lo esperabas'**
+  String get executableRefusedBody;
+
+  /// No description provided for @trRejectedExecutable.
+  ///
+  /// In es, this message translates to:
+  /// **'El otro dispositivo no acepta ejecutables'**
+  String get trRejectedExecutable;
 
   /// No description provided for @speedAndEta.
   ///
@@ -1176,7 +1374,7 @@ abstract class AppLocalizations {
   /// No description provided for @sharedClipboardBody.
   ///
   /// In es, this message translates to:
-  /// **'Lo que copies en un dispositivo se puede pegar en el otro'**
+  /// **'Lo que copies en un dispositivo se puede pegar en el otro. En el móvil se envía al abrir PepoConnect, con el tile «Enviar portapapeles» de los ajustes rápidos o con el acceso directo del icono.'**
   String get sharedClipboardBody;
 
   /// No description provided for @notifications.
@@ -1244,12 +1442,6 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Permitir ejecutables'**
   String get allowExecutables;
-
-  /// No description provided for @allowExecutablesBody.
-  ///
-  /// In es, this message translates to:
-  /// **'Acepta archivos .exe, .msi y similares. Solo si sabes lo que haces'**
-  String get allowExecutablesBody;
 
   /// No description provided for @autoSendPhotos.
   ///
@@ -1521,6 +1713,12 @@ abstract class AppLocalizations {
   /// **'Galería'**
   String get mobileGallery;
 
+  /// No description provided for @mobileClipboard.
+  ///
+  /// In es, this message translates to:
+  /// **'Portapapeles'**
+  String get mobileClipboard;
+
   /// No description provided for @mobileCamera.
   ///
   /// In es, this message translates to:
@@ -1748,6 +1946,30 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Texto copiado desde {device}'**
   String toastClipboardReceived(String device);
+
+  /// No description provided for @toastClipboardSent.
+  ///
+  /// In es, this message translates to:
+  /// **'Portapapeles enviado a {device}'**
+  String toastClipboardSent(String device);
+
+  /// No description provided for @clipboardEmpty.
+  ///
+  /// In es, this message translates to:
+  /// **'El portapapeles está vacío'**
+  String get clipboardEmpty;
+
+  /// No description provided for @clipboardNoTarget.
+  ///
+  /// In es, this message translates to:
+  /// **'Ningún PC conectado con el portapapeles compartido'**
+  String get clipboardNoTarget;
+
+  /// No description provided for @clipboardQueued.
+  ///
+  /// In es, this message translates to:
+  /// **'Sin PC conectado: se enviará al conectar'**
+  String get clipboardQueued;
 
   /// No description provided for @toastUndo.
   ///
@@ -2055,12 +2277,6 @@ abstract class AppLocalizations {
   /// **'No se pudo enviar'**
   String get trSendFailed;
 
-  /// No description provided for @trExecutableSendAnyway.
-  ///
-  /// In es, this message translates to:
-  /// **'Enviar igualmente'**
-  String get trExecutableSendAnyway;
-
   /// No description provided for @trDroppedNothing.
   ///
   /// In es, this message translates to:
@@ -2304,7 +2520,7 @@ abstract class AppLocalizations {
   /// No description provided for @setAllowExecutablesBody.
   ///
   /// In es, this message translates to:
-  /// **'Unison los bloqueaba; aquí solo se avisa'**
+  /// **'Desactivado, no se envían ni se reciben programas (.exe, .msi, .apk…). Actívalo en los dos dispositivos solo si lo necesitas'**
   String get setAllowExecutablesBody;
 
   /// No description provided for @setResetLocation.

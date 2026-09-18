@@ -15,11 +15,8 @@
 # Deferred components (Play Core) are referenced by the engine but not used.
 -dontwarn com.google.android.play.core.**
 
-# --- PepoConnect native bridge (MethodChannel org.pepoconnect/native) ---------
+# --- PepoConnect natives: MethodChannel bridge, foreground service, receivers --
 -keep class org.pepoconnect.app.** { *; }
-
-# --- flutter_foreground_task (service, receivers, callback dispatcher) --------
--keep class com.pravera.flutter_foreground_task.** { *; }
 
 # --- photo_manager (+ Glide, used for thumbnails) ------------------------------
 -keep class com.fluttercandies.photo_manager.** { *; }

@@ -1,0 +1,16 @@
+name: Proponer una mejora / Suggest a feature
+description: Explica qué te gustaría hacer con PepoConnect. Español o English.
+title: "[Idea] "
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Qué quieres hacer / What would you like to do?
+      description: Cuenta la situación que quieres resolver. / Describe the problem you want to solve.
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Tu idea / Your idea
+      description: Cómo te imaginas que podría funcionar. / How you think it could work.

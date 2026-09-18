@@ -9,18 +9,39 @@ import 'package:photo_manager/photo_manager.dart' as pm;
 
 /// Android/iOS gallery through `photo_manager` (MediaStore / PhotoKit),
 /// including change notifications for the "new photo" event.
+///
+/// Change notifications are noisy and early: on Android the camera inserts
+/// the MediaStore row as pending (invisible to queries), writes the file and
+/// commits the row, and the observer fires at each step. The scans they
+/// trigger go through a [RescanScheduler] so a burst becomes one scan, a
+/// notification that lands mid-scan queues another scan instead of being
+/// dropped, and a couple of delayed re-scans catch a row that was still
+/// pending when the scan ran.
 class MediaSourcePhotoManager extends MediaSource {
   MediaSourcePhotoManager({
     required this.cacheDir,
     this.pollFallback = const Duration(seconds: 10),
+    this.debounce = const Duration(milliseconds: 300),
+    this.settleDelays = const [Duration(milliseconds: 1500), Duration(seconds: 5)],
   });
 
   final String cacheDir;
   final Duration pollFallback;
 
+  /// Quiet time after the last change notification before scanning.
+  final Duration debounce;
+
+  /// Re-scans after each burst of notifications.
+  final List<Duration> settleDelays;
+
   final _changes = StreamController<MediaChange>.broadcast();
   final Map<String, pm.AssetEntity> _known = {};
   final Set<String> _seen = {};
+  late final RescanScheduler _rescan = RescanScheduler(
+    scan: _diff,
+    debounce: debounce,
+    settleDelays: settleDelays,
+  );
   DateTime? _lastObserverEvent;
   Timer? _poll;
   bool _running = false;
@@ -96,6 +117,7 @@ class MediaSourcePhotoManager extends MediaSource {
   Future<void> stop() async {
     _running = false;
     _poll?.cancel();
+    _rescan.cancel();
     pm.PhotoManager.removeChangeCallback(_onChange);
     if (_notifying) {
       try {
@@ -137,7 +159,7 @@ class MediaSourcePhotoManager extends MediaSource {
 
   void _onChange(MethodCall call) {
     _lastObserverEvent = DateTime.now();
-    unawaited(_diff());
+    _rescan.signal();
   }
 
   Future<void> _pollTick() async {
@@ -148,16 +170,17 @@ class MediaSourcePhotoManager extends MediaSource {
         DateTime.now().difference(last) < const Duration(minutes: 5)) {
       return;
     }
-    await _diff();
+    await _rescan.run();
   }
 
-  bool _diffing = false;
-
+  /// One scan of the newest assets; anything not seen before is reported.
+  /// Only runs through [_rescan], which keeps scans from overlapping.
   Future<void> _diff() async {
-    if (_diffing || !_running) return;
-    _diffing = true;
+    if (!_running) return;
     try {
-      await _loadRoot();
+      // The root path is loaded once: listing paths walks the whole store
+      // on Android, and the range query below is fresh on every call.
+      if (_all == null) await _loadRoot();
       final root = _all;
       if (root == null) return;
       final recent = await root.getAssetListRange(start: 0, end: 30);
@@ -169,13 +192,12 @@ class MediaSourcePhotoManager extends MediaSource {
         final item = await _toItem(a);
         if (item != null) added.add(item);
       }
-      if (added.isNotEmpty && !_changes.isClosed) {
-        _changes.add(MediaChange(added: added));
+      if (added.isNotEmpty) {
+        _indexVersion++;
+        if (!_changes.isClosed) _changes.add(MediaChange(added: added));
       }
     } catch (_) {
       // Transient errors (permission revoked, etc.) are ignored.
-    } finally {
-      _diffing = false;
     }
   }
 

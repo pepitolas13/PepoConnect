@@ -19,6 +19,7 @@ class AppSettings {
     this.startWithSystem = false,
     this.minimizeToTray = true,
     this.notifications = true,
+    this.updateNotifications = true,
     this.sounds = false,
     this.deviceName,
     this.clipboardSharing = false,
@@ -46,6 +47,9 @@ class AppSettings {
   final bool startWithSystem;
   final bool minimizeToTray;
   final bool notifications;
+
+  /// Foreground update offers; daily checks and manual updates stay enabled.
+  final bool updateNotifications;
   final bool sounds;
 
   /// Null = host name / device model.
@@ -80,6 +84,7 @@ class AppSettings {
     bool? startWithSystem,
     bool? minimizeToTray,
     bool? notifications,
+    bool? updateNotifications,
     bool? sounds,
     String? deviceName,
     bool? clipboardSharing,
@@ -103,6 +108,7 @@ class AppSettings {
     startWithSystem: startWithSystem ?? this.startWithSystem,
     minimizeToTray: minimizeToTray ?? this.minimizeToTray,
     notifications: notifications ?? this.notifications,
+    updateNotifications: updateNotifications ?? this.updateNotifications,
     sounds: sounds ?? this.sounds,
     deviceName: deviceName ?? this.deviceName,
     clipboardSharing: clipboardSharing ?? this.clipboardSharing,
@@ -127,6 +133,7 @@ class AppSettings {
     'startWithSystem': startWithSystem,
     'minimizeToTray': minimizeToTray,
     'notifications': notifications,
+    'updateNotifications': updateNotifications,
     'sounds': sounds,
     'deviceName': deviceName,
     'clipboardSharing': clipboardSharing,
@@ -151,6 +158,7 @@ class AppSettings {
     startWithSystem: j['startWithSystem'] as bool? ?? false,
     minimizeToTray: j['minimizeToTray'] as bool? ?? true,
     notifications: j['notifications'] as bool? ?? true,
+    updateNotifications: j['updateNotifications'] as bool? ?? true,
     sounds: j['sounds'] as bool? ?? false,
     deviceName: j['deviceName'] as String?,
     clipboardSharing: j['clipboardSharing'] as bool? ?? false,

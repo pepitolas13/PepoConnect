@@ -12,6 +12,7 @@ import 'app/app.dart';
 import 'app/app_services.dart';
 import 'app/bootstrap.dart';
 import 'app/shell/window_effects.dart';
+import 'features/updates/update_providers.dart';
 import 'platform/desktop_integration.dart';
 import 'platform/media_source_photo_manager.dart';
 import 'platform/notifications.dart';
@@ -38,7 +39,6 @@ Future<void> main(List<String> args) async {
     paths: paths,
     options: options,
     mediaSource: mediaSource,
-    offerPolicy: (_, offer) async => settings.allowExecutables || !_isExecutable(offer.name),
   );
 
   if (DesktopIntegration.isSupported) {
@@ -55,6 +55,7 @@ Future<void> main(List<String> args) async {
   final toasts = ToastService();
   final container = ProviderContainer(
     overrides: [
+      updateLaunchArgumentsProvider.overrideWithValue(List.unmodifiable(args)),
       sharedPreferencesProvider.overrideWithValue(prefs),
       engineProvider.overrideWithValue(engine),
       dataDirProvider.overrideWithValue(paths.dataDir),
@@ -89,24 +90,6 @@ bool _isDark(AppThemeMode mode) => switch (mode) {
   AppThemeMode.light => false,
   AppThemeMode.dark => true,
 };
-
-bool _isExecutable(String name) {
-  final lower = name.toLowerCase();
-  const exts = [
-    '.exe',
-    '.msi',
-    '.bat',
-    '.cmd',
-    '.com',
-    '.scr',
-    '.ps1',
-    '.vbs',
-    '.js',
-    '.jar',
-    '.apk',
-  ];
-  return exts.any(lower.endsWith);
-}
 
 void _setupLogging() {
   Logger.root.level = Level.INFO;

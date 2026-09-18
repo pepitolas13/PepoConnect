@@ -5,6 +5,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../l10n/generated/app_localizations.dart';
+import '../features/updates/update_installer.dart';
+import '../features/updates/update_prompt.dart';
 import '../platform/open_helper.dart';
 import '../shared/motion/motion_scope.dart';
 import '../shared/motion/toast.dart';
@@ -29,11 +31,13 @@ class _PepoAppState extends ConsumerState<PepoApp> {
   late final GoRouter _router;
   AppServices? _services;
   final _refresh = _RouterRefresh();
+  final _navigatorKey = GlobalKey<NavigatorState>();
 
   @override
   void initState() {
     super.initState();
     _router = buildRouter(
+      navigatorKey: _navigatorKey,
       actions: ShellActions(
         onOpenDownloads: (_) => OpenHelper.openFolder(ref.read(engineProvider).config.downloadRoot),
         onRenamePc: (_, name) => ref.read(engineProvider).setDeviceName(name),
@@ -71,6 +75,7 @@ class _PepoAppState extends ConsumerState<PepoApp> {
     final services = AppServices(ProviderScope.containerOf(context), _router);
     _services = services;
     await services.start();
+    await UpdateInstaller.confirmStartup();
   }
 
   @override
@@ -102,7 +107,10 @@ class _PepoAppState extends ConsumerState<PepoApp> {
             enabled: settings.animations,
             child: ToastHost(
               service: ref.read(toastServiceProvider),
-              child: child ?? const SizedBox.shrink(),
+              child: UpdatePromptHost(
+                navigatorKey: _navigatorKey,
+                child: child ?? const SizedBox.shrink(),
+              ),
             ),
           );
         },

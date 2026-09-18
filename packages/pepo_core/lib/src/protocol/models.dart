@@ -135,6 +135,7 @@ class PairedDevice {
     this.autoDownload = false,
     this.convertHeic = false,
     this.shareClipboard = false,
+    this.shareClipboardAt,
   });
 
   final String deviceId;
@@ -161,7 +162,15 @@ class PairedDevice {
   final String? folderName;
   final bool autoDownload;
   final bool convertHeic;
+
+  /// Clipboard sharing with this device. One switch for both directions: it
+  /// is mirrored to the peer (`device.info`) and the newer [shareClipboardAt]
+  /// wins when the two sides disagree.
   final bool shareClipboard;
+
+  /// When [shareClipboard] was last changed (by either side). Null on
+  /// records written before the flag was synchronised.
+  final DateTime? shareClipboardAt;
 
   String get shortId => 'PEPO-${deviceId.substring(0, 4)}-${deviceId.substring(4, 8)}';
 
@@ -177,6 +186,7 @@ class PairedDevice {
     bool? autoDownload,
     bool? convertHeic,
     bool? shareClipboard,
+    DateTime? shareClipboardAt,
     bool? weInitiate,
   }) => PairedDevice(
     deviceId: deviceId,
@@ -195,6 +205,7 @@ class PairedDevice {
     autoDownload: autoDownload ?? this.autoDownload,
     convertHeic: convertHeic ?? this.convertHeic,
     shareClipboard: shareClipboard ?? this.shareClipboard,
+    shareClipboardAt: shareClipboardAt ?? this.shareClipboardAt,
   );
 
   Map<String, dynamic> toJson({bool includePsk = true}) => {
@@ -214,6 +225,7 @@ class PairedDevice {
     'autoDownload': autoDownload,
     'convertHeic': convertHeic,
     'shareClipboard': shareClipboard,
+    if (shareClipboardAt != null) 'shareClipboardAt': shareClipboardAt!.millisecondsSinceEpoch,
   };
 
   factory PairedDevice.fromJson(Map<String, dynamic> json, {Uint8List? psk}) => PairedDevice(
@@ -233,6 +245,9 @@ class PairedDevice {
     autoDownload: json['autoDownload'] as bool? ?? false,
     convertHeic: json['convertHeic'] as bool? ?? false,
     shareClipboard: json['shareClipboard'] as bool? ?? false,
+    shareClipboardAt: json['shareClipboardAt'] == null
+        ? null
+        : DateTime.fromMillisecondsSinceEpoch(json['shareClipboardAt'] as int),
   );
 }
 

@@ -5,6 +5,77 @@ La versión sale siempre de `pubspec.yaml` (`version: X.Y.Z+N`); `tool/release.p
 etiqueta `vX.Y.Z` y dispara `.github/workflows/release.yml`, que ejecuta lo mismo que se
 describe aquí.
 
+## Actualizaciones desde la app
+
+El estado de actualizaciones es único para toda la app: cambiar de pantalla no
+interrumpe una descarga. Se consulta la última versión estable de GitHub cada
+24 horas mientras el proceso está en marcha, y al recuperar el primer plano si
+la comprobación ya toca. Una comprobación fallida se reintenta después de una
+hora; los fallos automáticos no abren ventanas. El resultado, las fechas y la
+última versión ofrecida se guardan bajo `pepo.updates`, separado de los ajustes.
+El interruptor `updateNotifications` controla solo el aviso; se puede seguir
+comprobando e instalando manualmente en Acerca de.
+
+La selección del paquete depende de la arquitectura del proceso y del formato
+instalado. Solo se aceptan metadatos de versiones estables, enlaces HTTPS del
+repositorio y archivos de esa misma versión. Primero se descarga a una carpeta
+privada, se comprueba el tamaño y se valida contra `SHA256SUMS.txt`; una descarga
+incompleta, cancelada o con un hash distinto no modifica la instalación.
+
+| Distribución | Proceso |
+|---|---|
+| Windows, lanzador `.exe` | Sustitución del lanzador y del bundle, reinicio y conservación de sus rutas y datos. |
+| Windows, ZIP | Preparación del bundle nuevo, sustitución al salir y reinicio. |
+| Linux, AppImage | Sustitución de la imagen original y reinicio. |
+| Linux, tarball | Preparación del bundle nuevo en su instalación y reinicio. |
+| Linux, Flatpak | Descarga verificada y apertura del gestor de software del sistema. No se conceden permisos para salir del sandbox. |
+| Android, APK | Descarga para la ABI del proceso y confirmación mediante el instalador de Android. Si falta autorización para instalar, se abre el ajuste del sistema y se continúa al volver. |
+| iOS, IPA sin firmar | Aviso e instrucciones para reinstalar con AltStore/Sideloadly y la misma cuenta. No hay auto-instalación de IPA sin firmar. |
+
+Antes de reiniciar se vuelve a comprobar que no haya transferencias activas ni
+enlaces de invitado abiertos. El reemplazo de escritorio usa un ayudante que
+espera a la salida del proceso. Conserva una copia de recuperación y comprueba
+que la nueva app llegue a iniciar sus servicios; si no lo logra, restaura la
+versión anterior. Los permisos de una carpeta protegida pueden impedir la
+actualización: se informa del fallo sin solicitar elevación automáticamente.
+
+El reemplazo es atómico por archivo. Un corte de energía durante un bundle con
+varios archivos no equivale a una transacción atómica de todo el directorio:
+se conserva el registro y la copia anterior en `.pepoconnect-update-*`, junto a
+la instalación. Con la app completamente cerrada, se puede recuperar ejecutando
+`install.ps1 -Config plan.json -Recover` en Windows (ambas rutas deben apuntar a
+esa carpeta) o `sh install.sh --recover` en Linux. El archivo `result` distingue
+`installed`, `rolledBack` y `recoveryRequired`; no se debe borrar la carpeta si
+queda pendiente una recuperación. Repetir la recuperación de una operación ya
+completada no revierte la versión instalada.
+
+El lanzador de Windows también restaura automáticamente una carpeta `app.old*`
+completa si un cierre interrumpió el intercambio y falta `app`. Conserva los
+directorios anteriores como copias de recuperación, incluidos archivos ajenos
+al paquete. Ocupan espacio; se pueden retirar manualmente después de comprobar
+que la nueva versión y los datos funcionan. No se borran anticipadamente durante
+el siguiente arranque.
+
+La publicación debe producir todos los paquetes admitidos y sus checksums antes
+de anunciar una nueva versión. Las etiquetas publicadas exigen los secretos
+`ANDROID_KEYSTORE_BASE64`, `ANDROID_KEYSTORE_PASSWORD` y `ANDROID_KEY_ALIAS`:
+cambiar la clave de firma impide actualizar los APK anteriores conservando sus
+datos. Las compilaciones de prueba locales pueden seguir usando la firma de
+debug. El APK instalado debe tener el mismo identificador y una firma compatible,
+y el número de compilación de la actualización debe ser mayor.
+
+Una versión antigua que solo abre GitHub necesita instalar una vez la versión
+que introduce este actualizador. A partir de esa versión, las siguientes
+actualizaciones usan este flujo. No se ejecuta un servicio nuevo exclusivamente
+para buscar versiones cuando la app está completamente cerrada.
+
+El canal de distribución tiene que admitir consultas y descargas sin iniciar
+sesión. Los clientes no incluyen credenciales de GitHub: un repositorio privado
+devuelve 404 tanto para la API de versiones como para sus archivos. Antes de
+distribuir una versión con el actualizador, hay que hacer accesible ese canal
+o configurar una distribución pública separada; no basta con que el propietario
+pueda descargar los archivos desde su navegador con sesión iniciada.
+
 ## Windows
 
 ### Lanzador de un solo `.exe` (`windows-launcher/`)
@@ -94,19 +165,22 @@ vacío al lado.
   Si no existe, la release se firma con la clave de debug y Gradle avisa. En CI se genera desde los
   secretos `ANDROID_KEYSTORE_BASE64`, `ANDROID_KEYSTORE_PASSWORD` y `ANDROID_KEY_ALIAS`.
 - **R8**: `isMinifyEnabled` + `isShrinkResources` con `proguard-android-optimize.txt` y
-  `android/app/proguard-rules.pro` (Flutter, `flutter_foreground_task`, `photo_manager`/Glide,
-  `mobile_scanner`/ML Kit, Gson de `flutter_local_notifications`, `share_handler` y nuestro puente).
+  `android/app/proguard-rules.pro` (Flutter, `photo_manager`/Glide, `mobile_scanner`/ML Kit, Gson de
+  `flutter_local_notifications`, `share_handler` y nuestras clases nativas: puente, servicio y receptor).
 - `flutter_local_notifications` exige *core library desugaring* (`desugar_jdk_libs 2.1.4`); por eso
   también se añade `androidx.window:window(-java) 1.0.0`, que su README recomienda.
 - **Manifest** (`android/app/src/main/AndroidManifest.xml`):
   - permisos: INTERNET, ACCESS_NETWORK_STATE, ACCESS_WIFI_STATE, CHANGE_WIFI_MULTICAST_STATE,
     WAKE_LOCK, CAMERA, POST_NOTIFICATIONS, FOREGROUND_SERVICE,
-    FOREGROUND_SERVICE_CONNECTED_DEVICE, REQUEST_IGNORE_BATTERY_OPTIMIZATIONS,
+    FOREGROUND_SERVICE_CONNECTED_DEVICE, REQUEST_IGNORE_BATTERY_OPTIMIZATIONS, RECEIVE_BOOT_COMPLETED,
     READ_EXTERNAL_STORAGE (maxSdk 32), READ_MEDIA_IMAGES, READ_MEDIA_VIDEO,
     READ_MEDIA_VISUAL_USER_SELECTED, ACCESS_MEDIA_LOCATION;
-  - servicio de `flutter_foreground_task` (`com.pravera.flutter_foreground_task.service.ForegroundService`,
-    `foregroundServiceType="connectedDevice"`, `exported=false`, `stopWithTask=false`). Al iniciar el
-    servicio desde Dart, usa el tipo `connectedDevice`;
+  - `PepoForegroundService` (`foregroundServiceType="connectedDevice"`, `exported=false`,
+    `stopWithTask=false`): mantiene vivo el proceso con la app cerrada (notificación persistente,
+    wake lock, Wi-Fi lock y multicast lock) y, si Android lo reinicia (START_STICKY) o tras un
+    reinicio del móvil o una actualización (`BootReceiver`: BOOT_COMPLETED y MY_PACKAGE_REPLACED),
+    arranca el motor Flutter sin ventana. El motor es único y cacheado (`PepoEngineHolder`):
+    `MainActivity` se engancha a él y lo suelta sin destruirlo mientras el servicio esté en marcha;
   - `MainActivity` con `launchMode="singleTask"` (recomendado por `share_handler` para que compartir
     no abra una segunda instancia), deep link `pepoconnect://pair` (VIEW + BROWSABLE) y filtros
     SEND / SEND_MULTIPLE para `image/*`, `video/*` y `*/*`.
@@ -145,9 +219,7 @@ vacío al lado.
   sustituye `TEAM_ID` y `PROFILE_NAME` con los secretos `IOS_TEAM_ID` y el nombre del perfil, y
   ejecuta `flutter build ipa --export-options-plist=ios/ExportOptions.plist`.
 - Pendiente (requiere Xcode): la Share Extension de `share_handler` (target `ShareExtension`,
-  App Group y esquema `ShareMedia-$(PRODUCT_BUNDLE_IDENTIFIER)`) y, si se usa
-  `flutter_foreground_task` en iOS, `UIBackgroundModes: fetch` +
-  `BGTaskSchedulerPermittedIdentifiers` (`com.pravera.flutter_foreground_task.refresh`).
+  App Group y esquema `ShareMedia-$(PRODUCT_BUNDLE_IDENTIFIER)`).
 
 ## Linux
 
@@ -182,9 +254,8 @@ dart run flutter_launcher_icons        # Android (launcher) e iOS a partir de es
   `flutter_launcher_icons.yaml` (escribiría un .ico todo PNG).
 - `android/app/src/main/res/drawable-*/ic_stat_pepoconnect.png` — icono de la barra de estado
   (24 dp, glifo blanco sobre transparente: Android solo usa el alfa). Lo usan las notificaciones
-  de `flutter_local_notifications` (`AndroidInitializationSettings` + `icon`) y el servicio de
-  `flutter_foreground_task` (`NotificationIcon.metaDataName` →
-  `<meta-data android:name="org.pepoconnect.app.NOTIFICATION_ICON">` en el manifest). Sin él
+  de `flutter_local_notifications` (`AndroidInitializationSettings` + `icon`) y la notificación de
+  `PepoForegroundService` (`R.drawable.ic_stat_pepoconnect`). Sin él
   Android aplana el launcher a un cuadrado blanco. `res/raw/keep.xml` lo protege del
   `shrinkResources` porque Dart lo busca por nombre.
 

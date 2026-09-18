@@ -52,12 +52,12 @@ const T = es ? {
   send: 'Archivos para ti', sendSub: '{n} archivos · {size}', recv: 'Envía archivos a {host}', recvSub: 'Suelta aquí los archivos o elige en tu dispositivo',
   download: 'Descargar', downloadAll: 'Descargar todo', choose: 'Elegir archivos', sending: 'Enviando…', sent: 'Enviado', failed: 'Error',
   expires: 'Este enlace caduca en {m} min y solo funciona en esta red.', expired: 'El enlace ha caducado. Pide otro en el PC.', taken: 'Este enlace ya se está usando en otro dispositivo.',
-  tooBig: 'Archivo demasiado grande', from: 'De {host}', multi: 'Puedes elegir varios archivos a la vez.'
+  tooBig: 'Archivo demasiado grande', noPrograms: 'Este PC no acepta programas', from: 'De {host}', multi: 'Puedes elegir varios archivos a la vez.'
 } : {
   send: 'Files for you', sendSub: '{n} files · {size}', recv: 'Send files to {host}', recvSub: 'Drop files here or choose from your device',
   download: 'Download', downloadAll: 'Download all', choose: 'Choose files', sending: 'Sending…', sent: 'Sent', failed: 'Failed',
   expires: 'This link expires in {m} min and only works on this network.', expired: 'The link has expired. Ask for a new one on the PC.', taken: 'This link is already in use on another device.',
-  tooBig: 'File too large', from: 'From {host}', multi: 'You can choose several files at once.'
+  tooBig: 'File too large', noPrograms: 'This PC does not accept programs', from: 'From {host}', multi: 'You can choose several files at once.'
 };
 const fmt = (t, o) => t.replace(/\{(\w+)\}/g, (_, k) => o[k]);
 const bytes = n => n < 1024 ? n + ' B' : n < 1048576 ? (n/1024).toFixed(0) + ' KB' : n < 1073741824 ? (n/1048576).toFixed(1).replace('.', es ? ',' : '.') + ' MB' : (n/1073741824).toFixed(2).replace('.', es ? ',' : '.') + ' GB';
@@ -111,7 +111,7 @@ if (S.mode === 'send') {
     const xhr = new XMLHttpRequest();
     xhr.open('PUT', S.base + '/upload?name=' + encodeURIComponent(f.name));
     xhr.upload.onprogress = e => { if (e.lengthComputable) fill.style.width = (e.loaded / e.total * 100) + '%'; };
-    xhr.onload = () => { const ok = xhr.status >= 200 && xhr.status < 300; st.textContent = ok ? T.sent : (xhr.status === 413 ? T.tooBig : T.failed); st.className = 'size ' + (ok ? 'ok' : 'err'); fill.style.width = '100%'; busy = false; pump(); };
+    xhr.onload = () => { const ok = xhr.status >= 200 && xhr.status < 300; st.textContent = ok ? T.sent : (xhr.status === 413 ? T.tooBig : xhr.status === 415 ? T.noPrograms : T.failed); st.className = 'size ' + (ok ? 'ok' : 'err'); fill.style.width = '100%'; busy = false; pump(); };
     xhr.onerror = () => { st.textContent = T.failed; st.className = 'size err'; busy = false; pump(); };
     xhr.send(f);
   };

@@ -106,6 +106,44 @@ void main() {
     expect(res.statusCode, 404);
   });
 
+  test('programs are refused from guests and left out of what they get', () async {
+    final events = <GuestEventKind>[];
+    server.events.listen((e) => events.add(e.kind));
+    final s = await server.startReceive();
+    final url = s.urls(['127.0.0.1'], server.boundPort).single;
+
+    Future<HttpClientResponse> upload(String name) async {
+      final req = await client.putUrl(Uri.parse('$url/upload?name=${Uri.encodeComponent(name)}'));
+      final data = utf8.encode('MZ');
+      req.contentLength = data.length;
+      req.add(data);
+      return req.close();
+    }
+
+    final refused = await upload('Setup.EXE');
+    expect(refused.statusCode, HttpStatus.unsupportedMediaType);
+    expect(await utf8.decodeStream(refused), contains('"reason":"executable"'));
+    expect(Directory(server.receiveDir).listSync(), isEmpty);
+    expect(s.uploads, 0);
+    expect(events, contains(GuestEventKind.uploadFailed));
+
+    server.allowExecutables = true;
+    final taken = await upload('Setup.EXE');
+    expect(taken.statusCode, 200);
+    await taken.drain<void>();
+    expect(File(p.join(server.receiveDir, 'Setup.EXE')).existsSync(), isTrue);
+
+    // Sending to a guest: the program is skipped unless allowed.
+    final exe = File(p.join(tmp.path, 'tool.exe'))..writeAsStringSync('MZ');
+    final doc = File(p.join(tmp.path, 'doc.pdf'))..writeAsStringSync('%PDF');
+    server.allowExecutables = false;
+    final blocked = await server.startSend([exe.path, doc.path]);
+    expect(blocked.files.map((f) => f.name), ['doc.pdf']);
+    server.allowExecutables = true;
+    final allowed = await server.startSend([exe.path, doc.path]);
+    expect(allowed.files.map((f) => f.name), ['tool.exe', 'doc.pdf']);
+  });
+
   test('sessions expire', () async {
     final short = GuestShareServer(
       hostName: 'PC',

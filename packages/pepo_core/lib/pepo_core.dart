@@ -14,6 +14,7 @@ export 'src/media/image_ops.dart';
 export 'src/media/media_server.dart' show MediaServer, DeletePolicy;
 export 'src/media/media_source.dart';
 export 'src/media/media_source_fs.dart';
+export 'src/media/rescan_scheduler.dart';
 export 'src/native/native_bulk.dart'
     show NativeBulk, NativeBulkException, NativeBulkResult, NativeJob, nativeBulkLibraryEnv;
 export 'src/net/handshake.dart' show HandshakeException, NotPairedException;
@@ -26,9 +27,11 @@ export 'src/pairing/qr_payload.dart';
 export 'src/protocol/message_types.dart';
 export 'src/protocol/models.dart';
 export 'src/share/guest_share_server.dart';
+export 'src/transfer/executable_names.dart';
 export 'src/transfer/folder_layout.dart';
 export 'src/transfer/name_sanitizer.dart';
-export 'src/transfer/transfer_engine.dart' show TransferEngine, OfferPolicy, DestinationResolver;
+export 'src/transfer/transfer_engine.dart'
+    show TransferEngine, OfferPolicy, DestinationResolver, RejectedOffer;
 export 'src/transfer/transfer_record.dart';
 export 'src/util/bytes.dart' show toHex, fromHex, base64Url, base64UrlDecode, randomBytes;
 export 'src/version.dart';

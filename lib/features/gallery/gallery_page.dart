@@ -117,9 +117,7 @@ class _GalleryPageState extends ConsumerState<GalleryPage> {
     for (final e in entries) {
       final key = galleryEntryKey(e);
       if (e.isNew) stillNew.add(key);
-      if (_seen.add(key) &&
-          e.isNew &&
-          (_newestSeen == null || e.takenAt.isAfter(_newestSeen!))) {
+      if (_seen.add(key) && e.isNew && (_newestSeen == null || e.takenAt.isAfter(_newestSeen!))) {
         _arrived.add(key);
       }
       if (newest == null || e.takenAt.isAfter(newest)) newest = e.takenAt;

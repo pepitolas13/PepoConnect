@@ -66,6 +66,20 @@ void main() {
     Duration timeout = const Duration(seconds: 15),
   }) => e.events.where((x) => x is T && where(x)).cast<T>().first.timeout(timeout);
 
+  Future<void> waitUntil(
+    Future<bool> Function() condition, {
+    Duration timeout = const Duration(seconds: 10),
+  }) async {
+    final deadline = DateTime.now().add(timeout);
+    while (!await condition()) {
+      if (DateTime.now().isAfter(deadline)) fail('condition not met in $timeout');
+      await Future<void>.delayed(const Duration(milliseconds: 50));
+    }
+  }
+
+  Future<bool> sharesClipboard(PepoEngine e) async =>
+      (await e.devices()).single.device.shareClipboard;
+
   test('full flow: QR pairing, gallery, new photo, download into per-device folder', () async {
     expect(hub.shortId, startsWith('PEPO-'));
     final invite = await hub.startQrPairing();
@@ -142,8 +156,20 @@ void main() {
     // Clipboard text reaches the phone when sharing is enabled for it.
     await hub.updateDevice(phoneId, shareClipboard: true);
     final clip = next<ClipboardReceivedEvent>(phone, (e) => e.text == 'hola mundo');
-    hub.sendClipboard('hola mundo');
+    expect(hub.sendClipboard('hola mundo'), ['Pixel 8']);
     expect((await clip).deviceId, hub.deviceId);
+
+    // One switch for the pair: the phone adopts the hub's flag and can push
+    // its own clipboard back without touching its own settings.
+    await waitUntil(() => sharesClipboard(phone));
+    final back = next<ClipboardReceivedEvent>(hub, (e) => e.text == 'desde el móvil');
+    expect(phone.sendClipboard('desde el móvil'), ['PC de Daniel']);
+    expect((await back).deviceId, phone.deviceId);
+
+    // Switching it off on the phone reaches the hub.
+    await phone.updateDevice(hub.deviceId, shareClipboard: false);
+    await waitUntil(() async => !await sharesClipboard(hub));
+    expect(hub.sendClipboard('nada'), isEmpty);
 
     // Forget: both sides drop the device.
     final gone = next<DevicesChangedEvent>(phone, (_) => true);
@@ -165,5 +191,30 @@ void main() {
     expect(device.deviceId, hub.deviceId);
     await connected;
     expect((await hub.devices()).single.connected, isTrue);
+  });
+
+  test('clipboard switch: legacy true wins the tie, a later change wins afterwards', () async {
+    final invite = await hub.startCodePairing();
+    final connected = next<DeviceConnectionEvent>(hub, (e) => e.connected);
+    await phone.pairWithCode(code: invite.code!, host: '127.0.0.1', port: hub.listenPort);
+    await connected;
+    final phoneId = phone.deviceId;
+
+    // Record written before the flag was mirrored: on, no timestamp.
+    final session = hub.sessions.session(phoneId)!;
+    await hub.sessions.updateDevice(session.device.copyWith(shareClipboard: true));
+    expect(session.device.shareClipboardAt, isNull);
+    session.sendStatus();
+    await waitUntil(() => sharesClipboard(phone));
+
+    // A stamped change on the phone beats it...
+    await phone.updateDevice(hub.deviceId, shareClipboard: false);
+    await waitUntil(() async => !await sharesClipboard(hub));
+
+    // ...and the hub's next status push does not switch it back on.
+    session.sendStatus();
+    await Future<void>.delayed(const Duration(milliseconds: 300));
+    expect(await sharesClipboard(phone), isFalse);
+    expect(await sharesClipboard(hub), isFalse);
   });
 }

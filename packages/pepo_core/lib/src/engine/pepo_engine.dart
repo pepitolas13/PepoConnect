@@ -168,6 +168,7 @@ class PepoEngine {
       store: _transferStore,
       destination: _destinationFor,
       policy: _offerPolicy,
+      allowExecutables: config.allowExecutables,
     );
     sessions.transfers = transfers;
     gallery = GalleryClient(
@@ -229,6 +230,13 @@ class PepoEngine {
             _emit(DevicesChangedEvent());
         }
       }),
+    );
+    _subs.add(
+      transfers.rejectedOffers.listen(
+        (r) => _emit(
+          OfferRejectedEvent(deviceId: r.deviceId, name: r.name, size: r.size, reason: r.reason),
+        ),
+      ),
     );
     _subs.add(
       transfers.events.listen((e) {
@@ -305,7 +313,8 @@ class PepoEngine {
     unawaited(sessions.probe());
   }
 
-  /// Persists per-device preferences.
+  /// Persists per-device preferences. The clipboard switch is shared with
+  /// the peer: a change is stamped and pushed right away when connected.
   Future<void> updateDevice(
     String deviceId, {
     String? name,
@@ -315,14 +324,20 @@ class PepoEngine {
   }) async {
     final current = sessions.session(deviceId)?.device ?? await _deviceStore.find(deviceId);
     if (current == null) return;
+    final clipChanged = shareClipboard != null && shareClipboard != current.shareClipboard;
     await sessions.updateDevice(
       current.copyWith(
         name: name,
         autoDownload: autoDownload,
         convertHeic: convertHeic,
         shareClipboard: shareClipboard,
+        shareClipboardAt: clipChanged ? DateTime.now() : null,
       ),
     );
+    if (clipChanged) {
+      final s = sessions.session(deviceId);
+      if (s != null && s.isConnected) s.sendStatus();
+    }
   }
 
   Future<void> _ensureFolderName(PairedDevice device) async {
@@ -368,6 +383,17 @@ class PepoEngine {
 
   void setClipboardSharing(bool value) => _clipboardShare = value;
   bool get clipboardSharing => _clipboardShare;
+
+  /// Programs (`.exe`, `.msi`, `.apk`...) are neither sent, accepted from a
+  /// paired device nor taken from a guest browser unless this is on. The
+  /// other device has its own switch; both have to be on.
+  void setAllowExecutables(bool value) {
+    config = config.copyWith(allowExecutables: value);
+    transfers.allowExecutables = value;
+    _guest?.allowExecutables = value;
+  }
+
+  bool get allowExecutables => config.allowExecutables;
 
   /// Local IPv4 addresses (for QR codes and the pairing screen).
   Future<List<String>> localAddresses() => localIPv4Addresses();
@@ -557,16 +583,28 @@ class PepoEngine {
   // Clipboard (text)
 
   /// Sends [text] to every connected device with clipboard sharing enabled
-  /// (or to [deviceId] only).
-  void sendClipboard(String text, {String? deviceId}) {
-    if (text.isEmpty || text.length > 64 * 1024) return;
+  /// (or to [deviceId] only). Returns the names of the devices it went to;
+  /// empty when nobody was connected to receive it.
+  List<String> sendClipboard(String text, {String? deviceId}) {
+    if (text.isEmpty || text.length > 64 * 1024) return const [];
+    final sent = <String>[];
     for (final s in sessions.sessions) {
       if (!s.isConnected) continue;
       if (deviceId != null && s.deviceId != deviceId) continue;
       if (deviceId == null && !s.device.shareClipboard) continue;
-      s.control?.send(MsgType.clipboardSet, data: {'mime': 'text/plain', 'text': text});
+      final control = s.control;
+      if (control == null) continue;
+      control.send(MsgType.clipboardSet, data: {'mime': 'text/plain', 'text': text});
+      sent.add(s.device.name);
     }
+    return sent;
   }
+
+  /// Connected devices that receive our clipboard.
+  List<String> clipboardTargets() => [
+    for (final s in sessions.sessions)
+      if (s.isConnected && s.device.shareClipboard) s.device.name,
+  ];
 
   // ---------------------------------------------------------------------------
   // Guest share (browser, no app)
@@ -592,11 +630,15 @@ class PepoEngine {
       );
     }
     g.receiveDir = layout.guestsDirectory();
+    g.allowExecutables = config.allowExecutables;
     return g;
   }
 
   /// Current guest session (null when none or expired).
   GuestSession? get guestSession => _guest?.session;
+
+  /// Includes accepted browser transfers whose invitation has since expired.
+  int get activeGuestTransfers => _guest?.activeTransfers ?? 0;
 
   /// Port of the guest HTTP server (0 until first use).
   int get guestPort => _guest?.boundPort ?? 0;

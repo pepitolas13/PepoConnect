@@ -148,11 +148,6 @@ class _FluentPageRoute<T> extends PageRoute<T> {
         child,
       );
     }
-    return fluentTransition(
-      animation,
-      secondaryAnimation,
-      child,
-      slide: fullscreenDialog ? 0 : 8,
-    );
+    return fluentTransition(animation, secondaryAnimation, child, slide: fullscreenDialog ? 0 : 8);
   }
 }

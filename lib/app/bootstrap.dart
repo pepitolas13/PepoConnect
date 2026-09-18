@@ -154,6 +154,7 @@ Future<PepoEngine> startEngine({
     appVersion: pkg.version,
     model: identity.model,
     separateByDevice: settings.separateByDevice,
+    allowExecutables: settings.allowExecutables,
     listenPort:
         options.port ??
         (options.profile == null

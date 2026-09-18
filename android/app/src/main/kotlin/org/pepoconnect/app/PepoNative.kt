@@ -29,7 +29,7 @@ import java.util.concurrent.Executors
 
 /**
  * Native helpers exposed to Dart on the MethodChannel `org.pepoconnect/native`.
- * Registered from [MainActivity.configureFlutterEngine].
+ * Registered when the engine is created ([PepoEngineHolder]).
  *
  * Methods (all errors come back as PlatformException):
  *  - `acquireMulticastLock()` -> Boolean. Holds a WifiManager.MulticastLock so mDNS
@@ -45,6 +45,17 @@ import java.util.concurrent.Executors
  *  - `openAppSettings()` -> Boolean. Opens this app's details page in Settings.
  *  - `playWav(wav: ByteArray, sampleRate: Int)` -> Boolean. Plays a short 16-bit mono WAV
  *    (canonical 44-byte header) on the notification stream.
+ *  - `clipboardReady()` -> null. Dart registered its handler for the native -> Dart call
+ *    below; until then [deliverClipboard] refuses to use the channel.
+ *  - `hasActivity()` -> Boolean. A window (MainActivity) is attached, so platform calls
+ *    that need one (clipboard, permission dialogs) can be made.
+ *  - `serviceStart(title, text, idle)` -> Boolean, `serviceUpdate(title, text)` -> Boolean,
+ *    `serviceStop()` -> null, `serviceRunning()` -> Boolean. The foreground service that
+ *    keeps the engine alive with the app closed, see [PepoForegroundService].
+ *
+ * Native -> Dart (see [deliverClipboard]):
+ *  - `clipboardText(text: String)` -> Map with `sent`: names of the devices the text went
+ *    to. Used by [ClipboardSendActivity] (quick-settings tile / launcher shortcut).
  */
 class PepoNative : FlutterPlugin, ActivityAware, MethodChannel.MethodCallHandler {
 
@@ -53,7 +64,22 @@ class PepoNative : FlutterPlugin, ActivityAware, MethodChannel.MethodCallHandler
         private const val LOCK_TAG = "PepoConnect:mdns"
         private const val DOWNLOADS_SUBDIR = "PepoConnect"
         private const val WAV_HEADER = 44
+
+        /**
+         * The instance attached to the running Flutter engine ([PepoEngineHolder]), or
+         * null when Dart is not running at all: no window and no foreground service. The
+         * engine outlives the window while the service runs, so a null here means
+         * "start the app".
+         */
+        @Volatile
+        var current: PepoNative? = null
+            private set
     }
+
+    /** Dart has registered its handler for native -> Dart calls. */
+    @Volatile
+    var dartReady: Boolean = false
+        private set
 
     private var channel: MethodChannel? = null
     private var appContext: Context? = null
@@ -69,14 +95,61 @@ class PepoNative : FlutterPlugin, ActivityAware, MethodChannel.MethodCallHandler
         channel = MethodChannel(binding.binaryMessenger, CHANNEL).also {
             it.setMethodCallHandler(this)
         }
+        current = this
     }
 
     override fun onDetachedFromEngine(binding: FlutterPlugin.FlutterPluginBinding) {
+        if (current === this) current = null
+        dartReady = false
         channel?.setMethodCallHandler(null)
         channel = null
         releaseMulticastLock()
         io.shutdown()
         appContext = null
+    }
+
+    // ---- Native -> Dart ----------------------------------------------------------------
+
+    /**
+     * Hands clipboard [text] to Dart (`clipboardText`) and calls [callback] on the main
+     * thread with the names of the devices it was sent to, or null when Dart could not
+     * take it: handler not registered yet, error, or no answer within [timeoutMs].
+     * A message sent before Dart registers its handler sits in the channel buffer
+     * unanswered, which is why [dartReady] gates the call.
+     */
+    fun deliverClipboard(text: String, timeoutMs: Long = 1500L, callback: (List<String>?) -> Unit) {
+        val ch = channel
+        if (ch == null || !dartReady) {
+            mainHandler.post { callback(null) }
+            return
+        }
+        mainHandler.post {
+            var done = false
+            val timeout = Runnable {
+                if (!done) {
+                    done = true
+                    callback(null)
+                }
+            }
+            fun finish(names: List<String>?) {
+                if (done) return
+                done = true
+                mainHandler.removeCallbacks(timeout)
+                callback(names)
+            }
+            mainHandler.postDelayed(timeout, timeoutMs)
+            ch.invokeMethod("clipboardText", text, object : MethodChannel.Result {
+                override fun success(result: Any?) {
+                    val sent = (result as? Map<*, *>)?.get("sent") as? List<*>
+                    finish(sent?.filterIsInstance<String>() ?: emptyList())
+                }
+
+                override fun error(errorCode: String, errorMessage: String?, errorDetails: Any?) =
+                    finish(null)
+
+                override fun notImplemented() = finish(null)
+            })
+        }
     }
 
     // ---- ActivityAware -----------------------------------------------------------------
@@ -107,6 +180,9 @@ class PepoNative : FlutterPlugin, ActivityAware, MethodChannel.MethodCallHandler
         }
         try {
             when (call.method) {
+                "updateCacheDirectory" -> result.success(PepoUpdater.cacheDirectory(context).path)
+                "updateCanInstall" -> result.success(PepoUpdater.canInstall(context))
+                "updateInstall" -> PepoUpdater.install(context, activity, call, result, io, mainHandler)
                 "acquireMulticastLock" -> result.success(acquireMulticastLock(context))
                 "releaseMulticastLock" -> {
                     releaseMulticastLock()
@@ -140,6 +216,27 @@ class PepoNative : FlutterPlugin, ActivityAware, MethodChannel.MethodCallHandler
                     }
                     result.success(playPcm(wav, WAV_HEADER, sampleRate))
                 }
+                "clipboardReady" -> {
+                    dartReady = true
+                    result.success(null)
+                }
+                "hasActivity" -> result.success(activity != null)
+                "serviceStart" -> {
+                    val title = call.argument<String>("title") ?: context.getString(R.string.app_name)
+                    val text = call.argument<String>("text") ?: ""
+                    val idle = call.argument<String>("idle") ?: context.getString(R.string.service_idle)
+                    result.success(PepoForegroundService.start(context, title, text, idle))
+                }
+                "serviceUpdate" -> {
+                    val title = call.argument<String>("title") ?: context.getString(R.string.app_name)
+                    val text = call.argument<String>("text") ?: ""
+                    result.success(PepoForegroundService.update(title, text))
+                }
+                "serviceStop" -> {
+                    PepoForegroundService.stop(context)
+                    result.success(null)
+                }
+                "serviceRunning" -> result.success(PepoForegroundService.isRunning)
                 else -> result.notImplemented()
             }
         } catch (e: Exception) {

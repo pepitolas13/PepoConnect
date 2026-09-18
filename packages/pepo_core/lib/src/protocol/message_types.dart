@@ -66,6 +66,9 @@ class ErrorCode {
   static const unauthorized = 'unauthorized';
   static const notFound = 'not_found';
   static const rejected = 'rejected';
+
+  /// `file.reject` reason: the receiver does not accept programs.
+  static const executable = 'executable';
   static const timeout = 'timeout';
   static const busy = 'busy';
   static const io = 'io';

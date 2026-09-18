@@ -8,10 +8,10 @@ import '../../shared/theme/tokens.dart';
 import '../../shared/widgets/device_icon.dart';
 import '../../shared/widgets/status_pill.dart';
 
-/// Where the files of a "Send to PC" come from.
-enum SendSource { files, gallery }
+/// What a "Send to PC" sends: picked files, gallery items or the clipboard.
+enum SendSource { files, gallery, clipboard }
 
-/// Bottom sheet "Send to PC: Files / Gallery / Cancel".
+/// Bottom sheet "Send to PC: Files / Gallery / Clipboard / Cancel".
 Future<SendSource?> showSendToPcSheet(BuildContext context) {
   final t = context.t;
   return _showSheet<SendSource>(
@@ -27,6 +27,11 @@ Future<SendSource?> showSendToPcSheet(BuildContext context) {
         icon: FluentIcons.image_multiple_20_regular,
         label: t.mobileGallery,
         onTap: () => Navigator.of(sheet).pop(SendSource.gallery),
+      ),
+      _SheetRow(
+        icon: FluentIcons.clipboard_paste_20_regular,
+        label: t.mobileClipboard,
+        onTap: () => Navigator.of(sheet).pop(SendSource.clipboard),
       ),
     ],
   );

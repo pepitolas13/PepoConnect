@@ -5,6 +5,7 @@ import 'dart:io';
 import 'package:logging/logging.dart';
 import 'package:path/path.dart' as p;
 
+import '../transfer/executable_names.dart';
 import '../transfer/name_sanitizer.dart';
 import '../util/bytes.dart';
 import 'guest_share_page.dart';
@@ -26,7 +27,16 @@ class GuestFile {
 }
 
 /// What happened in a guest session.
-enum GuestEventKind { created, opened, downloaded, uploaded, uploadFailed, expired, cancelled }
+enum GuestEventKind {
+  created,
+  opened,
+  downloaded,
+  uploaded,
+  uploadFailed,
+  expired,
+  cancelled,
+  transfersChanged,
+}
 
 class GuestShareEvent {
   GuestShareEvent(this.session, this.kind, {this.fileName, this.bytes, this.remote, this.path});
@@ -93,6 +103,7 @@ class GuestShareServer {
     this.port = 47475,
     this.ttl = const Duration(minutes: 10),
     this.maxUploadBytes = 8 * 1024 * 1024 * 1024,
+    this.allowExecutables = false,
   });
 
   final String hostName;
@@ -101,15 +112,23 @@ class GuestShareServer {
   final Duration ttl;
   final int maxUploadBytes;
 
+  /// Programs (`.exe`, `.msi`, `.apk`...) are neither offered to guests nor
+  /// taken from them unless this is on. See [ExecutableNames].
+  bool allowExecutables;
+
   HttpServer? _server;
   GuestSession? _session;
   final _events = StreamController<GuestShareEvent>.broadcast();
   Timer? _expiry;
+  int _activeTransfers = 0;
 
   Stream<GuestShareEvent> get events => _events.stream;
   GuestSession? get session => _session?.isExpired == true ? null : _session;
   int get boundPort => _server?.port ?? port;
   bool get isRunning => _server != null;
+
+  /// Accepted HTTP streams outlive invitation expiry/cancellation.
+  int get activeTransfers => _activeTransfers;
 
   Future<void> _ensureServer() async {
     if (_server != null) return;
@@ -133,12 +152,14 @@ class GuestShareServer {
     _log.info('guest share listening on ${server.port}');
   }
 
-  /// Offers [paths] to a guest. Replaces any previous session.
+  /// Offers [paths] to a guest. Replaces any previous session. Programs
+  /// are left out unless [allowExecutables] is on.
   Future<GuestSession> startSend(List<String> paths, {String? message}) async {
     await _ensureServer();
     final files = <GuestFile>[];
     var i = 0;
     for (final path in paths) {
+      if (!allowExecutables && ExecutableNames.isExecutable(p.basename(path))) continue;
       final f = File(path);
       if (!await f.exists()) continue;
       files.add(
@@ -242,13 +263,13 @@ class GuestShareServer {
       }
       s.boundRemote ??= remote;
       if (segments[2] == 'file' && segments.length == 4 && s.mode == GuestMode.send) {
-        await _serveFile(req, s, segments[3], remote);
+        await _trackTransfer(s, () => _serveFile(req, s, segments[3], remote));
         return;
       }
       if (segments[2] == 'upload' &&
           s.mode == GuestMode.receive &&
           (req.method == 'PUT' || req.method == 'POST')) {
-        await _receiveUpload(req, s, remote);
+        await _trackTransfer(s, () => _receiveUpload(req, s, remote));
         return;
       }
       await _html(res, HttpStatus.notFound, guestErrorPage('PepoConnect'));
@@ -267,6 +288,17 @@ class GuestShareServer {
     res.headers.set('Cache-Control', 'no-store');
     res.write(body);
     await res.close();
+  }
+
+  Future<void> _trackTransfer(GuestSession session, Future<void> Function() transfer) async {
+    _activeTransfers++;
+    _emit(session, GuestEventKind.transfersChanged);
+    try {
+      await transfer();
+    } finally {
+      _activeTransfers--;
+      _emit(session, GuestEventKind.transfersChanged);
+    }
   }
 
   Future<void> _serveFile(HttpRequest req, GuestSession s, String id, String remote) async {
@@ -327,6 +359,15 @@ class GuestShareServer {
     final rawName =
         req.uri.queryParameters['name'] ?? req.headers.value('X-File-Name') ?? 'archivo';
     final name = NameSanitizer.sanitize(rawName);
+    if (!allowExecutables && ExecutableNames.isExecutable(name)) {
+      _log.info('guest upload refused, executables are off: $name');
+      _emit(s, GuestEventKind.uploadFailed, fileName: name, remote: remote);
+      res.statusCode = HttpStatus.unsupportedMediaType;
+      res.headers.contentType = ContentType.json;
+      res.write(jsonEncode({'ok': false, 'reason': 'executable'}));
+      await res.close();
+      return;
+    }
     final declared = req.contentLength;
     if (declared > maxUploadBytes) {
       res.statusCode = HttpStatus.requestEntityTooLarge;

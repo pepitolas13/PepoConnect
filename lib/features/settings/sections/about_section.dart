@@ -5,16 +5,15 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../platform/open_helper.dart';
 import '../../../shared/i18n/l10n.dart';
-import '../../../shared/motion/fade_slide_switcher.dart';
 import '../../../shared/motion/toast.dart';
 import '../../../shared/theme/tokens.dart';
 import '../../../shared/widgets/fluent_button.dart';
-import '../../../shared/widgets/info_bar.dart';
 import '../../../shared/widgets/pepo_card.dart';
 import '../../../shared/widgets/pepo_logo.dart';
 import '../settings_providers.dart';
 import '../settings_widgets.dart';
 import '../update_checker.dart';
+import '../../updates/update_controls.dart';
 
 /// Logo, version, device id, update check, repository link and reset.
 class AboutSection extends ConsumerStatefulWidget {
@@ -25,36 +24,11 @@ class AboutSection extends ConsumerStatefulWidget {
 }
 
 class _AboutSectionState extends ConsumerState<AboutSection> {
-  bool _checking = false;
-  UpdateCheckResult? _result;
-  bool _failed = false;
-
   Future<void> _copyId(String id) async {
     final t = context.t;
     await Clipboard.setData(ClipboardData(text: id));
     if (!mounted) return;
     ToastService.maybeOf(context)?.show(ToastData(title: t.toastCopied, message: id));
-  }
-
-  Future<void> _check(String current) async {
-    setState(() {
-      _checking = true;
-      _failed = false;
-      _result = null;
-    });
-    UpdateCheckResult? result;
-    var failed = false;
-    try {
-      result = await checkForUpdates(currentVersion: current);
-    } catch (_) {
-      failed = true;
-    }
-    if (!mounted) return;
-    setState(() {
-      _checking = false;
-      _result = result;
-      _failed = failed;
-    });
   }
 
   Future<void> _reset() async {
@@ -72,47 +46,12 @@ class _AboutSectionState extends ConsumerState<AboutSection> {
         ?.show(ToastData(title: t.setResetDone, severity: ToastSeverity.success));
   }
 
-  Widget? _updateBar() {
-    final t = context.t;
-    if (_failed) {
-      return InfoBar(
-        key: const ValueKey('failed'),
-        severity: InfoBarSeverity.critical,
-        title: t.setUpdateFailed,
-        message: t.setUpdateFailedBody,
-        onClose: () => setState(() => _failed = false),
-      );
-    }
-    final r = _result;
-    if (r == null) return null;
-    if (r.isNewer) {
-      return InfoBar(
-        key: const ValueKey('newer'),
-        title: t.setUpdateAvailable(r.latest),
-        action: FluentButton.subtle(
-          label: t.setViewOnGitHub,
-          size: FluentButtonSize.small,
-          trailingIcon: FluentIcons.open_16_regular,
-          onPressed: () => OpenHelper.openUrl(r.url),
-        ),
-        onClose: () => setState(() => _result = null),
-      );
-    }
-    return InfoBar(
-      key: const ValueKey('latest'),
-      severity: InfoBarSeverity.success,
-      title: t.setUpToDate,
-      onClose: () => setState(() => _result = null),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final t = context.t;
     final colors = context.pepo;
     final text = context.text;
     final facts = ref.watch(localDeviceFactsProvider);
-    final bar = _updateBar();
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -159,30 +98,7 @@ class _AboutSectionState extends ConsumerState<AboutSection> {
                   ? t.setFastLaneOn(facts.fastLanePort)
                   : t.setFastLaneOff,
             ),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                SettingsRow(
-                  icon: FluentIcons.arrow_sync_20_regular,
-                  title: t.setCheckUpdates,
-                  description: t.version(facts.appVersion),
-                  trailing: FluentButton(
-                    label: t.setCheckUpdates,
-                    loading: _checking,
-                    onPressed: () => _check(facts.appVersion),
-                  ),
-                ),
-                FadeSlideSwitcher(
-                  child: bar == null
-                      ? const SizedBox.shrink(key: ValueKey('none'))
-                      : Padding(
-                          key: bar.key,
-                          padding: const EdgeInsets.fromLTRB(Space.l, 0, Space.l, Space.m),
-                          child: bar,
-                        ),
-                ),
-              ],
-            ),
+            const UpdateControls(),
             SettingsRow(
               icon: FluentIcons.globe_20_regular,
               title: t.setSourceCode,
@@ -198,6 +114,21 @@ class _AboutSectionState extends ConsumerState<AboutSection> {
               title: t.resetSettings,
               description: t.setResetBody,
               trailing: FluentButton(label: t.resetSettings, onPressed: _reset),
+            ),
+            SettingsRow(
+              icon: FluentIcons.document_20_regular,
+              title: MaterialLocalizations.of(context).licensesPageTitle,
+              description: 'GPLv3 · © 2026 PepoTech',
+              trailing: FluentButton(
+                icon: FluentIcons.open_16_regular,
+                label: t.open,
+                onPressed: () => showLicensePage(
+                  context: context,
+                  applicationName: t.appName,
+                  applicationVersion: facts.appVersion,
+                  applicationLegalese: '© 2026 PepoTech · GPLv3',
+                ),
+              ),
             ),
           ],
         ),

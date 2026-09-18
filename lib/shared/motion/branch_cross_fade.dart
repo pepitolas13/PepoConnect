@@ -47,7 +47,10 @@ class _BranchCrossFadeState extends State<BranchCrossFade> with SingleTickerProv
     ..addStatusListener(_onStatus);
 
   /// Incoming: ease-out, fast at the start.
-  late final Animation<double> _enter = CurvedAnimation(parent: _controller, curve: Motion.standard);
+  late final Animation<double> _enter = CurvedAnimation(
+    parent: _controller,
+    curve: Motion.standard,
+  );
 
   /// Outgoing: a linear dim, so it is a tail under the new section rather
   /// than a double exposure.

@@ -14,6 +14,7 @@ import '../../shared/widgets/fluent_button.dart';
 import '../../shared/widgets/flyout.dart';
 import '../../shared/widgets/thin_progress_bar.dart';
 import 'file_type_icon.dart';
+import 'transfer_errors.dart';
 
 bool get _touch =>
     defaultTargetPlatform == TargetPlatform.android || defaultTargetPlatform == TargetPlatform.iOS;
@@ -264,7 +265,7 @@ class _HistoryTransferRowState extends State<HistoryTransferRow> {
       when,
     ];
     final String? problem = switch (r.state) {
-      TransferState.failed => r.error ?? t.errorGeneric,
+      TransferState.failed => transferErrorLabel(t, r.error),
       TransferState.cancelled => t.errorCancelled,
       _ => null,
     };

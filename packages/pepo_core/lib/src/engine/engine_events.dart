@@ -1,5 +1,6 @@
 import '../media/gallery_client.dart';
 import '../pairing/pairing_session.dart';
+import '../protocol/message_types.dart';
 import '../protocol/models.dart';
 import '../transfer/transfer_record.dart';
 
@@ -45,6 +46,13 @@ sealed class EngineEvent {
         );
       case 'clipboard':
         return ClipboardReceivedEvent(j['deviceId'] as String, j['text'] as String);
+      case 'rejected':
+        return OfferRejectedEvent(
+          deviceId: j['deviceId'] as String,
+          name: j['name'] as String,
+          size: j['size'] as int? ?? 0,
+          reason: j['reason'] as String,
+        );
       case 'guest':
         return GuestShareChangedEvent(
           kind: j['kind'] as String,
@@ -159,6 +167,33 @@ class TransferChangedEvent extends EngineEvent {
     'record': record.toJson(),
     'progressOnly': progressOnly,
     'removed': removed,
+  };
+}
+
+/// An incoming file was turned down here before any byte moved: a program
+/// while "allow executables" is off ([ErrorCode.executable]), or the app's
+/// offer policy said no ([ErrorCode.rejected]). The sender sees a failed
+/// transfer with the same reason.
+class OfferRejectedEvent extends EngineEvent {
+  const OfferRejectedEvent({
+    required this.deviceId,
+    required this.name,
+    required this.size,
+    required this.reason,
+  });
+
+  final String deviceId;
+  final String name;
+  final int size;
+  final String reason;
+
+  @override
+  Map<String, dynamic> toJson() => {
+    'e': 'rejected',
+    'deviceId': deviceId,
+    'name': name,
+    'size': size,
+    'reason': reason,
   };
 }
 

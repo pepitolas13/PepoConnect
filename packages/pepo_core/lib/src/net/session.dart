@@ -129,9 +129,14 @@ class PeerSession {
     final old = _control;
     _control = conn;
     _sessionToken = token;
+    // The handshake may hand back a copy loaded from the store; keep the
+    // clipboard flag that changed last (a toggle while connecting).
+    final keepMemory = _clipStamp(device) > _clipStamp(updated);
     device = updated.copyWith(
       lastAddresses: conn.isInitiator ? device.lastAddresses : _addressesFor(conn),
       lastSeen: DateTime.now(),
+      shareClipboard: keepMemory ? device.shareClipboard : null,
+      shareClipboardAt: keepMemory ? device.shareClipboardAt : null,
     );
     state = SessionState.connected;
     connectedAt = DateTime.now();
@@ -176,8 +181,33 @@ class PeerSession {
         'role': _manager.info.role.code,
         'version': _manager.info.appVersion,
         if (_manager.bulkPort > 0) 'fast': _manager.bulkPort,
+        // Shared clipboard is one switch for the pair: tell the peer what we
+        // have and when it was set so both sides converge (newer wins).
+        'clipShare': device.shareClipboard,
+        'clipShareAt': _clipStamp(device),
       },
     );
+  }
+
+  static int _clipStamp(PairedDevice d) => d.shareClipboardAt?.millisecondsSinceEpoch ?? 0;
+
+  /// Adopts the peer's clipboard flag when theirs changed later than ours.
+  /// A tie is broken in favour of `true` so installs that enabled sharing
+  /// before the flag was synchronised (no timestamp) switch the peer on.
+  /// Returns true when [device] changed.
+  bool _reconcileClipboard(ControlMessage m) {
+    final remote = m.data['clipShare'];
+    if (remote is! bool) return false;
+    final remoteAt = m.optInt('clipShareAt') ?? 0;
+    final localAt = _clipStamp(device);
+    final adopt = remoteAt > localAt || (remoteAt == localAt && remote && !device.shareClipboard);
+    if (!adopt) return false;
+    final changed = remote != device.shareClipboard;
+    device = device.copyWith(
+      shareClipboard: remote,
+      shareClipboardAt: DateTime.fromMillisecondsSinceEpoch(remoteAt),
+    );
+    return changed;
   }
 
   /// The fast lane route to this device for the next transfer, or null.
@@ -229,8 +259,15 @@ class PeerSession {
         case MsgType.deviceInfo:
           status = DeviceStatus.fromJson(m.data);
           final name = m.optStr('name');
+          var changed = false;
           if (name != null && name.isNotEmpty && name != device.name) {
             device = device.copyWith(name: name);
+            changed = true;
+          }
+          // Never answer with our own device.info from here: the peer gets
+          // it on the next connect / status push, which avoids ping-pong.
+          changed = _reconcileClipboard(m) || changed;
+          if (changed) {
             await _manager._deviceStore.save(device);
             _manager._emit(DeviceUpdatedEvent(deviceId, device));
           }
@@ -810,8 +847,9 @@ class SessionManager implements ChannelProvider, PeerRegistry {
 
   /// Updates persisted settings of a device (name, auto download...).
   Future<void> updateDevice(PairedDevice device) async {
-    await _deviceStore.save(device);
+    // In memory first so a status push right after sees the new value.
     _sessions[device.deviceId]?.device = device;
+    await _deviceStore.save(device);
     _emit(DeviceUpdatedEvent(device.deviceId, device));
   }
 

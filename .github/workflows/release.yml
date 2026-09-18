@@ -53,7 +53,6 @@ jobs:
           - { runner: ubuntu-24.04,     arch: x64,   aiarch: x86_64,  fparch: x86_64 }
           - { runner: ubuntu-24.04-arm, arch: arm64, aiarch: aarch64, fparch: aarch64 }
     runs-on: ${{ matrix.runner }}
-    continue-on-error: ${{ matrix.arch == 'arm64' }}
     timeout-minutes: 90
     steps:
       - uses: actions/checkout@v4
@@ -117,6 +116,11 @@ jobs:
           echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | tr -d '\r\n ' | base64 -d > android/app/release.jks
           printf 'storeFile=release.jks\nstorePassword=%s\nkeyAlias=%s\nkeyPassword=%s\n' \
             "${{ secrets.ANDROID_KEYSTORE_PASSWORD }}" "${{ secrets.ANDROID_KEY_ALIAS }}" "${{ secrets.ANDROID_KEYSTORE_PASSWORD }}" > android/key.properties
+      - name: Require a stable signing identity for published updates
+        if: startsWith(github.ref, 'refs/tags/v') && env.HAS_KEYSTORE != 'true'
+        run: |
+          echo "::error::Published APK updates require ANDROID_KEYSTORE_BASE64, ANDROID_KEYSTORE_PASSWORD and ANDROID_KEY_ALIAS. A new debug key would prevent existing users from updating."
+          exit 1
       - run: flutter pub get
       - run: flutter build apk --release --split-per-abi
       - run: flutter build apk --release --target-platform android-arm,android-arm64
@@ -124,6 +128,7 @@ jobs:
           mkdir -p dist
           cp build/app/outputs/flutter-apk/app-arm64-v8a-release.apk   dist/PepoConnect-android-arm64-v8a.apk
           cp build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk dist/PepoConnect-android-armeabi-v7a.apk
+          cp build/app/outputs/flutter-apk/app-x86_64-release.apk       dist/PepoConnect-android-x86_64.apk
           cp build/app/outputs/flutter-apk/app-release.apk             dist/PepoConnect-android-universal.apk
       - uses: actions/upload-artifact@v4
         with:
@@ -171,17 +176,39 @@ jobs:
 
   release:
     needs: [windows, linux, android, ios]
-    if: ${{ always() && startsWith(github.ref, 'refs/tags/v') && !contains(needs.*.result, 'cancelled') }}
+    if: ${{ success() && startsWith(github.ref, 'refs/tags/v') }}
     runs-on: ubuntu-24.04
     permissions: { contents: write }
     steps:
+      - uses: actions/checkout@v4
       - uses: actions/download-artifact@v4
         with:
           path: dist
           merge-multiple: true
-      - run: cd dist && ls -la && sha256sum * > SHA256SUMS.txt
+      - name: Require every supported package and generate update checksums
+        working-directory: dist
+        run: |
+          set -euo pipefail
+          for asset in PepoConnect-win-x64.exe PepoConnect-win-x64-portable.zip \
+            PepoConnect-linux-{x64,arm64}.{tar.gz,AppImage,flatpak} \
+            PepoConnect-android-{arm64-v8a,armeabi-v7a,x86_64,universal}.apk \
+            PepoConnect-ios-unsigned.ipa; do
+            test -s "$asset" || { echo "::error::Missing update package: $asset"; exit 1; }
+          done
+          sha256sum PepoConnect-* > SHA256SUMS.txt
+      - name: Prepare release notes
+        env:
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: |
+          notes="docs/releases/$RELEASE_TAG.md"
+          if [ -f "$notes" ]; then
+            cp "$notes" .release-notes.md
+          else
+            printf 'Descarga el paquete de tu sistema. Encontrarás las instrucciones y los cambios en el [repositorio](https://github.com/pepitolas13/PepoConnect).\n' > .release-notes.md
+          fi
       - uses: softprops/action-gh-release@v2
         with:
           files: dist/*
-          generate_release_notes: true
+          body_path: .release-notes.md
+          fail_on_unmatched_files: true
           prerelease: ${{ contains(github.ref_name, '-') }}

@@ -1,8 +1,7 @@
 import 'dart:io';
 
-import 'package:flutter_foreground_task/flutter_foreground_task.dart';
-
 import 'media_source_photo_manager.dart';
+import 'notifications.dart';
 import 'pepo_native.dart';
 
 /// State of the permissions the mobile app needs.
@@ -35,10 +34,9 @@ class MobilePermissions {
         batteryUnrestricted: true,
       );
     }
-    final notif = await FlutterForegroundTask.checkNotificationPermission();
     return MobilePermissionState(
       photos: await MediaSourcePhotoManager.hasPermission(),
-      notifications: notif == NotificationPermission.granted,
+      notifications: await SystemNotifications.instance.enabled(),
       batteryUnrestricted: Platform.isIOS || await PepoNative.isIgnoringBatteryOptimizations(),
     );
   }
@@ -47,8 +45,7 @@ class MobilePermissions {
 
   static Future<bool> requestNotifications() async {
     if (!isMobile) return true;
-    final r = await FlutterForegroundTask.requestNotificationPermission();
-    return r == NotificationPermission.granted;
+    return SystemNotifications.instance.requestPermission();
   }
 
   static Future<void> requestBattery() async {

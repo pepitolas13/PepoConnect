@@ -37,8 +37,7 @@ void main() {
       int count = 8,
       int stepMs = 20,
     }) async {
-      final boundary =
-          w.boundaryKey.currentContext!.findRenderObject()! as RenderRepaintBoundary;
+      final boundary = w.boundaryKey.currentContext!.findRenderObject()! as RenderRepaintBoundary;
       final shots = <(int, ui.Image)>[];
       await trigger();
       final clock = Stopwatch()..start();

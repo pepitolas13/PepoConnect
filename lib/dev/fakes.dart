@@ -79,11 +79,17 @@ class FakeTransfersNotifier extends TransfersNotifier {
 
   final TransfersState initial;
 
+  /// Every `send` call, for tests: `(deviceId, paths)`.
+  final List<(String, List<String>)> sent = [];
+
   @override
   TransfersState build() => initial;
 
   @override
-  Future<List<TransferRecord>> send(String deviceId, List<String> paths) async => const [];
+  Future<List<TransferRecord>> send(String deviceId, List<String> paths) async {
+    sent.add((deviceId, paths));
+    return const [];
+  }
 
   @override
   Future<void> cancel(int id) async {

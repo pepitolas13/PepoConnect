@@ -11,8 +11,8 @@ Pod::Spec.new do |s|
 Encrypted bulk file transfers over TCP (AES-256-GCM, xxh3) for PepoConnect, written in Rust.
                        DESC
   s.homepage         = 'https://github.com/pepitolas13/PepoConnect'
-  s.license          = { :type => 'MIT', :file => '../LICENSE' }
-  s.author           = { 'PepoTech' => 'danimeyt5@gmail.com' }
+  s.license          = { :type => 'GPL-3.0-only', :file => '../LICENSE' }
+  s.author           = { 'PepoTech' => '183022507+pepitolas13@users.noreply.github.com' }
 
   s.source           = { :path => '.' }
   s.source_files     = 'Classes/**/*'

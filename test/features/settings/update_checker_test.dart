@@ -32,4 +32,80 @@ void main() {
     expect(same.isNewer, isFalse);
     expect(same.url, releasesPageUrl);
   });
+
+  test('rejects invalid, prerelease and draft release metadata', () {
+    for (final payload in <Map<String, dynamic>>[
+      {},
+      {'tag_name': 'latest'},
+      {'tag_name': 'v9.0.0-beta.1'},
+      {'tag_name': 'v9.0.0', 'draft': true},
+      {'tag_name': 'v9.0.0', 'prerelease': true},
+      {'tag_name': 'v9.0.0', 'html_url': 'https://example.com/install'},
+      {'tag_name': 'v9.0.0', 'html_url': '$repositoryUrl/releases/tag/v8.0.0'},
+    ]) {
+      expect(() => UpdateCheckResult.fromJson(payload, current: '0.3.0'), throwsFormatException);
+    }
+  });
+
+  test('release assets survive caching and are tied to the release and repository', () {
+    const name = 'PepoConnect-win-x64.exe';
+    final payload = <String, dynamic>{
+      'tag_name': 'v0.4.0',
+      'html_url': '$repositoryUrl/releases/tag/v0.4.0',
+      'assets': [
+        {
+          'name': name,
+          'browser_download_url': '$repositoryUrl/releases/download/v0.4.0/$name',
+          'size': 1234,
+          'state': 'uploaded',
+        },
+      ],
+    };
+    final release = UpdateCheckResult.fromJson(payload, current: '0.3.0');
+    expect(release.assetNamed(name)?.size, 1234);
+    final cached = UpdateCheckResult.fromJson(release.toJson(), current: '0.4.0');
+    expect(cached.isNewer, isFalse);
+    expect(cached.assetNamed(name)?.url, '$repositoryUrl/releases/download/v0.4.0/$name');
+
+    for (final url in [
+      'http://github.com/pepitolas13/PepoConnect/releases/download/v0.4.0/$name',
+      'https://github.com/another/repo/releases/download/v0.4.0/$name',
+      '$repositoryUrl/releases/download/v0.3.0/$name',
+      '$repositoryUrl/releases/download/v0.4.0/other.exe',
+    ]) {
+      final bad = {
+        ...payload,
+        'assets': [
+          {'name': name, 'browser_download_url': url, 'size': 1234},
+        ],
+      };
+      expect(() => UpdateCheckResult.fromJson(bad, current: '0.3.0'), throwsFormatException);
+    }
+  });
+
+  test('rejects duplicate assets and invalid sizes', () {
+    final asset = {
+      'name': 'PepoConnect-win-x64.exe',
+      'browser_download_url': '$repositoryUrl/releases/download/v0.4.0/PepoConnect-win-x64.exe',
+      'size': 1234,
+    };
+    for (final assets in [
+      [asset, asset],
+      [
+        {...asset, 'size': -1},
+      ],
+      [
+        {...asset, 'size': 0},
+      ],
+      [
+        {...asset, 'name': '../escape.exe'},
+      ],
+    ]) {
+      expect(
+        () =>
+            UpdateCheckResult.fromJson({'tag_name': 'v0.4.0', 'assets': assets}, current: '0.3.0'),
+        throwsFormatException,
+      );
+    }
+  });
 }

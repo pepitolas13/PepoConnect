@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Descargar PepoConnect / Download PepoConnect
+    url: https://github.com/pepitolas13/PepoConnect/releases/latest
+    about: Instaladores y notas de la última versión / Latest packages and release notes
+  - name: Informar de una vulnerabilidad en privado / Report a vulnerability privately
+    url: https://github.com/pepitolas13/PepoConnect/security/advisories/new
+    about: No publiques detalles de seguridad en una incidencia abierta.

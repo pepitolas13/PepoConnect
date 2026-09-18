@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">PepoConnect</string>
+    <string name="tile_send_clipboard">Send clipboard</string>
+    <string name="shortcut_send_clipboard_short">Clipboard</string>
+    <string name="shortcut_send_clipboard_long">Send clipboard to the PC</string>
+    <string name="clipboard_empty">The clipboard is empty</string>
+    <string name="clipboard_too_long">The text is too long to send</string>
+    <string name="clipboard_sent">Clipboard sent to %1$s</string>
+    <string name="clipboard_no_pc">No connected PC with shared clipboard</string>
+    <string name="clipboard_opening">Opening PepoConnect to send it…</string>
+    <string name="service_channel">PepoConnect in the background</string>
+    <string name="service_channel_body">Keeps the connection to the PC</string>
+    <string name="service_idle">PepoConnect is waiting for the PC</string>
+</resources>

@@ -16,6 +16,7 @@ class EngineConfig {
     required this.appVersion,
     this.model,
     this.separateByDevice = true,
+    this.allowExecutables = false,
     this.listenPort = defaultListenPort,
     this.mediaRoots = const [],
     this.udpDiscovery = true,
@@ -35,6 +36,10 @@ class EngineConfig {
   final String appVersion;
   final String? model;
   final bool separateByDevice;
+
+  /// Programs (`.exe`, `.msi`, `.apk`...) are neither sent nor accepted
+  /// unless this is on. Off by default on every device.
+  final bool allowExecutables;
   final int listenPort;
 
   /// Folders served as this device's gallery (Linux phones, desktop
@@ -56,6 +61,7 @@ class EngineConfig {
     String? downloadRoot,
     String? deviceName,
     bool? separateByDevice,
+    bool? allowExecutables,
     List<String>? mediaRoots,
     DeviceRole? role,
   }) => EngineConfig(
@@ -67,6 +73,7 @@ class EngineConfig {
     appVersion: appVersion,
     model: model,
     separateByDevice: separateByDevice ?? this.separateByDevice,
+    allowExecutables: allowExecutables ?? this.allowExecutables,
     listenPort: listenPort,
     mediaRoots: mediaRoots ?? this.mediaRoots,
     udpDiscovery: udpDiscovery,
@@ -84,6 +91,7 @@ class EngineConfig {
     'appVersion': appVersion,
     'model': ?model,
     'separateByDevice': separateByDevice,
+    'allowExecutables': allowExecutables,
     'listenPort': listenPort,
     'mediaRoots': mediaRoots,
     'udpDiscovery': udpDiscovery,
@@ -101,6 +109,7 @@ class EngineConfig {
     appVersion: j['appVersion'] as String,
     model: j['model'] as String?,
     separateByDevice: j['separateByDevice'] as bool? ?? true,
+    allowExecutables: j['allowExecutables'] as bool? ?? false,
     listenPort: j['listenPort'] as int? ?? defaultListenPort,
     mediaRoots: (j['mediaRoots'] as List<dynamic>? ?? const []).cast<String>(),
     udpDiscovery: j['udpDiscovery'] as bool? ?? true,

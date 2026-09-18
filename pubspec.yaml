@@ -1,15 +1,18 @@
 name: pepoconnect
 description: "PepoConnect: fotos y archivos entre el movil y el PC, al instante."
 publish_to: 'none'
-version: 0.3.0+3
+version: 0.4.0+4
 
 environment:
   sdk: ^3.13.3
 
 dependencies:
+  archive: ^4.3.0
   battery_plus: ^7.1.1
   bonsoir: ^7.1.5
   connectivity_plus: ^7.3.1
+  crypto: ^3.0.7
+  cupertino_icons: ^1.0.9
   desktop_drop: ^0.8.4
   device_info_plus: ^13.2.0
   ffi: ^2.2.0
@@ -19,7 +22,6 @@ dependencies:
     sdk: flutter
   flutter_acrylic: ^1.1.4
   flutter_displaymode: ^0.7.0
-  flutter_foreground_task: ^11.0.3
   flutter_image_compress: ^2.5.1
   flutter_local_notifications: ^22.3.1
   flutter_localizations:
@@ -66,4 +68,3 @@ flutter:
     - assets/brand/
     - assets/icon/
     - assets/web/
-

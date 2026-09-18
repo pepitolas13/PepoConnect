@@ -8,8 +8,8 @@
 //! 1. Picks the install root: the folder of the exe when a `portable.txt`
 //!    marker sits next to it, otherwise `%LOCALAPPDATA%\PepoConnect`.
 //! 2. Compares `app\.bundle-id` with the id baked into this exe. When they
-//!    differ (or the app is missing) it extracts the bundle into
-//!    `app.staging-<pid>`, then swaps `app` -> `app.old` -> deleted and
+//!    differ (or the app is missing) it extracts the bundle into a unique
+//!    `app.staging-<pid>-<n>`, then swaps `app` -> retained recovery backup and
 //!    `app.staging-<pid>` -> `app`. The `app` path therefore never changes
 //!    between versions (firewall rules, shortcuts, etc. stay valid).
 //! 3. Runs `app\pepoconnect.exe` with the original arguments and returns
@@ -29,6 +29,8 @@ use windows_sys::Win32::UI::Shell::{SHChangeNotify, SHCNE_ASSOCCHANGED, SHCNF_ID
 use windows_sys::Win32::UI::WindowsAndMessaging::{
     MessageBoxW, MB_ICONERROR, MB_ICONWARNING, MB_OK, MB_SETFOREGROUND,
 };
+
+mod preserve;
 
 static BUNDLE: &[u8] = include_bytes!(concat!(env!("OUT_DIR"), "/bundle.tar.zst"));
 const BUNDLE_ID: &str = env!("PEPO_BUNDLE_ID");
@@ -91,12 +93,18 @@ fn run() -> Result<(), Failure> {
     })?;
 
     let app_dir = root.join(APP_DIR);
-    cleanup_leftovers(&root);
+    preserve::recover_interrupted_install(&root, &app_dir)
+        .map_err(|e| fail("No se ha podido recuperar la instalación anterior", e))?;
 
     if !is_current(&app_dir) {
         install(&root, &app_dir)?;
         refresh_shell_icons();
     }
+
+    // Pinned taskbar shortcuts can open the extracted runner directly, losing
+    // the environment variable. Its updater must still replace this launcher.
+    fs::write(app_dir.join(".launcher-path"), exe.to_string_lossy().as_bytes())
+        .map_err(|e| fail("No se ha podido guardar la ruta del lanzador", e))?;
 
     let app_exe = app_dir.join(APP_EXE);
     let mut cmd = Command::new(&app_exe);
@@ -134,28 +142,13 @@ fn is_current(app_dir: &Path) -> bool {
     id_matches && app_dir.join(APP_EXE).is_file()
 }
 
-/// Removes folders left behind by previous updates (`app.old*`,
-/// `app.staging-*`). Failures are ignored: a folder that is still in use will
-/// simply be retried next time.
-fn cleanup_leftovers(root: &Path) {
-    let Ok(entries) = fs::read_dir(root) else { return };
-    for entry in entries.flatten() {
-        let name = entry.file_name();
-        let name = name.to_string_lossy();
-        if name.starts_with("app.old") || name.starts_with("app.staging-") {
-            let _ = fs::remove_dir_all(entry.path());
-        }
-    }
-}
-
 fn install(root: &Path, app_dir: &Path) -> Result<(), Failure> {
     // Cheap early check: the running exe is locked against writes.
     if app_dir.exists() && exe_locked(app_dir) {
         return Err(Failure::AlreadyRunning);
     }
 
-    let staging = root.join(format!("app.staging-{}", process::id()));
-    let _ = fs::remove_dir_all(&staging);
+    let staging = unused_dir(root, &format!("app.staging-{}", process::id()));
 
     let result = extract(&staging).and_then(|()| swap(root, app_dir, &staging));
     if result.is_err() {
@@ -197,6 +190,8 @@ fn extract(staging: &Path) -> Result<(), Failure> {
 
 fn swap(root: &Path, app_dir: &Path, staging: &Path) -> Result<(), Failure> {
     if app_dir.exists() {
+        preserve::preserve_unknown_files(app_dir, staging)
+            .map_err(|e| fail("No se han podido conservar los archivos de la instalación anterior", e))?;
         let old = old_dir(root);
         if let Err(e) = fs::rename(app_dir, &old) {
             return Err(if in_use(&e) || exe_locked(app_dir) {
@@ -216,7 +211,8 @@ fn swap(root: &Path, app_dir: &Path, staging: &Path) -> Result<(), Failure> {
                 e,
             ));
         }
-        let _ = fs::remove_dir_all(&old);
+        // Keep the previous tree until recovery is no longer needed. A rename
+        // completing does not prove that the new Flutter application can start.
     } else if let Err(e) = fs::rename(staging, app_dir) {
         return Err(fail(
             &format!("No se ha podido instalar PepoConnect en {}", app_dir.display()),
@@ -244,15 +240,19 @@ fn refresh_shell_icons() {
     }
 }
 
-/// `app.old`, or `app.old-<pid>` when a stale `app.old` could not be removed.
+/// Never delete an older recovery copy to make room for a new one.
 fn old_dir(root: &Path) -> PathBuf {
-    let old = root.join("app.old");
-    let _ = fs::remove_dir_all(&old);
-    if old.exists() {
-        root.join(format!("app.old-{}", process::id()))
-    } else {
-        old
+    unused_dir(root, "app.old")
+}
+
+fn unused_dir(root: &Path, prefix: &str) -> PathBuf {
+    let first = root.join(prefix);
+    if fs::symlink_metadata(&first).is_err() { return first; }
+    for suffix in 1_u64.. {
+        let candidate = root.join(format!("{prefix}-{}-{suffix}", process::id()));
+        if fs::symlink_metadata(&candidate).is_err() { return candidate; }
     }
+    unreachable!("directory suffix exhausted")
 }
 
 fn in_use(e: &io::Error) -> bool {

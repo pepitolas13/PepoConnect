@@ -13,6 +13,8 @@ import 'package:pepoconnect/features/onboarding/onboarding_page.dart';
 import 'package:pepoconnect/features/pairing/pairing_page.dart';
 import 'package:pepoconnect/features/settings/settings_page.dart';
 import 'package:pepoconnect/features/settings/settings_providers.dart';
+import 'package:pepoconnect/features/updates/update_controller.dart';
+import 'package:pepoconnect/features/updates/update_providers.dart';
 import 'package:pepoconnect/platform/transfer_chime.dart';
 import 'package:pepoconnect/shared/i18n/l10n.dart';
 import 'package:pepoconnect/shared/motion/motion_scope.dart';
@@ -153,6 +155,8 @@ List<Override> featureOverrides({
   TestDevicesNotifier? devicesNotifier,
   FakePairingNotifier? pairing,
 }) => [
+  updateStoreProvider.overrideWith((ref) => _TestUpdateStore()),
+  updateCanInstallProvider.overrideWithValue(true),
   settingsProvider.overrideWith(() => FakeSettingsNotifier(settings)),
   devicesProvider.overrideWith(
     () => devicesNotifier ?? TestDevicesNotifier(devices ?? sampleDevices()),
@@ -164,6 +168,13 @@ List<Override> featureOverrides({
   localDeviceFactsProvider.overrideWithValue(testFacts),
   transferChimeProvider.overrideWithValue(TransferChime(backend: const SilentChimeBackend())),
 ];
+
+class _TestUpdateStore implements UpdateStore {
+  @override
+  String? read() => null;
+  @override
+  Future<void> write(String value) async {}
+}
 
 /// The feature pages plus text stand-ins for the shell branches.
 GoRouter testRouter({required String initialLocation, bool mobile = false}) => GoRouter(

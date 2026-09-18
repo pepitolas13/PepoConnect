@@ -23,6 +23,7 @@ import '../../shared/widgets/pepo_text_field.dart';
 import '../../shared/widgets/pill_tabs.dart';
 import '../../state/engine_providers.dart';
 import 'file_type_icon.dart';
+import 'send_files.dart';
 
 enum _Step { compose, ready }
 
@@ -84,8 +85,12 @@ class _GuestShareDialogState extends ConsumerState<GuestShareDialog> {
   void initState() {
     super.initState();
     _events = _engine.events.listen(_onEvent);
-    for (final path in widget.initialPaths) {
-      _addPath(path);
+    final split = splitBlockedExecutables(ref, widget.initialPaths);
+    split.allowed.forEach(_addPath);
+    if (split.blocked.isNotEmpty) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) unawaited(explainBlockedExecutables(context, split.blocked));
+      });
     }
     final session = _engine.guestSession;
     if (session != null) unawaited(_restore(session));
@@ -123,12 +128,12 @@ class _GuestShareDialogState extends ConsumerState<GuestShareDialog> {
   Future<void> _pickFiles() async {
     final picked = await FilePicker.pickFiles(dialogTitle: context.t.addFiles);
     if (!mounted) return;
-    setState(() {
-      for (final f in picked) {
-        final path = f.path;
-        if (path != null) _addPath(path);
-      }
-    });
+    final split = splitBlockedExecutables(ref, [
+      for (final f in picked)
+        if (f.path != null) f.path!,
+    ]);
+    setState(() => split.allowed.forEach(_addPath));
+    await explainBlockedExecutables(context, split.blocked);
   }
 
   Future<void> _create() async {

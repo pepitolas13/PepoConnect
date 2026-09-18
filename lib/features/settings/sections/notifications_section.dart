@@ -22,6 +22,14 @@ class NotificationsSection extends ConsumerWidget {
       header: t.settingsNotifications,
       children: [
         SettingsRow(
+          title: t.updateNotifications,
+          description: t.updateNotificationsBody,
+          trailing: ToggleSwitch(
+            value: settings.updateNotifications,
+            onChanged: (v) => notifier.update((s) => s.copyWith(updateNotifications: v)),
+          ),
+        ),
+        SettingsRow(
           title: t.notifications,
           description: t.notificationsBody,
           trailing: ToggleSwitch(

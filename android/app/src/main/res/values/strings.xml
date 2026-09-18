@@ -1,4 +1,21 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">PepoConnect</string>
+
+    <!-- "Send clipboard" quick-settings tile, launcher shortcut and the toasts of
+         ClipboardSendActivity. Spanish is the default; values-en has the English. -->
+    <string name="tile_send_clipboard">Enviar portapapeles</string>
+    <string name="shortcut_send_clipboard_short">Portapapeles</string>
+    <string name="shortcut_send_clipboard_long">Enviar portapapeles al PC</string>
+    <string name="clipboard_empty">El portapapeles está vacío</string>
+    <string name="clipboard_too_long">El texto es demasiado largo para enviarlo</string>
+    <string name="clipboard_sent">Portapapeles enviado a %1$s</string>
+    <string name="clipboard_no_pc">Ningún PC conectado con el portapapeles compartido</string>
+    <string name="clipboard_opening">Abriendo PepoConnect para enviarlo…</string>
+
+    <!-- Foreground service (PepoForegroundService): its notification channel and the text
+         shown when the service comes back on its own, before Dart reports a PC. -->
+    <string name="service_channel">PepoConnect en segundo plano</string>
+    <string name="service_channel_body">Mantiene la conexión con el PC</string>
+    <string name="service_idle">PepoConnect espera al PC</string>
 </resources>

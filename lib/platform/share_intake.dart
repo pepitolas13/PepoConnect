@@ -19,7 +19,11 @@ class ShareIntake {
     try {
       final handler = ShareHandlerPlatform.instance;
       final initial = await handler.getInitialSharedMedia();
-      if (initial != null) _handle(initial);
+      if (initial != null) {
+        _handle(initial);
+        // Otherwise the launch share is served again on the next start.
+        await handler.resetInitialSharedMedia();
+      }
       _sub = handler.sharedMediaStream.listen(_handle);
     } catch (_) {
       // Plugin missing on this platform build: ignore.

@@ -10,6 +10,102 @@ class AppLocalizationsEs extends AppLocalizations {
   AppLocalizationsEs([String locale = 'es']) : super(locale);
 
   @override
+  String get updateNotifications => 'Avisos de actualizaciones';
+
+  @override
+  String get updateNotificationsBody =>
+      'Mostrar un aviso cuando haya una versión nueva. Aunque lo desactives, seguiremos comprobando las actualizaciones cada día.';
+
+  @override
+  String get updateDailyBody =>
+      'Buscamos actualizaciones cada 24 horas mientras PepoConnect está abierto, también en la bandeja, y al volver a abrirlo si toca comprobar.';
+
+  @override
+  String get updateInstall => 'Actualizar';
+
+  @override
+  String get updateContinue => 'Continuar instalación';
+
+  @override
+  String get updateLater => 'Ahora no';
+
+  @override
+  String get updateDontNotify => 'No mostrar más avisos de actualizaciones';
+
+  @override
+  String get updateDesktopBody =>
+      'Se descargará y verificará la nueva versión. PepoConnect se reiniciará para instalarla y conservará tus ajustes y dispositivos.';
+
+  @override
+  String get updateAndroidBody =>
+      'La app descargará y verificará la actualización. Android te pedirá confirmar la instalación.';
+
+  @override
+  String get updateFlatpakBody =>
+      'Se descargará y verificará la actualización. Confirma la instalación en el gestor de software y vuelve a abrir PepoConnect.';
+
+  @override
+  String get updateIosBody =>
+      'Esta versión de iPhone se instala con AltStore o Sideloadly. iOS no permite que este paquete sin firmar se actualice solo: instala la nueva versión con la misma cuenta para conservar tus datos.';
+
+  @override
+  String get updateUnavailableBody =>
+      'Aún no hay un paquete compatible y verificable para esta instalación. Puedes consultar la versión publicada y las instrucciones de instalación.';
+
+  @override
+  String get updateInstructions => 'Ver instrucciones';
+
+  @override
+  String get updateDetails => 'Ver novedades';
+
+  @override
+  String get updateDownloading => 'Descargando actualización…';
+
+  @override
+  String get updateVerifying => 'Verificando la descarga…';
+
+  @override
+  String get updateInstalling => 'Preparando la instalación…';
+
+  @override
+  String get updateCancelDownload => 'Cancelar descarga';
+
+  @override
+  String get updatePermissionBody =>
+      'Permite que PepoConnect instale aplicaciones en la pantalla de Android. Al volver, continuaremos automáticamente. También puedes pulsar «Continuar instalación».';
+
+  @override
+  String get updateInstallerOpened =>
+      'El instalador está abierto. Confirma la actualización; si lo cerraste, puedes volver a abrirlo con «Actualizar».';
+
+  @override
+  String get updateInstallFailed => 'No se ha podido actualizar';
+
+  @override
+  String get updateDownloadFailed =>
+      'La descarga no se completó. Comprueba la conexión y el espacio disponible y vuelve a intentarlo.';
+
+  @override
+  String get updateVerificationFailed =>
+      'La actualización no ha superado las comprobaciones de integridad y compatibilidad. No se ha instalado nada. Consulta las instrucciones de esta versión.';
+
+  @override
+  String get updatePermissionFailed =>
+      'No hay permiso para actualizar esta instalación. Comprueba los permisos de su carpeta o del instalador y vuelve a intentarlo.';
+
+  @override
+  String get updateGenericFailed =>
+      'No se pudo preparar la actualización. Tu instalación actual sigue disponible. Vuelve a intentarlo o consulta las instrucciones de la versión.';
+
+  @override
+  String get updateBusyBody =>
+      'Termina o pausa las transferencias y cierra los enlaces de invitado antes de actualizar.';
+
+  @override
+  String get updateOpenFailed =>
+      'No se ha podido abrir el enlace. Comprueba que tienes un navegador disponible.';
+
+  @override
   String get appName => 'PepoConnect';
 
   @override
@@ -380,12 +476,36 @@ class AppLocalizationsEs extends AppLocalizations {
   String get connectToSend => 'Conecta el móvil para enviar archivos';
 
   @override
-  String get executableBlocked => 'PepoConnect no envía programas ejecutables';
+  String get executableBlocked => 'PepoConnect no envía programas hasta que lo permitas en Ajustes';
 
   @override
-  String executableWarning(String file) {
-    return '$file es un ejecutable. ¿Enviarlo igualmente?';
+  String executableBlockedOne(String file) {
+    return 'No se ha enviado $file';
   }
+
+  @override
+  String executableBlockedMany(int count) {
+    return 'No se han enviado $count ejecutables';
+  }
+
+  @override
+  String get executableBlockedBody =>
+      'PepoConnect no envía programas (.exe, .msi, .apk…) hasta que actives «Permitir ejecutables» en Ajustes › Almacenamiento, en este dispositivo y en el que los recibe.';
+
+  @override
+  String get executableOpenSettings => 'Abrir ajustes';
+
+  @override
+  String executableRefusedTitle(String file, String device) {
+    return 'No se ha aceptado $file de $device';
+  }
+
+  @override
+  String get executableRefusedBody =>
+      'Los ejecutables están desactivados. Actívalos en Ajustes › Almacenamiento si lo esperabas';
+
+  @override
+  String get trRejectedExecutable => 'El otro dispositivo no acepta ejecutables';
 
   @override
   String speedAndEta(String speed, String eta) {
@@ -665,7 +785,8 @@ class AppLocalizationsEs extends AppLocalizations {
   String get sharedClipboard => 'Portapapeles compartido';
 
   @override
-  String get sharedClipboardBody => 'Lo que copies en un dispositivo se puede pegar en el otro';
+  String get sharedClipboardBody =>
+      'Lo que copies en un dispositivo se puede pegar en el otro. En el móvil se envía al abrir PepoConnect, con el tile «Enviar portapapeles» de los ajustes rápidos o con el acceso directo del icono.';
 
   @override
   String get notifications => 'Notificaciones';
@@ -702,10 +823,6 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get allowExecutables => 'Permitir ejecutables';
-
-  @override
-  String get allowExecutablesBody =>
-      'Acepta archivos .exe, .msi y similares. Solo si sabes lo que haces';
 
   @override
   String get autoSendPhotos => 'Enviar fotos nuevas al PC automáticamente';
@@ -851,6 +968,9 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get mobileGallery => 'Galería';
+
+  @override
+  String get mobileClipboard => 'Portapapeles';
 
   @override
   String get mobileCamera => 'Cámara';
@@ -1025,6 +1145,20 @@ class AppLocalizationsEs extends AppLocalizations {
   }
 
   @override
+  String toastClipboardSent(String device) {
+    return 'Portapapeles enviado a $device';
+  }
+
+  @override
+  String get clipboardEmpty => 'El portapapeles está vacío';
+
+  @override
+  String get clipboardNoTarget => 'Ningún PC conectado con el portapapeles compartido';
+
+  @override
+  String get clipboardQueued => 'Sin PC conectado: se enviará al conectar';
+
+  @override
   String get toastUndo => 'Deshacer';
 
   @override
@@ -1192,9 +1326,6 @@ class AppLocalizationsEs extends AppLocalizations {
   String get trSendFailed => 'No se pudo enviar';
 
   @override
-  String get trExecutableSendAnyway => 'Enviar igualmente';
-
-  @override
   String get trDroppedNothing => 'No hay archivos que enviar';
 
   @override
@@ -1357,7 +1488,8 @@ class AppLocalizationsEs extends AppLocalizations {
   String get setSeparateByDeviceBody => 'Crea una subcarpeta por cada móvil';
 
   @override
-  String get setAllowExecutablesBody => 'Unison los bloqueaba; aquí solo se avisa';
+  String get setAllowExecutablesBody =>
+      'Desactivado, no se envían ni se reciben programas (.exe, .msi, .apk…). Actívalo en los dos dispositivos solo si lo necesitas';
 
   @override
   String get setResetLocation => 'Restablecer';

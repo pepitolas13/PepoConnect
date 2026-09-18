@@ -6,15 +6,19 @@
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE"/>
     <uses-permission android:name="android.permission.CHANGE_WIFI_MULTICAST_STATE"/>
     <uses-permission android:name="android.permission.WAKE_LOCK"/>
+    <!-- User-confirmed installation of a verified PepoConnect release APK. -->
+    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES"/>
 
     <!-- QR pairing (mobile_scanner). -->
     <uses-permission android:name="android.permission.CAMERA"/>
 
-    <!-- Foreground service while transferring (flutter_foreground_task, type connectedDevice). -->
+    <!-- Foreground service that keeps the connection with the app closed
+         (PepoForegroundService, type connectedDevice), brought back after a reboot. -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_CONNECTED_DEVICE"/>
     <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS"/>
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
 
     <!-- Photo/video library (photo_manager). -->
     <uses-permission
@@ -33,6 +37,15 @@
         android:label="PepoConnect"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
+        <provider
+            android:name=".PepoUpdateFileProvider"
+            android:authorities="${applicationId}.update-files"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/update_paths"/>
+        </provider>
         <activity
             android:name=".MainActivity"
             android:exported="true"
@@ -54,6 +67,11 @@
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
+
+            <!-- Long-press menu of the launcher icon: "Send clipboard". -->
+            <meta-data
+                android:name="android.app.shortcuts"
+                android:resource="@xml/shortcuts"/>
 
             <!-- Pairing deep link: pepoconnect://pair/... (the QR payload). -->
             <intent-filter>
@@ -96,20 +114,51 @@
             </intent-filter>
         </activity>
 
-        <!-- flutter_foreground_task: the service name must not change. -->
+        <!-- "Send clipboard" without opening the app: an invisible window that holds
+             the focus Android 10+ requires to read the clipboard, then hands the text
+             to Dart (PepoNative). Launched only by the quick-settings tile and the
+             launcher shortcut below, both of which run as this app, so it stays
+             unexported. -->
+        <activity
+            android:name=".ClipboardSendActivity"
+            android:exported="false"
+            android:theme="@style/ClipboardSendTheme"
+            android:excludeFromRecents="true"
+            android:noHistory="true"
+            android:taskAffinity=""/>
+
+        <!-- Quick-settings tile "Send clipboard" (the user adds it from the panel editor). -->
         <service
-            android:name="com.pravera.flutter_foreground_task.service.ForegroundService"
+            android:name=".ClipboardTileService"
+            android:exported="true"
+            android:icon="@drawable/ic_tile_clipboard"
+            android:label="@string/tile_send_clipboard"
+            android:permission="android.permission.BIND_QUICK_SETTINGS_TILE">
+            <intent-filter>
+                <action android:name="android.service.quicksettings.action.QS_TILE"/>
+            </intent-filter>
+        </service>
+
+        <!-- Keeps the process (and the Flutter engine in it) alive with the app closed:
+             persistent notification, wake / Wi-Fi / multicast locks, and a headless boot
+             of the engine when Android restarts the service (START_STICKY) or after a
+             reboot. stopWithTask=false: swiping the app away does not stop it. -->
+        <service
+            android:name=".PepoForegroundService"
             android:exported="false"
             android:foregroundServiceType="connectedDevice"
             android:stopWithTask="false"/>
 
-        <!-- Status-bar icon of the foreground-service notification (read by
-             flutter_foreground_task through NotificationIcon.metaDataName).
-             Same drawable as flutter_local_notifications; rendered by
-             tool/brand/render_icons.py. -->
-        <meta-data
-            android:name="org.pepoconnect.app.NOTIFICATION_ICON"
-            android:resource="@drawable/ic_stat_pepoconnect"/>
+        <!-- Restarts the service after a reboot or an app update when it was running.
+             Both actions are protected broadcasts (only the system sends them). -->
+        <receiver
+            android:name=".BootReceiver"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED"/>
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED"/>
+            </intent-filter>
+        </receiver>
 
         <!-- Don't delete the meta-data below.
              This is used by the Flutter tool to generate GeneratedPluginRegistrant.java -->

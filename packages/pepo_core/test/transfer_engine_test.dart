@@ -13,6 +13,7 @@ import 'package:pepo_core/src/net/peer_listener.dart';
 import 'package:pepo_core/src/pairing/pairing_session.dart';
 import 'package:pepo_core/src/protocol/message_types.dart';
 import 'package:pepo_core/src/protocol/models.dart';
+import 'package:pepo_core/src/transfer/executable_names.dart';
 import 'package:pepo_core/src/transfer/transfer_engine.dart';
 import 'package:pepo_core/src/transfer/transfer_record.dart';
 import 'package:test/test.dart';
@@ -433,6 +434,44 @@ void main() {
     await Future<void>.delayed(const Duration(milliseconds: 300));
     final leftovers = await Directory(pair.hubDir.path).list().toList();
     expect(leftovers.where((e) => e.path.contains('cancel.bin')), isEmpty);
+  });
+
+  group('executables', () {
+    test('the sender refuses to queue a program while its setting is off', () async {
+      final src = await writeRandom(pair.phoneDir, 'setup.exe', 4096);
+      await expectLater(
+        pair.phoneEngine.send(deviceId: pair.hubId.deviceId, path: src.path),
+        throwsA(isA<ExecutableBlockedException>()),
+      );
+      expect(pair.phoneEngine.transfers, isEmpty);
+      expect(await pair.phoneStore.all(), isEmpty);
+    });
+
+    test('the receiver rejects a program while its setting is off', () async {
+      pair.phoneEngine.allowExecutables = true;
+      final src = await writeRandom(pair.phoneDir, 'Setup.EXE', 4096);
+      final rejected = pair.hubEngine.rejectedOffers.first;
+      final t = await pair.phoneEngine.send(deviceId: pair.hubId.deviceId, path: src.path);
+      final r = await waitTerminal(pair.phoneEngine, t.id);
+      expect(r.state, TransferState.failed);
+      expect(r.error, ErrorCode.executable);
+      final offer = await rejected.timeout(const Duration(seconds: 5));
+      expect(offer.deviceId, pair.phoneId.deviceId);
+      expect(offer.name, 'Setup.EXE');
+      expect(offer.reason, ErrorCode.executable);
+      expect(await pair.hubDir.list().isEmpty, isTrue);
+      expect(pair.hubEngine.transfers, isEmpty);
+    });
+
+    test('a program goes through once both sides allow it', () async {
+      pair.phoneEngine.allowExecutables = true;
+      pair.hubEngine.allowExecutables = true;
+      final src = await writeRandom(pair.phoneDir, 'tool.exe', 64 * 1024, seed: 9);
+      final t = await pair.phoneEngine.send(deviceId: pair.hubId.deviceId, path: src.path);
+      final r = await waitTerminal(pair.phoneEngine, t.id);
+      expect(r.state, TransferState.done, reason: r.error);
+      expect(await sameContent(src, File(p.join(pair.hubDir.path, 'tool.exe'))), isTrue);
+    });
   });
 
   test(

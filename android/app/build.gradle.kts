@@ -90,6 +90,7 @@ flutter {
 }
 
 dependencies {
+    testImplementation("junit:junit:4.13.2")
     // Required by flutter_local_notifications 10+ (java.time backport).
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")
     // Recommended by flutter_local_notifications to avoid crashes on Android 12L+ when desugaring.

@@ -7,6 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:pepo_core/pepo_core.dart' show TransferRecord;
 
 import '../../app/app_services.dart';
+import '../../platform/clipboard_sync.dart';
 import '../../platform/open_helper.dart';
 import '../../shared/i18n/l10n.dart';
 import '../../shared/motion/motion.dart';
@@ -87,6 +88,10 @@ class _TransfersMobileState extends ConsumerState<TransfersMobile> {
     try {
       final source = await showSendToPcSheet(context);
       if (source == null || !mounted) return;
+      if (source == SendSource.clipboard) {
+        await _sendClipboard();
+        return;
+      }
       final picked = await FilePicker.pickFiles(
         type: source == SendSource.gallery ? FileType.media : FileType.any,
         dialogTitle: context.t.mobileSendToPc,
@@ -101,6 +106,24 @@ class _TransfersMobileState extends ConsumerState<TransfersMobile> {
       await sendFilesTo(context, ref, deviceId: target, paths: paths);
     } finally {
       _busy = false;
+    }
+  }
+
+  /// Pushes whatever is in the clipboard right now (no "only if changed").
+  Future<void> _sendClipboard() async {
+    final t = context.t;
+    final result = await ref.read(clipboardSyncProvider).sendNow(retries: 1);
+    if (!mounted) return;
+    final toasts = ref.read(toastServiceProvider);
+    switch (result.reason) {
+      case ClipboardSendReason.sent:
+        toasts.success(t.toastClipboardSent(result.sentTo.join(', ')));
+      case ClipboardSendReason.empty:
+        toasts.show(ToastData(title: t.clipboardEmpty));
+      case ClipboardSendReason.noTarget:
+        toasts.show(ToastData(title: t.clipboardNoTarget));
+      case ClipboardSendReason.unchanged:
+        break;
     }
   }
 

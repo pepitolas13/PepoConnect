@@ -1,5 +1,6 @@
 import 'package:fluentui_system_icons/fluentui_system_icons.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:pepo_core/pepo_core.dart';
 import 'package:pepoconnect/features/transfers/device_drop_zone.dart';
@@ -7,7 +8,9 @@ import 'package:pepoconnect/features/transfers/file_type_icon.dart';
 import 'package:pepoconnect/features/transfers/send_files.dart';
 import 'package:pepoconnect/features/transfers/transfers_page.dart';
 import 'package:pepoconnect/shared/widgets/empty_state.dart';
+import 'package:pepoconnect/shared/widgets/pepo_dialog.dart';
 import 'package:pepoconnect/shared/widgets/pill_tabs.dart';
+import 'package:pepoconnect/state/app_settings.dart';
 import 'package:pepoconnect/state/engine_providers.dart';
 
 import '../gallery/fakes.dart';
@@ -115,9 +118,58 @@ void main() {
     expect(fileExtensionLabel('sin_extension'), '');
   });
 
-  test('executables are recognised by extension', () {
-    expect(isExecutableName('setup.exe'), isTrue);
-    expect(isExecutableName('Script.PS1'), isTrue);
-    expect(isExecutableName('foto.jpg'), isFalse);
+  group('sending programs', () {
+    const paths = ['C:/fotos/IMG_0001.jpg', 'C:/tools/setup.exe'];
+
+    Widget sender() => Consumer(
+      builder: (context, ref, _) => TextButton(
+        onPressed: () => sendFilesTo(context, ref, deviceId: 'pixel8', paths: paths),
+        child: const Text('enviar'),
+      ),
+    );
+
+    FakeTransfersNotifier fakeTransfers(WidgetTester tester) =>
+        ProviderScope.containerOf(tester.element(find.text('enviar')))
+                .read(transfersProvider.notifier)
+            as FakeTransfersNotifier;
+
+    testWidgets('stay behind with an explanation while the setting is off; the rest goes', (
+      tester,
+    ) async {
+      await pumpFeature(
+        tester,
+        child: sender(),
+        overrides: featureOverrides(devices: sampleDevices()),
+      );
+      await tester.tap(find.text('enviar'));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(PepoDialog), findsOneWidget);
+      expect(find.text('No se ha enviado setup.exe'), findsOneWidget);
+      expect(find.text('Abrir ajustes'), findsOneWidget);
+      final sent = fakeTransfers(tester).sent;
+      expect(sent.single.$1, 'pixel8');
+      expect(sent.single.$2, ['C:/fotos/IMG_0001.jpg']);
+
+      await tester.tap(find.text('Aceptar'));
+      await tester.pumpAndSettle();
+      expect(find.byType(PepoDialog), findsNothing);
+    }, variant: desktopVariant);
+
+    testWidgets('go like any other file once the setting is on', (tester) async {
+      await pumpFeature(
+        tester,
+        child: sender(),
+        overrides: featureOverrides(
+          settings: const AppSettings(animations: false, allowExecutables: true),
+          devices: sampleDevices(),
+        ),
+      );
+      await tester.tap(find.text('enviar'));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(PepoDialog), findsNothing);
+      expect(fakeTransfers(tester).sent.single.$2, paths);
+    }, variant: desktopVariant);
   });
 }

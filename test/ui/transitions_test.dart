@@ -43,7 +43,11 @@ double _opacity(WidgetTester tester, Key root) {
 
 /// Two routes mid-transition: the one on top at [primary], the one below
 /// covered by [secondary].
-Future<void> _pumpPair(WidgetTester tester, Animation<double> primary, Animation<double> secondary) {
+Future<void> _pumpPair(
+  WidgetTester tester,
+  Animation<double> primary,
+  Animation<double> secondary,
+) {
   return tester.pumpWidget(
     Directionality(
       textDirection: TextDirection.ltr,

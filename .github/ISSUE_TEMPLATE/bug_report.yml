@@ -1,0 +1,30 @@
+name: Algo no funciona / Bug report
+description: Cuéntanos qué ha pasado y cómo repetirlo. Español o English.
+title: "[Bug] "
+body:
+  - type: input
+    id: version
+    attributes:
+      label: Versión de PepoConnect / App version
+      placeholder: "0.4.0"
+    validations:
+      required: true
+  - type: input
+    id: devices
+    attributes:
+      label: Dispositivos y sistemas / Devices and operating systems
+      placeholder: "Windows 11 + Android 15, modelo del móvil"
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Pasos para repetirlo / Steps to reproduce
+      description: Qué hiciste, qué esperabas y qué ocurrió. / What you did, expected and saw.
+    validations:
+      required: true
+  - type: textarea
+    id: details
+    attributes:
+      label: Más información / More details
+      description: Mensaje de error, captura o registros que ayuden. Oculta los datos personales.
