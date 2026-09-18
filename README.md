@@ -8,11 +8,26 @@ la red local, cifrado, sin cuentas y sin instalador.
 Plataformas: Windows (`.exe` portable), Linux x64 y arm64 (tarball, AppImage y
 Flatpak para móviles Linux), Android (`.apk`) e iOS (`.ipa`).
 
+## Capturas
+
+| Galería del móvil en el PC | Transferencias |
+|---|---|
+| ![Galería](docs/screenshots/galeria.png) | ![Transferencias](docs/screenshots/transferencias.png) |
+
+| Tema oscuro, fotos recién llegadas | Emparejar por QR | Ancho de móvil |
+|---|---|---|
+| ![Galería en oscuro](docs/screenshots/galeria-oscuro.png) | ![Emparejar](docs/screenshots/emparejar.png) | ![Móvil](docs/screenshots/movil-galeria.png) |
+
+Las capturas las genera `flutter test integration_test/screenshots_test.dart -d windows`
+a partir de la app real.
+
 ## Qué hace
 
 - **Galería del móvil en el PC** con miniaturas, previsualización a 1600 px y
   descarga del original con sus metadatos. Las fotos nuevas aparecen arriba con
-  un aviso y un toast con "Ver" y "Descargar".
+  un aviso y un toast con "Ver" y "Descargar" (una ráfaga de fotos se agrupa en
+  un solo aviso); "Seleccionar nuevas" (Ctrl+Mayús+N) las deja listas para
+  descargarlas de golpe.
 - **Transferencias en los dos sentidos**: arrastra archivos a la zona del
   dispositivo o elige "Añadir archivos…"; desde el móvil, el botón de enviar o
   "Compartir con PepoConnect". Reanudación tras cortes, verificación de
