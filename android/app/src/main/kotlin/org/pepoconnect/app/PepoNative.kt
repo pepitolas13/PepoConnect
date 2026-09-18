@@ -5,6 +5,9 @@ import android.content.ActivityNotFoundException
 import android.content.ContentValues
 import android.content.Context
 import android.content.Intent
+import android.media.AudioAttributes
+import android.media.AudioFormat
+import android.media.AudioTrack
 import android.net.Uri
 import android.net.wifi.WifiManager
 import android.os.Environment
@@ -40,6 +43,8 @@ import java.util.concurrent.Executors
  *    file into MediaStore Downloads/PepoConnect (off the main thread) and returns the
  *    `content://` URI of the copy.
  *  - `openAppSettings()` -> Boolean. Opens this app's details page in Settings.
+ *  - `playWav(wav: ByteArray, sampleRate: Int)` -> Boolean. Plays a short 16-bit mono WAV
+ *    (canonical 44-byte header) on the notification stream.
  */
 class PepoNative : FlutterPlugin, ActivityAware, MethodChannel.MethodCallHandler {
 
@@ -47,6 +52,7 @@ class PepoNative : FlutterPlugin, ActivityAware, MethodChannel.MethodCallHandler
         const val CHANNEL = "org.pepoconnect/native"
         private const val LOCK_TAG = "PepoConnect:mdns"
         private const val DOWNLOADS_SUBDIR = "PepoConnect"
+        private const val WAV_HEADER = 44
     }
 
     private var channel: MethodChannel? = null
@@ -125,6 +131,15 @@ class PepoNative : FlutterPlugin, ActivityAware, MethodChannel.MethodCallHandler
                     )
                 }
                 "openAppSettings" -> result.success(openAppSettings(context))
+                "playWav" -> {
+                    val wav = call.argument<ByteArray>("wav")
+                    val sampleRate = call.argument<Int>("sampleRate") ?: 44100
+                    if (wav == null || wav.size <= WAV_HEADER) {
+                        result.error("bad_args", "'wav' is required", null)
+                        return
+                    }
+                    result.success(playPcm(wav, WAV_HEADER, sampleRate))
+                }
                 else -> result.notImplemented()
             }
         } catch (e: Exception) {
@@ -198,6 +213,41 @@ class PepoNative : FlutterPlugin, ActivityAware, MethodChannel.MethodCallHandler
         } catch (e: SecurityException) {
             false
         }
+    }
+
+    // ---- Sounds ------------------------------------------------------------------------
+
+    /**
+     * Plays 16-bit mono PCM (the bytes of [wav] after [offset]) as a notification sound.
+     * Static AudioTrack: the whole clip is written up front and released once it is over.
+     */
+    private fun playPcm(wav: ByteArray, offset: Int, sampleRate: Int): Boolean {
+        val size = wav.size - offset
+        val track = AudioTrack.Builder()
+            .setAudioAttributes(
+                AudioAttributes.Builder()
+                    .setUsage(AudioAttributes.USAGE_NOTIFICATION_EVENT)
+                    .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+                    .build(),
+            )
+            .setAudioFormat(
+                AudioFormat.Builder()
+                    .setEncoding(AudioFormat.ENCODING_PCM_16BIT)
+                    .setSampleRate(sampleRate)
+                    .setChannelMask(AudioFormat.CHANNEL_OUT_MONO)
+                    .build(),
+            )
+            .setTransferMode(AudioTrack.MODE_STATIC)
+            .setBufferSizeInBytes(size)
+            .build()
+        if (track.write(wav, offset, size) < size) {
+            track.release()
+            return false
+        }
+        track.play()
+        val millis = size * 1000L / (2L * sampleRate) + 300L
+        mainHandler.postDelayed({ runCatching { track.stop(); track.release() } }, millis)
+        return true
     }
 
     // ---- Downloads ---------------------------------------------------------------------

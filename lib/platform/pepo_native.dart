@@ -2,8 +2,8 @@ import 'dart:io';
 
 import 'package:flutter/services.dart';
 
-/// Thin wrapper over the Android `org.pepoconnect/native` channel
-/// (`PepoNative.kt`). Every call is a no-op elsewhere.
+/// Thin wrapper over the `org.pepoconnect/native` channel (`PepoNative.kt` on
+/// Android, `AppDelegate.swift` on iOS). Every call is a no-op elsewhere.
 class PepoNative {
   const PepoNative._();
 
@@ -53,6 +53,18 @@ class PepoNative {
       });
     } catch (_) {
       return null;
+    }
+  }
+
+  /// Plays a short 16-bit mono WAV (the transfer chime) on the notification
+  /// stream. Android and iOS; false when it could not be played.
+  static Future<bool> playWav(Uint8List wav, {required int sampleRate}) async {
+    if (!Platform.isAndroid && !Platform.isIOS) return false;
+    try {
+      return await _channel.invokeMethod<bool>('playWav', {'wav': wav, 'sampleRate': sampleRate}) ??
+          false;
+    } catch (_) {
+      return false;
     }
   }
 

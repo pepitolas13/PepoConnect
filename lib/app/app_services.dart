@@ -18,6 +18,7 @@ import '../platform/notifications.dart';
 import '../platform/open_helper.dart';
 import '../platform/pepo_native.dart';
 import '../platform/share_intake.dart';
+import '../platform/transfer_chime.dart';
 import '../shared/motion/toast.dart';
 import '../shared/util/format.dart';
 import '../state/app_settings.dart';
@@ -306,6 +307,11 @@ class AppServices with WidgetsBindingObserver {
               payload: path != null ? 'path:$path' : 'transfers',
             ),
           );
+        }
+        if (settings.sounds) {
+          ref
+              .read(transferChimeProvider)
+              .ping(busy: () => ref.read(transfersProvider).activeCount > 0);
         }
       case TransferChangedEvent(record: final r) when r.state == TransferState.failed:
         toasts.show(

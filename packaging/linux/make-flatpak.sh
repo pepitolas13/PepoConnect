@@ -27,6 +27,7 @@ finish-args:
   - --share=ipc
   - --socket=wayland
   - --socket=fallback-x11
+  - --socket=pulseaudio
   - --device=dri
   - --filesystem=xdg-download
   - --filesystem=xdg-pictures

@@ -1,6 +1,9 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../platform/transfer_chime.dart';
 import '../../../shared/i18n/l10n.dart';
 import '../../../shared/widgets/toggle_switch.dart';
 import '../../../state/app_settings.dart';
@@ -31,7 +34,11 @@ class NotificationsSection extends ConsumerWidget {
           description: t.soundsBody,
           trailing: ToggleSwitch(
             value: settings.sounds,
-            onChanged: (v) => notifier.update((s) => s.copyWith(sounds: v)),
+            onChanged: (v) {
+              notifier.update((s) => s.copyWith(sounds: v));
+              // Hear it right away.
+              if (v) unawaited(ref.read(transferChimeProvider).play());
+            },
           ),
         ),
       ],

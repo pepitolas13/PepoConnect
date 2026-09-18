@@ -13,6 +13,7 @@ import 'package:pepoconnect/features/onboarding/onboarding_page.dart';
 import 'package:pepoconnect/features/pairing/pairing_page.dart';
 import 'package:pepoconnect/features/settings/settings_page.dart';
 import 'package:pepoconnect/features/settings/settings_providers.dart';
+import 'package:pepoconnect/platform/transfer_chime.dart';
 import 'package:pepoconnect/shared/i18n/l10n.dart';
 import 'package:pepoconnect/shared/motion/motion_scope.dart';
 import 'package:pepoconnect/state/app_settings.dart';
@@ -161,6 +162,7 @@ List<Override> featureOverrides({
   pairingProvider.overrideWith(() => pairing ?? FakePairingNotifier()),
   discoveredDevicesProvider.overrideWith((ref) => Stream.value(const <PeerCandidate>[])),
   localDeviceFactsProvider.overrideWithValue(testFacts),
+  transferChimeProvider.overrideWithValue(TransferChime(backend: const SilentChimeBackend())),
 ];
 
 /// The feature pages plus text stand-ins for the shell branches.
