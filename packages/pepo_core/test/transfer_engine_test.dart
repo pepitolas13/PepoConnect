@@ -301,12 +301,13 @@ void main() {
     await pair.hubEngine.events
         .firstWhere((e) => e.record.id == t.id && e.record.bytesDone > 4 * 1024 * 1024)
         .timeout(const Duration(seconds: 20));
-    await pair.hubEngine.cancel(t.id, reason: CancelReason.pause);
-    final paused = await pair.phoneEngine.events
+    final pausedFuture = pair.phoneEngine.events
         .where((e) => e.record.id == t.id && (e.record.state == TransferState.paused || e.record.state.isTerminal))
         .map((e) => e.record)
         .first
         .timeout(const Duration(seconds: 20));
+    await pair.hubEngine.cancel(t.id, reason: CancelReason.pause);
+    final paused = await pausedFuture;
     final part = await Directory(pair.hubDir.path)
         .list()
         .where((e) => e.path.endsWith('.pepopart'))
@@ -335,8 +336,9 @@ void main() {
     await pair.hubEngine.events
         .firstWhere((e) => e.record.id == t.id && e.record.bytesDone > 1024 * 1024)
         .timeout(const Duration(seconds: 20));
+    final terminal = waitTerminal(pair.phoneEngine, t.id);
     await pair.phoneEngine.cancel(t.id);
-    final r = await waitTerminal(pair.phoneEngine, t.id);
+    final r = await terminal;
     expect(r.state, TransferState.cancelled);
     await Future<void>.delayed(const Duration(milliseconds: 300));
     final leftovers = await Directory(pair.hubDir.path).list().toList();
