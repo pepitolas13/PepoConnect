@@ -43,6 +43,8 @@ Las variantes Android de 32 bits y x86_64 están en la página de la versión.
 si hay una versión nueva cada día y puedes desactivar los avisos que aparecen
 en pantalla. Si vienes de una versión anterior a 0.4, instala esta una vez para
 activar el nuevo actualizador.
+En Windows y Linux, cierra la versión anterior antes de abrir la nueva descarga.
+En Android, instala el APK sobre la app existente para conservar tus datos.
 
 ## Capturas
 

@@ -38,6 +38,24 @@ android {
         // flag during build.
         versionCode = flutter.versionCode
         versionName = flutter.versionName
+
+        // Flutter 3.47 fills this with every supported ABI for non-split APKs,
+        // even when --target-platform requests fewer. Plugin libraries would
+        // then advertise ABIs that have no libapp.so/libflutter.so and crash.
+        // Leave split handling (including its version-code offsets) to Flutter.
+        val splitPerAbi = project.findProperty("split-per-abi")?.toString()?.toBoolean() ?: false
+        val targetPlatforms = project.findProperty("target-platform")?.toString()
+        if (!splitPerAbi && targetPlatforms != null) {
+            val platformAbis = mapOf(
+                "android-arm" to "armeabi-v7a",
+                "android-arm64" to "arm64-v8a",
+                "android-x64" to "x86_64"
+            )
+            ndk {
+                abiFilters.clear()
+                abiFilters.addAll(targetPlatforms.split(',').map { platformAbis.getValue(it) })
+            }
+        }
     }
 
     signingConfigs {

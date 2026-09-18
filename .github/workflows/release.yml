@@ -130,6 +130,8 @@ jobs:
           cp build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk dist/PepoConnect-android-armeabi-v7a.apk
           cp build/app/outputs/flutter-apk/app-x86_64-release.apk       dist/PepoConnect-android-x86_64.apk
           cp build/app/outputs/flutter-apk/app-release.apk             dist/PepoConnect-android-universal.apk
+      - name: Verify Android architectures and required native libraries
+        run: python3 tool/verify_release.py dist --android-only
       - uses: actions/upload-artifact@v4
         with:
           name: android
@@ -189,12 +191,7 @@ jobs:
         working-directory: dist
         run: |
           set -euo pipefail
-          for asset in PepoConnect-win-x64.exe PepoConnect-win-x64-portable.zip \
-            PepoConnect-linux-{x64,arm64}.{tar.gz,AppImage,flatpak} \
-            PepoConnect-android-{arm64-v8a,armeabi-v7a,x86_64,universal}.apk \
-            PepoConnect-ios-unsigned.ipa; do
-            test -s "$asset" || { echo "::error::Missing update package: $asset"; exit 1; }
-          done
+          python3 ../tool/verify_release.py .
           sha256sum PepoConnect-* > SHA256SUMS.txt
       - name: Prepare release notes
         env:

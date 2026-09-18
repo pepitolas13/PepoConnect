@@ -53,6 +53,8 @@ its system installer confirmation; Flatpak opens the system software manager.
 An unsigned iPhone IPA must be reinstalled with the same signing account.
 Install 0.4 once manually if you are upgrading from an older version: subsequent
 versions can use the new updater.
+On Windows and Linux, close the previous version before opening the new download.
+On Android, install the APK over the existing app to keep your data.
 
 ## Privacy and development
 
