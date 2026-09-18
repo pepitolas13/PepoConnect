@@ -11,3 +11,4 @@ analyzer:
     - windows/**
     - linux/**
     - lib/l10n/generated/**
+    - packages/**

@@ -23,6 +23,9 @@ jobs:
       - run: dart format --output=none --set-exit-if-changed lib test packages/pepo_core
       - run: flutter analyze --fatal-infos
       - run: flutter test
-      - name: pepo_core tests
+      - name: pepo_core analyze and tests
         working-directory: packages/pepo_core
-        run: dart pub get && dart test --exclude-tags perf
+        run: |
+          dart pub get
+          dart analyze --fatal-infos
+          dart test --exclude-tags perf
