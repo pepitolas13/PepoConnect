@@ -52,12 +52,12 @@ const T = es ? {
   send: 'Archivos para ti', sendSub: '{n} archivos · {size}', recv: 'Envía archivos a {host}', recvSub: 'Suelta aquí los archivos o elige en tu dispositivo',
   download: 'Descargar', downloadAll: 'Descargar todo', choose: 'Elegir archivos', sending: 'Enviando…', sent: 'Enviado', failed: 'Error',
   expires: 'Este enlace caduca en {m} min y solo funciona en esta red.', expired: 'El enlace ha caducado. Pide otro en el PC.', taken: 'Este enlace ya se está usando en otro dispositivo.',
-  tooBig: 'Archivo demasiado grande', from: 'De {host}'
+  tooBig: 'Archivo demasiado grande', from: 'De {host}', multi: 'Puedes elegir varios archivos a la vez.'
 } : {
   send: 'Files for you', sendSub: '{n} files · {size}', recv: 'Send files to {host}', recvSub: 'Drop files here or choose from your device',
   download: 'Download', downloadAll: 'Download all', choose: 'Choose files', sending: 'Sending…', sent: 'Sent', failed: 'Failed',
   expires: 'This link expires in {m} min and only works on this network.', expired: 'The link has expired. Ask for a new one on the PC.', taken: 'This link is already in use on another device.',
-  tooBig: 'File too large', from: 'From {host}'
+  tooBig: 'File too large', from: 'From {host}', multi: 'You can choose several files at once.'
 };
 const fmt = (t, o) => t.replace(/\{(\w+)\}/g, (_, k) => o[k]);
 const bytes = n => n < 1024 ? n + ' B' : n < 1048576 ? (n/1024).toFixed(0) + ' KB' : n < 1073741824 ? (n/1048576).toFixed(1).replace('.', es ? ',' : '.') + ' MB' : (n/1073741824).toFixed(2).replace('.', es ? ',' : '.') + ' GB';
@@ -94,7 +94,7 @@ if (S.mode === 'send') {
   const input = document.createElement('input'); input.type = 'file'; input.multiple = true;
   choose.onclick = () => input.click();
   drop.appendChild(choose); drop.appendChild(input);
-  drop.appendChild(el('div', 'hint', fmt(T.expires, {m: Math.max(1, Math.round((S.expiresAt - Date.now()) / 60000))})));
+  drop.appendChild(el('div', 'hint', T.multi));
   content.appendChild(drop);
   const list = el('div', 'card'); list.style.display = 'none'; content.appendChild(list);
   const queue = [];
