@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io' show Platform;
 
 import 'package:fluentui_system_icons/fluentui_system_icons.dart';
@@ -106,13 +107,58 @@ class AppShell extends ConsumerStatefulWidget {
   ConsumerState<AppShell> createState() => _AppShellState();
 }
 
-class _AppShellState extends ConsumerState<AppShell> {
+class _AppShellState extends ConsumerState<AppShell> with WidgetsBindingObserver {
   bool _statusCollapsed = true;
 
   /// Panel state between 900 and 1280 px, where it is closed by default.
   bool? _panelOverride;
 
   StatefulNavigationShell get _shell => widget.navigationShell;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  /// A branch switch arrives as a new [StatefulNavigationShell]; moving away
+  /// from the gallery is what clears its "new" marks.
+  @override
+  void didUpdateWidget(AppShell oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    final was = oldWidget.navigationShell.currentIndex;
+    if (was == AppShell.galleryIndex && _shell.currentIndex != was) _galleryLeft();
+  }
+
+  /// The shell itself is replaced (pairing, onboarding) while the gallery
+  /// was on screen. `ref` is still usable here, unlike in [dispose].
+  @override
+  void deactivate() {
+    if (_shell.currentIndex == AppShell.galleryIndex) _galleryLeft();
+    super.deactivate();
+  }
+
+  /// Minimised, hidden to the tray or sent to the background with the
+  /// gallery on screen counts as leaving it too.
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state != AppLifecycleState.hidden && state != AppLifecycleState.paused) return;
+    if (_shell.currentIndex == AppShell.galleryIndex) _galleryLeft();
+  }
+
+  /// What the gallery was showing has been seen: it stops being new. The
+  /// marks are gallery state, so they change once this build pass is over.
+  void _galleryLeft() {
+    final scope = ref.read(selectedDeviceProvider);
+    final gallery = ref.read(galleryProvider(scope).notifier);
+    scheduleMicrotask(() => unawaited(gallery.markSeen()));
+  }
 
   void _goBranch(int index) {
     _shell.goBranch(index, initialLocation: index == _shell.currentIndex);

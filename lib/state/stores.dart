@@ -179,13 +179,16 @@ class JsonTransferStore implements TransferStore {
   }
 }
 
-/// Per-device gallery item states in `gallery/<deviceId>.json`.
+/// Per-device gallery item states in `gallery/<deviceId>.json`:
+/// `{"seenUntil": <ISO-8601>, "items": [...]}`. Files written before the
+/// watermark existed are a bare list and still load.
 class JsonMediaStateStore implements MediaStateStore {
   JsonMediaStateStore(String dataDir) : _dir = p.join(dataDir, 'gallery');
 
   final String _dir;
   final Map<String, JsonFile> _files = {};
   final Map<String, Map<String, MediaItemState>> _cache = {};
+  final Map<String, DateTime?> _seenUntil = {};
 
   JsonFile _fileFor(String deviceId) =>
       _files.putIfAbsent(deviceId, () => JsonFile(p.join(_dir, '$deviceId.json')));
@@ -195,9 +198,16 @@ class JsonMediaStateStore implements MediaStateStore {
     final cached = _cache[deviceId];
     if (cached != null) return Map.of(cached);
     final raw = await _fileFor(deviceId).read();
+    Object? items = raw;
+    DateTime? seenUntil;
+    if (raw is Map) {
+      items = raw['items'];
+      final s = raw['seenUntil'];
+      if (s is String) seenUntil = DateTime.tryParse(s);
+    }
     final map = <String, MediaItemState>{};
-    if (raw is List) {
-      for (final e in raw) {
+    if (items is List) {
+      for (final e in items) {
         try {
           final s = MediaItemState.fromJson((e as Map).cast<String, dynamic>());
           map[s.id] = s;
@@ -205,20 +215,45 @@ class JsonMediaStateStore implements MediaStateStore {
       }
     }
     _cache[deviceId] = map;
+    _seenUntil[deviceId] = seenUntil;
     return Map.of(map);
+  }
+
+  Future<void> _ensureLoaded(String deviceId) async {
+    if (!_cache.containsKey(deviceId)) await load(deviceId);
+  }
+
+  void _write(String deviceId) {
+    _fileFor(deviceId).write({
+      'seenUntil': ?_seenUntil[deviceId]?.toUtc().toIso8601String(),
+      'items': _cache[deviceId]!.values.map((s) => s.toJson()).toList(),
+    });
   }
 
   @override
   Future<void> save(String deviceId, MediaItemState state) async {
-    if (!_cache.containsKey(deviceId)) await load(deviceId);
-    final map = _cache[deviceId]!;
-    map[state.id] = state;
-    _fileFor(deviceId).write(map.values.map((s) => s.toJson()).toList());
+    await _ensureLoaded(deviceId);
+    _cache[deviceId]![state.id] = state;
+    _write(deviceId);
+  }
+
+  @override
+  Future<DateTime?> loadSeenUntil(String deviceId) async {
+    await _ensureLoaded(deviceId);
+    return _seenUntil[deviceId];
+  }
+
+  @override
+  Future<void> saveSeenUntil(String deviceId, DateTime until) async {
+    await _ensureLoaded(deviceId);
+    _seenUntil[deviceId] = until;
+    _write(deviceId);
   }
 
   @override
   Future<void> removeDevice(String deviceId) async {
     _cache.remove(deviceId);
+    _seenUntil.remove(deviceId);
     _files.remove(deviceId);
     final f = File(p.join(_dir, '$deviceId.json'));
     if (await f.exists()) await f.delete();

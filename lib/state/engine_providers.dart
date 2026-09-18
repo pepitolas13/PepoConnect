@@ -374,6 +374,20 @@ class GalleryNotifier extends Notifier<GalleryState> {
 
   Future<void> dismiss(GalleryEntry e) => ref.read(engineProvider).dismissItem(e.deviceId, e.id);
 
+  /// The gallery left the screen: everything it had loaded stops being new,
+  /// and only items captured later can show as new again.
+  Future<void> markSeen() async {
+    if (!ref.mounted) return;
+    final engine = ref.read(engineProvider);
+    final byDevice = <String, List<String>>{};
+    for (final e in state.entries) {
+      (byDevice[e.deviceId] ??= []).add(e.id);
+    }
+    for (final entry in byDevice.entries) {
+      await engine.markGallerySeen(entry.key, entry.value);
+    }
+  }
+
   Future<List<String>> deleteOnDevice(Iterable<GalleryEntry> entries) async {
     final engine = ref.read(engineProvider);
     final deleted = <String>[];

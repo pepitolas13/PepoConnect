@@ -113,15 +113,21 @@ class _GalleryPageState extends ConsumerState<GalleryPage> {
       return;
     }
     var newest = _newestSeen;
+    final stillNew = <String>{};
     for (final e in entries) {
-      if (_seen.add(galleryEntryKey(e)) &&
+      final key = galleryEntryKey(e);
+      if (e.isNew) stillNew.add(key);
+      if (_seen.add(key) &&
           e.isNew &&
           (_newestSeen == null || e.takenAt.isAfter(_newestSeen!))) {
-        _arrived.add(galleryEntryKey(e));
+        _arrived.add(key);
       }
       if (newest == null || e.takenAt.isAfter(newest)) newest = e.takenAt;
     }
     _newestSeen = newest;
+    // Once an item stops being new (seen, downloaded, dismissed) it must not
+    // glow again when its tile comes back on screen.
+    if (_arrived.isNotEmpty) _arrived.removeWhere((k) => !stillNew.contains(k));
   }
 
   /// First page for a scope that has never loaded while a device is
@@ -446,7 +452,7 @@ class _GalleryPageState extends ConsumerState<GalleryPage> {
                   square: square,
                   selected: _selection.contains(key),
                   selecting: _selection.isNotEmpty,
-                  glow: _arrived.contains(key),
+                  glow: e.isNew && _arrived.contains(key),
                   lookup: lookup,
                   loadThumbnail: notifier.thumbnail,
                   onTap: () => _onTileTap(e, key, ordered),

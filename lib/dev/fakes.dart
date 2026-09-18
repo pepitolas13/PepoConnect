@@ -261,6 +261,7 @@ class FakeGalleryNotifier extends GalleryNotifier {
   final List<GalleryEntry> downloaded = [];
   final List<GalleryEntry> deleted = [];
   int refreshes = 0;
+  int seenCalls = 0;
 
   @override
   GalleryState build() {
@@ -292,6 +293,26 @@ class FakeGalleryNotifier extends GalleryNotifier {
 
   @override
   Future<void> dismiss(GalleryEntry e) async {}
+
+  /// Clears the new mark of every loaded entry, like the engine would.
+  @override
+  Future<void> markSeen() async {
+    seenCalls++;
+    if (!ref.mounted) return;
+    state = state.copyWith(
+      entries: [
+        for (final e in state.entries)
+          e.isNew
+              ? GalleryEntry(
+                  deviceId: e.deviceId,
+                  item: e.item,
+                  state: MediaState.dismissed,
+                  localPath: e.localPath,
+                )
+              : e,
+      ],
+    );
+  }
 
   @override
   Future<List<String>> deleteOnDevice(Iterable<GalleryEntry> entries) async {

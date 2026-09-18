@@ -539,6 +539,10 @@ class PepoEngine {
 
   Future<void> dismissItem(String deviceId, String id) => gallery.dismiss(deviceId, id);
 
+  /// The gallery left the screen with [ids] on it: they stop being new.
+  Future<void> markGallerySeen(String deviceId, Iterable<String> ids) =>
+      gallery.markSeen(deviceId, ids);
+
   Future<void> _maybeAutoDownload(String deviceId, List<String> ids) async {
     final device = sessions.session(deviceId)?.device;
     if (device == null || !device.autoDownload) return;

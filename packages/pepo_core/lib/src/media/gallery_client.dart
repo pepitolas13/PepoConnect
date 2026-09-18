@@ -20,11 +20,14 @@ final _log = Logger('pepo.media.gallery');
 enum MediaState { fresh, previewed, downloaded, dismissed }
 
 /// Persists per-item states and local paths (implemented by the app with
-/// SQLite; [MemoryMediaStateStore] for tests).
+/// a JSON file per device; [MemoryMediaStateStore] for tests), plus the
+/// per-device "seen until" watermark (see [DeviceGallery.seenUntil]).
 abstract class MediaStateStore {
   Future<Map<String, MediaItemState>> load(String deviceId);
   Future<void> save(String deviceId, MediaItemState state);
   Future<void> removeDevice(String deviceId);
+  Future<DateTime?> loadSeenUntil(String deviceId);
+  Future<void> saveSeenUntil(String deviceId, DateTime until);
 }
 
 class MediaItemState {
@@ -61,6 +64,7 @@ class MediaItemState {
 
 class MemoryMediaStateStore implements MediaStateStore {
   final Map<String, Map<String, MediaItemState>> _data = {};
+  final Map<String, DateTime> _seenUntil = {};
 
   @override
   Future<Map<String, MediaItemState>> load(String deviceId) async => Map.of(_data[deviceId] ?? {});
@@ -70,7 +74,17 @@ class MemoryMediaStateStore implements MediaStateStore {
       (_data[deviceId] ??= {})[state.id] = state;
 
   @override
-  Future<void> removeDevice(String deviceId) async => _data.remove(deviceId);
+  Future<void> removeDevice(String deviceId) async {
+    _data.remove(deviceId);
+    _seenUntil.remove(deviceId);
+  }
+
+  @override
+  Future<DateTime?> loadSeenUntil(String deviceId) async => _seenUntil[deviceId];
+
+  @override
+  Future<void> saveSeenUntil(String deviceId, DateTime until) async =>
+      _seenUntil[deviceId] = until;
 }
 
 /// What changed in a device gallery.
@@ -96,9 +110,27 @@ class DeviceGallery {
   int indexVersion = 0;
   bool loaded = false;
   bool loading = false;
+  bool statesLoaded = false;
   Set<MediaKind>? filter;
 
-  MediaState stateOf(String id) => states[id]?.state ?? MediaState.fresh;
+  /// Newest capture time the user has already looked at in the gallery
+  /// (bumped by [GalleryClient.markSeen]). Items without a stored state are
+  /// "new" only when captured after it; before the first look nothing is.
+  DateTime? seenUntil;
+
+  /// Hub state of [id]: the stored one when there is any; otherwise `fresh`
+  /// for an item captured after [seenUntil] (it arrived while the hub was
+  /// not looking, e.g. through a reload after a reconnect) and `dismissed`
+  /// for the rest.
+  MediaState stateOf(String id) {
+    final stored = states[id]?.state;
+    if (stored != null) return stored;
+    final until = seenUntil;
+    final item = byId[id];
+    if (until == null || item == null) return MediaState.dismissed;
+    return item.takenAt.isAfter(until) ? MediaState.fresh : MediaState.dismissed;
+  }
+
   bool isDownloaded(String id) => states[id]?.state == MediaState.downloaded;
   String? localPath(String id) => states[id]?.localPath;
 
@@ -177,7 +209,7 @@ class GalleryClient implements MessageHandler {
     if (g.loading) return;
     g.loading = true;
     try {
-      if (g.states.isEmpty) g.states.addAll(await stateStore.load(deviceId));
+      await _loadStates(g);
       final control = sessions.controlFor(deviceId);
       if (control == null) return;
       g.filter = kinds;
@@ -196,6 +228,13 @@ class GalleryClient implements MessageHandler {
     } finally {
       g.loading = false;
     }
+  }
+
+  Future<void> _loadStates(DeviceGallery g) async {
+    if (g.statesLoaded) return;
+    g.statesLoaded = true;
+    g.states.addAll(await stateStore.load(g.deviceId));
+    g.seenUntil ??= await stateStore.loadSeenUntil(g.deviceId);
   }
 
   /// Loads the next page, if any.
@@ -397,6 +436,36 @@ class GalleryClient implements MessageHandler {
   }
 
   Future<void> dismiss(String deviceId, String id) => _setState(deviceId, id, MediaState.dismissed);
+
+  /// The user has looked at [ids] (what the gallery had on screen) and moved
+  /// on: their "new" mark goes away and [DeviceGallery.seenUntil] advances
+  /// to the newest of them, so only items captured later can still show as
+  /// new. One `updated` event for every item that changed.
+  Future<void> markSeen(String deviceId, Iterable<String> ids) async {
+    final g = gallery(deviceId);
+    await _loadStates(g);
+    final changed = <String>[];
+    DateTime? newest = g.seenUntil;
+    for (final id in ids) {
+      final item = g.byId[id];
+      if (item != null && (newest == null || item.takenAt.isAfter(newest))) {
+        newest = item.takenAt;
+      }
+      final s = g.states[id];
+      if (s != null && s.state == MediaState.fresh) {
+        s.state = MediaState.dismissed;
+        await stateStore.save(deviceId, s);
+        changed.add(id);
+      } else if (s == null && g.stateOf(id) == MediaState.fresh) {
+        changed.add(id);
+      }
+    }
+    if (newest != null && newest != g.seenUntil) {
+      g.seenUntil = newest;
+      await stateStore.saveSeenUntil(deviceId, newest);
+    }
+    if (changed.isNotEmpty) _emit(deviceId, GalleryChange.updated, changed);
+  }
 
   Future<void> _setState(
     String deviceId,

@@ -170,6 +170,63 @@ void main() {
       }
     });
 
+    test('markSeen clears the new marks and sets the watermark', () async {
+      final session = hub.pairing.startQr();
+      final payload = hub.pairing.payloadFor(
+        session,
+        deviceId: hub.identity.deviceId,
+        fingerprint: hub.identity.fingerprint,
+        name: 'PC',
+        addresses: ['127.0.0.1'],
+        port: hub.listenPort,
+      );
+      final reset = client.events.where((e) => e.change == GalleryChange.reset).first;
+      await phone.pairWithQr(payload);
+      await reset.timeout(const Duration(seconds: 10));
+      final phoneId = phone.identity.deviceId;
+      final g = client.gallery(phoneId);
+      expect(g.items, hasLength(2));
+      // What the index brings before the user ever looked is not new.
+      expect(g.newCount, 0);
+      expect(g.seenUntil, isNull);
+
+      // A photo pushed live is new until the gallery is left.
+      final newEvent = client.events.where((e) => e.change == GalleryChange.newItem).first;
+      await writeJpeg(phoneRoot, 'IMG_0003.jpg', r: 30);
+      final id3 = (await newEvent.timeout(const Duration(seconds: 10))).ids.single;
+      expect(g.stateOf(id3), MediaState.fresh);
+      expect(g.newCount, 1);
+
+      final updated = client.events.where((e) => e.change == GalleryChange.updated).first;
+      await client.markSeen(phoneId, g.items.map((i) => i.id));
+      expect((await updated.timeout(const Duration(seconds: 5))).ids, [id3]);
+      expect(g.stateOf(id3), MediaState.dismissed);
+      expect(g.newCount, 0);
+      final until = g.byId[id3]!.takenAt;
+      expect(g.seenUntil, until);
+      expect(await client.stateStore.loadSeenUntil(phoneId), until);
+
+      // Items that show up without a stored state (an index reload after a
+      // reconnect) are new only when captured after the watermark.
+      g.states.remove(id3);
+      expect(g.stateOf(id3), MediaState.dismissed);
+      final later = MediaItem(
+        id: 'later',
+        kind: MediaKind.image,
+        name: 'IMG_LATER.jpg',
+        width: 8,
+        height: 8,
+        takenAt: until.add(const Duration(minutes: 1)),
+        size: 1,
+        mime: 'image/jpeg',
+      );
+      g.byId[later.id] = later;
+      expect(g.stateOf(later.id), MediaState.fresh);
+      await client.markSeen(phoneId, [later.id]);
+      expect(g.stateOf(later.id), MediaState.dismissed);
+      expect(g.seenUntil, later.takenAt);
+    });
+
     test('index, thumbnails, preview, live new photo, download', () async {
       final session = hub.pairing.startQr();
       final payload = hub.pairing.payloadFor(
