@@ -80,6 +80,7 @@ class DeviceStatus {
     this.storageTotal,
     this.addresses = const [],
     this.listenPort,
+    this.bulkPort,
   });
 
   final int? battery;
@@ -89,6 +90,9 @@ class DeviceStatus {
   final List<String> addresses;
   final int? listenPort;
 
+  /// Port of the peer's fast lane listener (Rust bulk engine), if it has one.
+  final int? bulkPort;
+
   Map<String, dynamic> toJson() => {
     if (battery != null) 'battery': battery,
     if (charging != null) 'charging': charging,
@@ -96,6 +100,7 @@ class DeviceStatus {
     if (storageTotal != null) 'storageTotal': storageTotal,
     'ips': addresses,
     if (listenPort != null) 'port': listenPort,
+    if (bulkPort != null && bulkPort! > 0) 'fast': bulkPort,
   };
 
   factory DeviceStatus.fromJson(Map<String, dynamic> json) => DeviceStatus(
@@ -105,6 +110,7 @@ class DeviceStatus {
     storageTotal: json['storageTotal'] as int?,
     addresses: (json['ips'] as List<dynamic>? ?? const []).cast<String>(),
     listenPort: json['port'] as int?,
+    bulkPort: json['fast'] as int?,
   );
 }
 
@@ -345,6 +351,7 @@ class FileOffer {
     this.mediaKind,
     this.sourceId,
     this.resumable = true,
+    this.fast = false,
   });
 
   final int transferId;
@@ -358,6 +365,10 @@ class FileOffer {
   final String? sourceId;
   final bool resumable;
 
+  /// The sender can move this file on the fast lane (Rust engine); the
+  /// receiver answers `fast: true` in `file.accept` when it can too.
+  final bool fast;
+
   Map<String, dynamic> toJson() => {
     'x': transferId,
     'name': name,
@@ -367,6 +378,7 @@ class FileOffer {
     if (mediaKind != null) 'kind': mediaKind!.code,
     if (sourceId != null) 'sourceId': sourceId,
     'resumable': resumable,
+    if (fast) 'fast': true,
   };
 
   factory FileOffer.fromJson(Map<String, dynamic> json) => FileOffer(
@@ -380,5 +392,6 @@ class FileOffer {
     mediaKind: json['kind'] == null ? null : MediaKind.fromCode(json['kind'] as String),
     sourceId: json['sourceId'] as String?,
     resumable: json['resumable'] as bool? ?? true,
+    fast: json['fast'] as bool? ?? false,
   );
 }

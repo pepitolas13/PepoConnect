@@ -1,0 +1,24 @@
+# The `aes` crate only uses the ARMv8 Cryptography Extensions when told to.
+# Every 64-bit ARM target we ship (Android, iOS, Linux phones, Apple Silicon)
+# has them, so AES-GCM runs in hardware there too.
+[target.aarch64-linux-android]
+rustflags = ["--cfg", "aes_armv8", "-C", "link-arg=-Wl,-z,max-page-size=16384"]
+
+[target.aarch64-apple-ios]
+rustflags = ["--cfg", "aes_armv8"]
+
+[target.aarch64-apple-ios-sim]
+rustflags = ["--cfg", "aes_armv8"]
+
+[target.aarch64-apple-darwin]
+rustflags = ["--cfg", "aes_armv8"]
+
+[target.aarch64-unknown-linux-gnu]
+rustflags = ["--cfg", "aes_armv8"]
+
+# Android 15+ wants 16 KB page alignment for every native library.
+[target.armv7-linux-androideabi]
+rustflags = ["-C", "link-arg=-Wl,-z,max-page-size=16384"]
+
+[target.x86_64-linux-android]
+rustflags = ["-C", "link-arg=-Wl,-z,max-page-size=16384"]

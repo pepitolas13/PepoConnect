@@ -7,6 +7,8 @@ import 'package:logging/logging.dart';
 
 import '../discovery/discovery.dart';
 import '../identity/identity.dart';
+import '../native/native_bulk.dart';
+import '../native/native_route.dart';
 import '../pairing/pairing_session.dart';
 import '../pairing/qr_payload.dart';
 import '../protocol/message_types.dart';
@@ -102,6 +104,8 @@ class PeerSession {
   final List<Completer<PeerConnection>> _waitingBulk = [];
   final List<Completer<PeerConnection>> _waitingMedia = [];
   String? _sessionToken;
+  Uint8List? _bulkSid;
+  Uint8List? _bulkKey;
   SessionState state = SessionState.disconnected;
   DeviceStatus status = const DeviceStatus();
   Timer? _reconnectTimer;
@@ -140,6 +144,14 @@ class PeerSession {
     );
     conn.onClose.then((_) => _onControlClosed(conn));
     old?.close();
+    final native = _manager.native;
+    if (native != null) {
+      // Fast lane key for this session, registered so the peer's bulk
+      // connections are accepted.
+      _bulkSid = PepoCrypto.bulkSessionId(token);
+      _bulkKey = PepoCrypto.bulkSessionKey(psk: device.psk, sessionToken: token);
+      native.addSession(_bulkSid!, _bulkKey!);
+    }
     unawaited(_manager._deviceStore.save(device));
     _manager._emit(DeviceConnectedEvent(deviceId, device));
     _manager.transfers?.onDeviceConnected(deviceId);
@@ -163,8 +175,40 @@ class PeerSession {
         'name': _manager.info.name,
         'role': _manager.info.role.code,
         'version': _manager.info.appVersion,
+        if (_manager.bulkPort > 0) 'fast': _manager.bulkPort,
       },
     );
+  }
+
+  /// The fast lane route to this device for the next transfer, or null.
+  NativeRoute? nativeRoute() {
+    final native = _manager.native;
+    final c = _control;
+    final sid = _bulkSid;
+    final key = _bulkKey;
+    if (native == null || c == null || sid == null || key == null || !isConnected) return null;
+    final weConnect = device.weInitiate;
+    final peerPort = status.bulkPort ?? 0;
+    if (weConnect && peerPort <= 0) return null;
+    if (!weConnect && !native.isListening) return null;
+    return NativeRoute(
+      native: native,
+      sid: sid,
+      key: key,
+      weConnect: weConnect,
+      host: _hostOf(c.remoteAddress),
+      port: peerPort,
+    );
+  }
+
+  /// `1.2.3.4:5` and `::ffff:1.2.3.4:5` → `1.2.3.4`; `[::1]:5` → `::1`.
+  static String _hostOf(String remoteAddress) {
+    var host = remoteAddress;
+    final colon = host.lastIndexOf(':');
+    if (colon > 0) host = host.substring(0, colon);
+    if (host.startsWith('[') && host.endsWith(']')) host = host.substring(1, host.length - 1);
+    if (host.toLowerCase().startsWith('::ffff:')) host = host.substring(7);
+    return host;
   }
 
   /// Pushes a fresh status (battery, storage) to the peer.
@@ -212,6 +256,9 @@ class PeerSession {
     if (!identical(conn, _control)) return;
     _control = null;
     _sessionToken = null;
+    if (_bulkSid != null) _manager.native?.removeSession(_bulkSid!);
+    _bulkSid = null;
+    _bulkKey = null;
     final reason = conn.closeReason?.toString() ?? 'closed';
     state = SessionState.disconnected;
     _media?.close();
@@ -494,6 +541,7 @@ class SessionManager implements ChannelProvider, PeerRegistry {
     List<Discovery> discovery = const [],
     DeviceStatus Function()? localStatus,
     this.preferredPort = defaultListenPort,
+    this.native,
   }) : _info = info,
        // ignore: prefer_initializing_formals
        _deviceStore = deviceStore,
@@ -516,6 +564,9 @@ class SessionManager implements ChannelProvider, PeerRegistry {
   final List<Discovery> _discovery;
   final DeviceStatus Function() _localStatus;
   final int preferredPort;
+
+  /// The fast lane engine (Rust), when the library loaded.
+  final NativeBulk? native;
   late final PairingSessions pairing;
   late final SessionTokens tokens;
   late final PeerListener _listener;
@@ -534,6 +585,9 @@ class SessionManager implements ChannelProvider, PeerRegistry {
   PeerSession? session(String deviceId) => _sessions[deviceId];
   Iterable<PeerCandidate> get candidates => _candidates.values;
   DeviceStatus localStatus() => _localStatus();
+
+  /// Port of our fast lane listener (0 = none).
+  int get bulkPort => native?.port ?? 0;
 
   void _emit(SessionEvent e) {
     if (!_events.isClosed) _events.add(e);
@@ -786,6 +840,9 @@ class SessionManager implements ChannelProvider, PeerRegistry {
   @override
   void releaseBulk(String deviceId, PeerConnection conn, {bool broken = false}) =>
       _sessions[deviceId]?.releaseBulk(conn, broken: broken);
+
+  @override
+  NativeRoute? nativeRouteFor(String deviceId) => _sessions[deviceId]?.nativeRoute();
 
   /// Media channel of [deviceId] (opened lazily).
   Future<PeerConnection> mediaChannel(String deviceId) {

@@ -152,6 +152,13 @@ class _AboutSectionState extends ConsumerState<AboutSection> {
                 onPressed: () => _copyId(facts.shortId),
               ),
             ),
+            SettingsRow(
+              icon: FluentIcons.flash_24_regular,
+              title: t.setFastLane,
+              description: facts.fastLanePort > 0
+                  ? t.setFastLaneOn(facts.fastLanePort)
+                  : t.setFastLaneOff,
+            ),
             Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [

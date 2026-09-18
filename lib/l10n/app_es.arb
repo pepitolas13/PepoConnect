@@ -909,6 +909,16 @@
   "setAllow": "Permitir",
   "setGranted": "Concedido",
   "setDeviceId": "ID de este dispositivo",
+  "setFastLane": "Motor rápido",
+  "setFastLaneOn": "Activo · Rust, AES-256-GCM, puerto {port}",
+  "@setFastLaneOn": {
+    "placeholders": {
+      "port": {
+        "type": "int"
+      }
+    }
+  },
+  "setFastLaneOff": "No disponible en este dispositivo; se usan los canales TLS",
   "setCheckUpdates": "Comprobar actualizaciones",
   "setUpToDate": "Tienes la última versión",
   "setUpdateAvailable": "Hay una versión nueva: {version}",

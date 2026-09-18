@@ -6,6 +6,7 @@ import 'dart:typed_data';
 import 'package:path/path.dart' as p;
 import 'package:pepo_core/src/identity/certificate_factory.dart';
 import 'package:pepo_core/src/identity/identity.dart';
+import 'package:pepo_core/src/native/native_route.dart';
 import 'package:pepo_core/src/net/handshake.dart';
 import 'package:pepo_core/src/net/peer_connection.dart';
 import 'package:pepo_core/src/net/peer_listener.dart';
@@ -133,6 +134,9 @@ class _Registry implements PeerRegistry {
 
 /// Phone side: dials new bulk channels with the session token.
 class PhoneChannels implements ChannelProvider {
+  @override
+  NativeRoute? nativeRouteFor(String deviceId) => null;
+
   PhoneChannels(this.pair);
   final Pair pair;
   final List<PeerConnection> idle = [];
@@ -177,6 +181,9 @@ class PhoneChannels implements ChannelProvider {
 
 /// Hub side: asks the phone to open a bulk channel (chan.open) and waits.
 class HubChannels implements ChannelProvider {
+  @override
+  NativeRoute? nativeRouteFor(String deviceId) => null;
+
   HubChannels(this.pair);
   final Pair pair;
   final incomingBulk = StreamController<PeerConnection>.broadcast();

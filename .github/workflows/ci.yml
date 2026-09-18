@@ -19,12 +19,22 @@ jobs:
           flutter-version: "3.47.4"
           cache: true
       - run: flutter --version
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with: { workspaces: packages/pepo_native/rust }
+      - name: Rust fast lane (build + tests)
+        working-directory: packages/pepo_native/rust
+        run: |
+          cargo build --release
+          cargo test --release
       - run: flutter pub get
-      - run: dart format --output=none --set-exit-if-changed lib test packages/pepo_core
+      - run: dart format --output=none --set-exit-if-changed lib test integration_test packages/pepo_core packages/pepo_native/lib
       - run: flutter analyze --fatal-infos
       - run: flutter test
-      - name: pepo_core analyze and tests
+      - name: pepo_core analyze and tests (TLS and fast lane)
         working-directory: packages/pepo_core
+        env:
+          PEPO_NATIVE_LIB: ${{ github.workspace }}/packages/pepo_native/rust/target/release/libpepo_native.so
         run: |
           dart pub get
           dart analyze --fatal-infos

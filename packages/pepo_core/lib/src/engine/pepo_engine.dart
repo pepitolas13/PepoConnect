@@ -9,6 +9,7 @@ import '../discovery/discovery.dart';
 import '../discovery/udp_beacon.dart';
 import '../identity/identity.dart';
 import '../identity/identity_store.dart';
+import '../native/native_bulk.dart';
 import '../media/gallery_client.dart';
 import '../media/media_server.dart';
 import '../media/media_source.dart';
@@ -104,6 +105,7 @@ class PepoEngine {
   MediaServer? mediaServer;
   GuestShareServer? _guest;
   late FolderLayout layout;
+  NativeBulk? _native;
   final _events = StreamController<EngineEvent>.broadcast();
   final List<StreamSubscription<dynamic>> _subs = [];
   final Map<String, String> _folderNames = {};
@@ -113,6 +115,16 @@ class PepoEngine {
   Stream<EngineEvent> get events => _events.stream;
   bool get isStarted => _started;
   int get listenPort => sessions.listenPort;
+
+  /// True when the Rust bulk engine loaded (transfers use it whenever the
+  /// peer has it too).
+  bool get fastLaneAvailable => _native != null;
+
+  /// Port of our fast lane listener, 0 when unavailable.
+  int get fastLanePort => _native?.port ?? 0;
+
+  /// Why the fast lane is unavailable, if it is.
+  String? get fastLaneError => _native == null ? NativeBulk.lastLoadError : null;
   String get deviceId => identity.deviceId;
   String get shortId => identity.shortId;
 
@@ -129,6 +141,13 @@ class PepoEngine {
     await Directory(config.downloadRoot).create(recursive: true);
     identity = await _identityStore.loadOrCreate(commonName: 'pepo-${config.deviceName}');
     layout = FolderLayout(root: config.downloadRoot, separateByDevice: config.separateByDevice);
+    if (config.fastLane) {
+      _native = NativeBulk.tryLoad(libraryPath: config.nativeLibraryPath);
+      final port = _native?.listen() ?? 0;
+      if (_native != null && port == 0) {
+        _log.warning('fast lane: cannot bind a port, will only dial out');
+      }
+    }
     sessions = SessionManager(
       identity: identity,
       info: LocalDeviceInfo(
@@ -142,6 +161,7 @@ class PepoEngine {
       discovery: _discovery ?? (config.udpDiscovery ? [UdpBeacon()] : const []),
       localStatus: _localStatus,
       preferredPort: config.listenPort,
+      native: _native,
     );
     transfers = TransferEngine(
       channels: sessions,
@@ -241,6 +261,8 @@ class PepoEngine {
     await mediaServer?.stop();
     await transfers.dispose();
     await sessions.dispose();
+    _native?.dispose();
+    _native = null;
     await _events.close();
   }
 

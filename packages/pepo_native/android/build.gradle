@@ -1,0 +1,126 @@
+// Builds rust/ with Cargo for every ABI Flutter asks for and bundles the
+// resulting libpepo_native.so files as jniLibs. Needs rustup + cargo on the
+// PATH (or in ~/.cargo/bin) and the NDK declared by the Flutter project.
+
+import java.nio.file.Files
+import java.nio.file.StandardCopyOption
+
+group = "org.pepoconnect.pepo_native"
+version = "0.3.0"
+
+buildscript {
+    repositories {
+        google()
+        mavenCentral()
+    }
+    dependencies {
+        classpath("com.android.tools.build:gradle:9.1.0")
+    }
+}
+
+rootProject.allprojects {
+    repositories {
+        google()
+        mavenCentral()
+    }
+}
+
+apply plugin: "com.android.library"
+
+def rustDir = file("../rust")
+def jniOut = layout.buildDirectory.dir("rustJniLibs").get().asFile
+
+android {
+    namespace = "org.pepoconnect.pepo_native"
+    compileSdk = 36
+    // Declared in /android/app/build.gradle of the Flutter project.
+    ndkVersion = android.ndkVersion
+
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
+    }
+
+    defaultConfig {
+        minSdk = 29
+    }
+
+    sourceSets {
+        main {
+            jniLibs.srcDirs += jniOut
+        }
+    }
+}
+
+// ABIs requested by Flutter (-Ptarget-platform=android-arm,android-arm64,android-x64).
+def abiTable = [
+    "android-arm"  : ["armeabi-v7a", "armv7-linux-androideabi", "armv7a-linux-androideabi"],
+    "android-arm64": ["arm64-v8a", "aarch64-linux-android", "aarch64-linux-android"],
+    "android-x64"  : ["x86_64", "x86_64-linux-android", "x86_64-linux-android"],
+]
+def requested = ((project.findProperty("target-platform") ?: "android-arm,android-arm64,android-x64") as String)
+    .split(",").collect { it.trim() }.findAll { abiTable.containsKey(it) }
+
+def isWindows = System.getProperty("os.name").toLowerCase().contains("windows")
+def hostTag = isWindows ? "windows-x86_64"
+    : (System.getProperty("os.name").toLowerCase().contains("mac") ? "darwin-x86_64" : "linux-x86_64")
+
+def cargoHome = System.getenv("CARGO_HOME") ?: (System.getProperty("user.home") + "/.cargo")
+def toolPath = { String name ->
+    def exe = isWindows ? "${name}.exe" : name
+    def inHome = new File("${cargoHome}/bin", exe)
+    inHome.isFile() ? inHome.absolutePath : name
+}
+
+def sdkDir = {
+    def env = System.getenv("ANDROID_HOME") ?: System.getenv("ANDROID_SDK_ROOT")
+    if (env) return new File(env)
+    def props = new Properties()
+    def lp = rootProject.file("local.properties")
+    if (lp.isFile()) lp.withInputStream { props.load(it) }
+    def dir = props.getProperty("sdk.dir")
+    if (dir == null) throw new GradleException("Android SDK not found (ANDROID_HOME or local.properties)")
+    return new File(dir)
+}
+
+tasks.register("cargoBuildPepoNative") {
+    description = "Compiles rust/ into libpepo_native.so for ${requested}"
+    inputs.dir(new File(rustDir, "src"))
+    inputs.file(new File(rustDir, "Cargo.toml"))
+    inputs.property("abis", requested.join(","))
+    outputs.dir(jniOut)
+    doLast {
+        def ndkVersion = android.ndkVersion
+        if (ndkVersion == null) throw new GradleException("android.ndkVersion is not set")
+        def ndk = new File(sdkDir(), "ndk/${ndkVersion}")
+        def bin = new File(ndk, "toolchains/llvm/prebuilt/${hostTag}/bin")
+        if (!bin.isDirectory()) throw new GradleException("NDK ${ndkVersion} not found at ${ndk}")
+        def cargo = toolPath("cargo")
+        def rustup = toolPath("rustup")
+        requested.each { tp ->
+            def (abi, triple, clangPrefix) = abiTable[tp]
+            providers.exec {
+                commandLine(rustup, "target", "add", triple)
+            }.result.get()
+            def clang = new File(bin, "${clangPrefix}29-clang" + (isWindows ? ".cmd" : ""))
+            def linkerVar = "CARGO_TARGET_" + triple.toUpperCase().replace("-", "_") + "_LINKER"
+            def ar = new File(bin, "llvm-ar" + (isWindows ? ".exe" : ""))
+            providers.exec {
+                workingDir(rustDir)
+                environment(linkerVar, clang.absolutePath)
+                environment("AR_" + triple.replace("-", "_"), ar.absolutePath)
+                environment("ANDROID_NDK_HOME", ndk.absolutePath)
+                commandLine(cargo, "build", "--release", "--lib", "--target", triple)
+            }.result.get()
+            def built = new File(rustDir, "target/${triple}/release/libpepo_native.so")
+            if (!built.isFile()) throw new GradleException("cargo produced no library at ${built}")
+            def dest = new File(jniOut, abi)
+            dest.mkdirs()
+            Files.copy(built.toPath(), new File(dest, "libpepo_native.so").toPath(), StandardCopyOption.REPLACE_EXISTING)
+        }
+    }
+}
+
+tasks.named("preBuild") {
+    dependsOn("cargoBuildPepoNative")
+}

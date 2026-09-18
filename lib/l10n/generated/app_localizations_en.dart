@@ -1416,7 +1416,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String get setGranted => 'Granted';
 
   @override
-  String get setDeviceId => 'This device\'s ID';
+  String get setDeviceId => 'Device ID';
+
+  @override
+  String get setFastLane => 'Fast lane';
+
+  @override
+  String setFastLaneOn(int port) {
+    return 'On · Rust, AES-256-GCM, port $port';
+  }
+
+  @override
+  String get setFastLaneOff => 'Not available on this device; the TLS channels are used';
 
   @override
   String get setCheckUpdates => 'Check for updates';

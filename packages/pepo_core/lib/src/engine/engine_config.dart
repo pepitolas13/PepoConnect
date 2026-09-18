@@ -20,6 +20,8 @@ class EngineConfig {
     this.mediaRoots = const [],
     this.udpDiscovery = true,
     this.profile,
+    this.fastLane = true,
+    this.nativeLibraryPath,
   });
 
   /// Identity, database, caches, logs.
@@ -43,6 +45,13 @@ class EngineConfig {
   /// Optional profile name (second instance on the same PC).
   final String? profile;
 
+  /// Use the Rust bulk engine when its library can be loaded.
+  final bool fastLane;
+
+  /// Explicit path of the fast lane library (tests); otherwise it is looked
+  /// up next to the executable.
+  final String? nativeLibraryPath;
+
   EngineConfig copyWith({
     String? downloadRoot,
     String? deviceName,
@@ -62,6 +71,8 @@ class EngineConfig {
     mediaRoots: mediaRoots ?? this.mediaRoots,
     udpDiscovery: udpDiscovery,
     profile: profile,
+    fastLane: fastLane,
+    nativeLibraryPath: nativeLibraryPath,
   );
 
   Map<String, dynamic> toJson() => {
@@ -77,6 +88,8 @@ class EngineConfig {
     'mediaRoots': mediaRoots,
     'udpDiscovery': udpDiscovery,
     'profile': ?profile,
+    'fastLane': fastLane,
+    'nativeLibraryPath': ?nativeLibraryPath,
   };
 
   factory EngineConfig.fromJson(Map<String, dynamic> j) => EngineConfig(
@@ -92,5 +105,7 @@ class EngineConfig {
     mediaRoots: (j['mediaRoots'] as List<dynamic>? ?? const []).cast<String>(),
     udpDiscovery: j['udpDiscovery'] as bool? ?? true,
     profile: j['profile'] as String?,
+    fastLane: j['fastLane'] as bool? ?? true,
+    nativeLibraryPath: j['nativeLibraryPath'] as String?,
   );
 }

@@ -5,6 +5,8 @@ import 'dart:math';
 import 'package:logging/logging.dart';
 import 'package:path/path.dart' as p;
 
+import '../native/native_bulk.dart';
+import '../native/native_route.dart';
 import '../net/frame.dart';
 import '../net/peer_connection.dart';
 import '../protocol/message_types.dart';
@@ -26,6 +28,10 @@ abstract class ChannelProvider {
 
   /// Returns a bulk channel to the pool. [broken] channels are discarded.
   void releaseBulk(String deviceId, PeerConnection conn, {bool broken = false});
+
+  /// How to reach [deviceId] on the fast lane (Rust engine) right now, or
+  /// null when either side cannot use it.
+  NativeRoute? nativeRouteFor(String deviceId) => null;
 }
 
 /// Directory where an incoming file should be stored.
@@ -63,8 +69,21 @@ class TransferEngine {
   final Map<String, List<_Outgoing>> _queues = {};
   final Map<String, int> _activeOutgoing = {};
   final Map<PeerConnection, StreamSubscription<DataChunk>> _bulkSubs = {};
+
+  /// Devices whose fast lane failed to connect: use TLS until this time.
+  final Map<String, DateTime> _fastLaneBlockedUntil = {};
   int _nextId;
   bool _disposed = false;
+
+  /// Fast lane route for [deviceId], unless it is temporarily blocked.
+  NativeRoute? _fastRoute(String deviceId) {
+    final until = _fastLaneBlockedUntil[deviceId];
+    if (until != null) {
+      if (DateTime.now().isBefore(until)) return null;
+      _fastLaneBlockedUntil.remove(deviceId);
+    }
+    return channels.nativeRouteFor(deviceId);
+  }
 
   /// Every state change and throttled progress tick.
   Stream<TransferEvent> get events => _events.stream;
@@ -189,6 +208,7 @@ class TransferEngine {
       if (out.record.state == TransferState.active) {
         out.cancel.cancel();
         out.pauseOnDrop = true;
+        out.nativeJob?.cancel();
       }
     }
     for (final inc in _incoming.values.where((i) => i.record.deviceId == deviceId).toList()) {
@@ -200,6 +220,7 @@ class TransferEngine {
 
   Future<void> _runOutgoing(_Outgoing out, PeerConnection control) async {
     final r = out.record;
+    final route = _fastRoute(r.deviceId);
     final offer = FileOffer(
       transferId: r.id,
       name: r.name,
@@ -208,6 +229,7 @@ class TransferEngine {
       modifiedAt: r.modifiedAt,
       mediaKind: r.mediaKind,
       sourceId: r.sourceId,
+      fast: route != null,
     );
     ControlMessage reply;
     try {
@@ -248,6 +270,9 @@ class TransferEngine {
     if (out.cancel.isCancelled) {
       return _finishOutgoing(out, out.pauseOnDrop ? TransferState.paused : TransferState.cancelled);
     }
+    if (route != null && reply.flag('fast')) {
+      return _runOutgoingFast(out, control, route, offset);
+    }
 
     PeerConnection bulk;
     try {
@@ -285,11 +310,80 @@ class TransferEngine {
     if (broken || reader.bytesSent != r.size - offset) {
       return _finishOutgoing(out, TransferState.paused, error: 'connection lost');
     }
+    return _ackOutgoing(out, control, reader.hashHex, offset);
+  }
+
+  /// Sends the file through the Rust engine (AES-GCM over TCP, hashed there)
+  /// and confirms it over the control channel like the TLS path does.
+  Future<void> _runOutgoingFast(
+    _Outgoing out,
+    PeerConnection control,
+    NativeRoute route,
+    int offset,
+  ) async {
+    final r = out.record;
+    r.state = TransferState.active;
+    r.bytesDone = offset;
+    r.fast = true;
+    _emit(r);
+    final progress = _ProgressMeter(this, r, offset);
+    final job = route.native.send(
+      sid: route.sid,
+      key: route.key,
+      transferId: r.id,
+      path: r.sourcePath!,
+      offset: offset,
+      host: route.weConnect ? route.host : null,
+      port: route.port,
+      onProgress: progress.update,
+    );
+    out.nativeJob = job;
+    if (out.cancel.isCancelled) job.cancel();
+    final NativeBulkResult result;
+    try {
+      result = await job.done;
+    } on NativeBulkException catch (e) {
+      out.nativeJob = null;
+      if (out.cancel.isCancelled) {
+        return _finishOutgoing(
+          out,
+          out.pauseOnDrop ? TransferState.paused : TransferState.cancelled,
+        );
+      }
+      if (r.bytesDone <= offset && _isConnectFailure(e.message)) {
+        // The fast lane cannot be reached (firewall, NAT): fall back to the
+        // TLS channels for a while and retry this file right away.
+        _log.warning('fast lane to ${r.deviceId} unreachable (${e.message}); using TLS');
+        _fastLaneBlockedUntil[r.deviceId] = DateTime.now().add(const Duration(minutes: 10));
+        await _finishOutgoing(out, TransferState.paused, error: 'fast lane: ${e.message}');
+        unawaited(resume(r.id));
+        return;
+      }
+      return _finishOutgoing(out, TransferState.paused, error: 'fast lane: ${e.message}');
+    }
+    out.nativeJob = null;
+    if (out.cancel.isCancelled) {
+      return _finishOutgoing(out, out.pauseOnDrop ? TransferState.paused : TransferState.cancelled);
+    }
+    if (result.bytes != r.size - offset) {
+      return _finishOutgoing(out, TransferState.paused, error: 'connection lost');
+    }
+    return _ackOutgoing(out, control, result.hashHex, offset);
+  }
+
+  static bool _isConnectFailure(String message) =>
+      message.startsWith('connect ') ||
+      message.startsWith('resolve ') ||
+      message.startsWith('waiting for peer') ||
+      message.startsWith('peer did not connect');
+
+  Future<void> _ackOutgoing(_Outgoing out, PeerConnection control, String hash, int offset) async {
+    final r = out.record;
     ControlMessage ack;
     try {
       ack = await control.request(
         MsgType.fileDone,
-        data: {'x': r.id, 'hash': reader.hashHex, 'from': offset},
+        data: {'x': r.id, 'hash': hash, 'from': offset},
         timeout: const Duration(seconds: 120),
       );
     } on PeerError catch (e) {
@@ -298,7 +392,7 @@ class TransferEngine {
       return _finishOutgoing(out, TransferState.paused, error: 'connection lost');
     }
     if (ack.flag('ok')) {
-      r.hash = reader.hashHex;
+      r.hash = hash;
       r.finalPath = ack.optStr('storedName');
       r.bytesDone = r.size;
       return _finishOutgoing(out, TransferState.done);
@@ -433,6 +527,14 @@ class TransferEngine {
     record.tempPath = tempPath;
     record.bytesDone = offset;
     record.state = TransferState.active;
+    // A re-offer of the same transfer replaces whatever was still waiting.
+    final stale = _incoming.remove(record.id);
+    if (stale != null) await stale.close();
+    final route = offer.fast ? _fastRoute(deviceId) : null;
+    if (route != null) {
+      await _acceptFast(control, m, record, route, dir, offset, tailHash, offer.size);
+      return;
+    }
     final RandomAccessFile raf;
     try {
       raf = await File(tempPath).open(mode: offset > 0 ? FileMode.append : FileMode.write);
@@ -451,6 +553,66 @@ class TransferEngine {
       data: {'x': record.id, 'offset': offset, if (offset > 0) 'tailHash': tailHash},
     );
     if (offer.size == 0) inc.markReceived();
+  }
+
+  /// Receives on the fast lane: the Rust engine writes the temp file and
+  /// hashes it; the control channel still carries accept/done/ack.
+  Future<void> _acceptFast(
+    PeerConnection control,
+    ControlMessage m,
+    TransferRecord record,
+    NativeRoute route,
+    String dir,
+    int offset,
+    String tailHash,
+    int size,
+  ) async {
+    record.fast = true;
+    final inc = _Incoming(record, null, dir, startOffset: offset);
+    _incoming[record.id] = inc;
+    await store.save(record);
+    _emit(record);
+    final meter = _ProgressMeter(this, record, offset);
+    final job = route.native.receive(
+      sid: route.sid,
+      key: route.key,
+      transferId: record.id,
+      path: record.tempPath!,
+      offset: offset,
+      size: size,
+      host: route.weConnect ? route.host : null,
+      port: route.port,
+      onProgress: meter.update,
+    );
+    inc.nativeJob = job;
+    unawaited(
+      job.done.then(
+        (res) {
+          inc.nativeHash = res.hashHex;
+          record.bytesDone = offset + res.bytes;
+          inc.markReceived();
+        },
+        onError: (Object e) async {
+          inc.nativeJob = null;
+          if (inc.isClosed || record.state.isTerminal) return;
+          final message = e is NativeBulkException ? e.message : '$e';
+          if (e is NativeBulkException && e.isCancelled) return;
+          if (message.contains('hash') ||
+              message.contains('order') ||
+              message.contains('announced')) {
+            await _failIncoming(inc, message);
+          } else {
+            _log.fine('fast lane receive of ${record.name} stopped: $message');
+            await _pauseIncoming(inc);
+          }
+        },
+      ),
+    );
+    control.respond(
+      m.reqId,
+      MsgType.fileAccept,
+      data: {'x': record.id, 'offset': offset, if (offset > 0) 'tailHash': tailHash, 'fast': true},
+    );
   }
 
   void _onChunk(DataChunk chunk, StreamSubscription<DataChunk> sub) {
@@ -480,8 +642,9 @@ class TransferEngine {
     }
     await inc.close();
     final theirHash = m.optStr('hash') ?? '';
-    if (theirHash != inc.hasher.hashHex) {
-      _log.warning('hash mismatch for ${r.name}: $theirHash vs ${inc.hasher.hashHex}');
+    final myHash = inc.nativeHash ?? inc.hasher.hashHex;
+    if (!sameHash(theirHash, myHash)) {
+      _log.warning('hash mismatch for ${r.name}: $theirHash vs $myHash');
       await _failIncoming(inc, 'hash mismatch');
       control.respond(
         m.reqId,
@@ -506,7 +669,7 @@ class TransferEngine {
       return;
     }
     r.finalPath = finalPath;
-    r.hash = inc.hasher.hashHex;
+    r.hash = myHash;
     r.state = TransferState.done;
     r.bytesPerSecond = 0;
     r.finishedAt = DateTime.now();
@@ -527,6 +690,7 @@ class TransferEngine {
     if (out != null && out.record.deviceId == deviceId) {
       out.pauseOnDrop = reason == CancelReason.pause;
       out.cancel.cancel();
+      out.nativeJob?.cancel();
       if (out.record.state == TransferState.queued) {
         _queues[deviceId]?.remove(out);
         await _finishOutgoing(
@@ -556,6 +720,7 @@ class TransferEngine {
           ?.send(MsgType.transferCancel, data: {'x': id, 'reason': reason.name});
       out.pauseOnDrop = reason == CancelReason.pause;
       out.cancel.cancel();
+      out.nativeJob?.cancel();
       if (r.state == TransferState.queued) {
         _queues[r.deviceId]?.remove(out);
         await _finishOutgoing(
@@ -689,12 +854,21 @@ class TransferEngine {
   bool get isDisposed => _disposed;
 }
 
+/// xxh3 hex strings from Dart (unpadded) and Rust (16 digits) compare equal.
+bool sameHash(String a, String b) {
+  if (a == b) return true;
+  final x = BigInt.tryParse(a, radix: 16);
+  final y = BigInt.tryParse(b, radix: 16);
+  return x != null && y != null && x == y;
+}
+
 class _Outgoing {
   _Outgoing(this.record);
   final TransferRecord record;
   final CancelToken cancel = CancelToken();
   final Completer<void> done = Completer<void>();
   bool pauseOnDrop = false;
+  NativeJob? nativeJob;
 }
 
 class _Incoming {
@@ -711,6 +885,12 @@ class _Incoming {
   int expected;
   _ProgressMeter? _meter;
   bool _closed = false;
+
+  /// Fast lane: the Rust job writing the file, and its hash once done.
+  NativeJob? nativeJob;
+  String? nativeHash;
+
+  bool get isClosed => _closed;
 
   void markReceived() {
     if (!received.isCompleted) received.complete();
@@ -747,6 +927,8 @@ class _Incoming {
   Future<void> close() async {
     if (_closed) return;
     _closed = true;
+    nativeJob?.cancel();
+    nativeJob = null;
     final raf = _raf;
     _raf = null;
     if (raf != null) {

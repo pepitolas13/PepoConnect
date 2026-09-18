@@ -19,6 +19,8 @@ class LocalDeviceFacts {
     required this.downloadRoot,
     required this.appVersion,
     this.profile,
+    this.fastLanePort = 0,
+    this.fastLaneError,
   });
 
   /// Name announced on the network right now.
@@ -33,6 +35,10 @@ class LocalDeviceFacts {
   /// Folder the engine writes received files to right now.
   final String downloadRoot;
   final String appVersion;
+
+  /// Port of the Rust fast lane listener, 0 when the library is not loaded.
+  final int fastLanePort;
+  final String? fastLaneError;
 
   /// Second-instance profile, if any.
   final String? profile;
@@ -51,6 +57,8 @@ final localDeviceFactsProvider = Provider<LocalDeviceFacts>((ref) {
     downloadRoot: config.downloadRoot,
     appVersion: config.appVersion,
     profile: config.profile,
+    fastLanePort: engine.fastLanePort,
+    fastLaneError: engine.fastLaneError,
   );
 });
 

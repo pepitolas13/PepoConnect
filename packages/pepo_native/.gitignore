@@ -1,0 +1,8 @@
+.dart_tool/
+build/
+pubspec.lock
+rust/target/
+android/.gradle/
+android/local.properties
+windows/flutter/
+linux/flutter/

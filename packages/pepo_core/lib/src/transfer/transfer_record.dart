@@ -37,6 +37,7 @@ class TransferRecord {
     this.bytesPerSecond = 0,
     this.error,
     this.hash,
+    this.fast = false,
   });
 
   final int id;
@@ -67,6 +68,9 @@ class TransferRecord {
   String? hash;
   DateTime? finishedAt;
 
+  /// Moved (or moving) on the fast lane.
+  bool fast;
+
   bool get isIncoming => direction == TransferDirection.receive;
   double get progress => size == 0 ? 1 : bytesDone / size;
   int get bytesLeft => size - bytesDone;
@@ -93,6 +97,7 @@ class TransferRecord {
     bytesPerSecond: bytesPerSecond,
     error: error,
     hash: hash,
+    fast: fast,
   )..finishedAt = finishedAt;
 
   Map<String, dynamic> toJson() => {
@@ -115,6 +120,7 @@ class TransferRecord {
     'error': ?error,
     'hash': ?hash,
     'finishedAt': ?finishedAt?.toUtc().toIso8601String(),
+    if (fast) 'fast': true,
   };
 
   factory TransferRecord.fromJson(Map<String, dynamic> j) => TransferRecord(
@@ -136,6 +142,7 @@ class TransferRecord {
     bytesPerSecond: (j['bytesPerSecond'] as num?)?.toDouble() ?? 0,
     error: j['error'] as String?,
     hash: j['hash'] as String?,
+    fast: j['fast'] as bool? ?? false,
   )..finishedAt = j['finishedAt'] == null ? null : DateTime.parse(j['finishedAt'] as String);
 
   @override

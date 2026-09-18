@@ -40,6 +40,22 @@ a partir de la app real.
   sesión de fotos, portapapeles compartido y **envío por navegador** a
   cualquiera sin la app (enlace de un solo uso).
 
+## Motor rápido (Rust)
+
+Los archivos van por un carril aparte escrito en Rust (`packages/pepo_native`):
+una conexión TCP por archivo, cifrada con AES-256-GCM con una clave derivada
+del emparejamiento y de la sesión, con xxh3 de integridad, escrita en disco
+sin pasar por Dart. En loopback mueve más de 400 MB/s con cifrado en los dos
+extremos; en la práctica manda la Wi-Fi o el almacenamiento del móvil. El
+canal de control (ofertas, aceptaciones, miniaturas) sigue en TLS.
+
+Se negocia por archivo: si un extremo no tiene el motor (versión antigua,
+biblioteca no cargada) o su puerto no es alcanzable, ese archivo va por los
+canales TLS de siempre y la app sigue funcionando. En "Acerca de" se ve si el
+motor está activo. El crate se compila dentro de `flutter build` en las cinco
+plataformas (cargokit en Windows, Linux e iOS; tarea de Gradle en Android), así
+que hace falta `rustup` para compilar el proyecto.
+
 ## Seguridad
 
 Cada dispositivo genera una clave EC P-256 y un certificado autofirmado. Las
@@ -50,13 +66,18 @@ el emparejamiento (HKDF/HMAC-SHA256). No hay servidores externos.
 ## Compilar
 
 Requisitos: Flutter 3.47 (estable), Visual Studio Build Tools con C++ y ATL
-(Windows), Android SDK con NDK 28, Java 17, Rust (lanzador de Windows).
+(Windows), Android SDK con NDK 28, Java 17, Rust con `rustup` (motor rápido y
+lanzador de Windows; los targets de Android e iOS se instalan solos).
 
 ```bash
 flutter pub get
-flutter test                       # tests de la app
-cd packages/pepo_core && dart test # tests del motor de red
+flutter test                                        # tests de la app
+cargo test --release --manifest-path packages/pepo_native/rust/Cargo.toml
+cd packages/pepo_core && dart test                  # motor de red, TLS y carril rápido
 ```
+
+Los tests del carril rápido cargan la biblioteca de `packages/pepo_native/rust/target/release`
+(compílala antes con `cargo build --release`) o la que indique `PEPO_NATIVE_LIB`.
 
 Prueba de extremo a extremo real (la app completa y un "móvil" sin interfaz en el
 mismo proceso, sobre TLS en loopback: emparejar por QR, foto nueva, descarga,

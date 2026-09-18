@@ -82,6 +82,14 @@ void main() {
     await phone.sendFiles(pc.deviceId, [vid.path]);
     final got = await waitForFile(tester, w.hubDownloads, 'VID_E2E.mp4');
     expect(await got.length(), await vid.length());
+    // Both ends run the Rust fast lane in this process: the file must have
+    // taken it, not the TLS channels.
+    expect(hub.fastLaneAvailable, isTrue, reason: hub.fastLaneError);
+    final vidRecord = await waitFor(tester, () {
+      final h = w.container.read(transfersProvider).history;
+      return h.where((t) => t.name == 'VID_E2E.mp4' && t.state == TransferState.done).firstOrNull;
+    }, what: 'VID_E2E.mp4 in the history');
+    expect(vidRecord.fast, isTrue, reason: 'received on the fast lane');
     await pumpUntilFound(tester, find.text('Transferencia completada'));
     await tester.tap(find.widgetWithText(NavRailItem, 'Transferencias'));
     await settle(tester);

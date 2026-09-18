@@ -14,6 +14,8 @@ export 'src/media/image_ops.dart';
 export 'src/media/media_server.dart' show MediaServer, DeletePolicy;
 export 'src/media/media_source.dart';
 export 'src/media/media_source_fs.dart';
+export 'src/native/native_bulk.dart'
+    show NativeBulk, NativeBulkException, NativeBulkResult, NativeJob, nativeBulkLibraryEnv;
 export 'src/net/handshake.dart' show HandshakeException, NotPairedException;
 export 'src/net/peer_connection.dart' show PeerError, PeerClosedException;
 export 'src/net/peer_listener.dart' show defaultListenPort;

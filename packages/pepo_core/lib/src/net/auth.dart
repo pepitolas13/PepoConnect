@@ -23,6 +23,16 @@ class PepoCrypto {
   static Uint8List hmacSha256(List<int> key, List<int> data) =>
       Uint8List.fromList(Hmac(sha256, key).convert(data).bytes);
 
+  /// Key of the fast lane (Rust bulk engine) for one session: bound to the
+  /// pairing PSK and to the session token the listener issued over TLS.
+  static Uint8List bulkSessionKey({required List<int> psk, required String sessionToken}) =>
+      hkdfSha256(ikm: psk, salt: utf8.encode(sessionToken), info: utf8.encode('pepo-bulk-v2'));
+
+  /// 16-byte id that names the session on the wire without revealing the
+  /// token.
+  static Uint8List bulkSessionId(String sessionToken) =>
+      Uint8List.fromList(sha256.convert(utf8.encode(sessionToken)).bytes.sublist(0, 16));
+
   /// HKDF-SHA256 extract + expand (RFC 5869).
   static Uint8List hkdfSha256({
     required List<int> ikm,

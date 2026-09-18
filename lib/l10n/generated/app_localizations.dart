@@ -2427,6 +2427,24 @@ abstract class AppLocalizations {
   /// **'ID de este dispositivo'**
   String get setDeviceId;
 
+  /// No description provided for @setFastLane.
+  ///
+  /// In es, this message translates to:
+  /// **'Motor rápido'**
+  String get setFastLane;
+
+  /// No description provided for @setFastLaneOn.
+  ///
+  /// In es, this message translates to:
+  /// **'Activo · Rust, AES-256-GCM, puerto {port}'**
+  String setFastLaneOn(int port);
+
+  /// No description provided for @setFastLaneOff.
+  ///
+  /// In es, this message translates to:
+  /// **'No disponible en este dispositivo; se usan los canales TLS'**
+  String get setFastLaneOff;
+
   /// No description provided for @setCheckUpdates.
   ///
   /// In es, this message translates to:

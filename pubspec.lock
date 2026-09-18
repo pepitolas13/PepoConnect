@@ -810,7 +810,14 @@ packages:
       path: "packages/pepo_core"
       relative: true
     source: path
-    version: "0.1.0"
+    version: "0.3.0"
+  pepo_native:
+    dependency: "direct main"
+    description:
+      path: "packages/pepo_native"
+      relative: true
+    source: path
+    version: "0.3.0"
   petitparser:
     dependency: transitive
     description:
@@ -1354,4 +1361,4 @@ packages:
     version: "3.1.4"
 sdks:
   dart: ">=3.13.3 <4.0.0"
-  flutter: ">=3.44.0"
+  flutter: ">=3.47.0"

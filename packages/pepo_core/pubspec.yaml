@@ -1,6 +1,6 @@
 name: pepo_core
 description: PepoConnect core - identity, pairing, discovery, transport, transfer engine and media pipeline (pure Dart).
-version: 0.1.0
+version: 0.3.0
 publish_to: none
 
 environment:
@@ -10,6 +10,7 @@ dependencies:
   async: ^2.13.0
   collection: ^1.19.0
   crypto: ^3.0.6
+  ffi: ^2.1.0
   logging: ^1.3.0
   meta: ^1.16.0
   path: ^1.9.0

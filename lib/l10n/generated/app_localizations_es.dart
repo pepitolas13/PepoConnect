@@ -1420,6 +1420,17 @@ class AppLocalizationsEs extends AppLocalizations {
   String get setDeviceId => 'ID de este dispositivo';
 
   @override
+  String get setFastLane => 'Motor rápido';
+
+  @override
+  String setFastLaneOn(int port) {
+    return 'Activo · Rust, AES-256-GCM, puerto $port';
+  }
+
+  @override
+  String get setFastLaneOff => 'No disponible en este dispositivo; se usan los canales TLS';
+
+  @override
   String get setCheckUpdates => 'Comprobar actualizaciones';
 
   @override
