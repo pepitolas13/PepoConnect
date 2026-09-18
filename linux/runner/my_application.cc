@@ -19,6 +19,29 @@ static void first_frame_cb(MyApplication* self, FlView* view) {
   gtk_widget_show(gtk_widget_get_toplevel(GTK_WIDGET(view)));
 }
 
+// Window icon for task bars, docks and Alt-Tab on X11 (on Wayland the
+// compositor takes it from the .desktop entry matched by APPLICATION_ID).
+// Prefers the themed icon installed by the packages (tarball + install script,
+// AppImage, Flatpak); a bundle run in place falls back to the PNG shipped in
+// the Flutter assets next to the binary.
+static void set_window_icon(GtkWindow* window) {
+  if (gtk_icon_theme_has_icon(gtk_icon_theme_get_default(), APPLICATION_ID)) {
+    gtk_window_set_icon_name(window, APPLICATION_ID);
+    return;
+  }
+  g_autofree gchar* exe_path = g_file_read_link("/proc/self/exe", nullptr);
+  if (exe_path == nullptr) {
+    return;
+  }
+  g_autofree gchar* exe_dir = g_path_get_dirname(exe_path);
+  g_autofree gchar* icon_path =
+      g_build_filename(exe_dir, "data", "flutter_assets", "assets", "icon",
+                       "pepoconnect-256.png", nullptr);
+  if (g_file_test(icon_path, G_FILE_TEST_IS_REGULAR)) {
+    gtk_window_set_icon_from_file(window, icon_path, nullptr);
+  }
+}
+
 // Implements GApplication::activate.
 static void my_application_activate(GApplication* application) {
   MyApplication* self = MY_APPLICATION(application);
@@ -53,6 +76,7 @@ static void my_application_activate(GApplication* application) {
   }
 
   gtk_window_set_default_size(window, 1100, 700);
+  set_window_icon(window);
 
   g_autoptr(FlDartProject) project = fl_dart_project_new();
   fl_dart_project_set_dart_entrypoint_arguments(

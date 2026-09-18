@@ -25,6 +25,7 @@ use std::os::windows::ffi::OsStrExt;
 use std::path::{Path, PathBuf};
 use std::process::{self, Command};
 
+use windows_sys::Win32::UI::Shell::{SHChangeNotify, SHCNE_ASSOCCHANGED, SHCNF_IDLIST};
 use windows_sys::Win32::UI::WindowsAndMessaging::{
     MessageBoxW, MB_ICONERROR, MB_ICONWARNING, MB_OK, MB_SETFOREGROUND,
 };
@@ -94,6 +95,7 @@ fn run() -> Result<(), Failure> {
 
     if !is_current(&app_dir) {
         install(&root, &app_dir)?;
+        refresh_shell_icons();
     }
 
     let app_exe = app_dir.join(APP_EXE);
@@ -222,6 +224,24 @@ fn swap(root: &Path, app_dir: &Path, staging: &Path) -> Result<(), Failure> {
         ));
     }
     Ok(())
+}
+
+/// Makes Explorer drop its icon cache after an update. `app\pepoconnect.exe`
+/// keeps the same path across versions and the shell caches icons by path
+/// without looking at the file again, so the taskbar, the Start menu entry and
+/// any shortcut would keep showing the icon of the previous version.
+fn refresh_shell_icons() {
+    // SAFETY: SHCNF_IDLIST with null items is the documented "flush" form; no
+    // memory is passed to or retained by the shell.
+    // windows-sys declares the event id as i32 but the constant as u32.
+    unsafe {
+        SHChangeNotify(
+            SHCNE_ASSOCCHANGED as i32,
+            SHCNF_IDLIST,
+            std::ptr::null(),
+            std::ptr::null(),
+        );
+    }
 }
 
 /// `app.old`, or `app.old-<pid>` when a stale `app.old` could not be removed.

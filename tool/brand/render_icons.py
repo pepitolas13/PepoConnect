@@ -3,16 +3,39 @@
 Pillow only (no cairosvg / resvg). Everything is drawn at 4x and downsampled.
 
     python tool/brand/render_icons.py
+
+Outputs:
+  assets/icon/*.png, favicon.ico          sources for flutter_launcher_icons, tray, Linux
+  windows/runner/resources/app_icon.ico   Windows app icon (title bar, taskbar, exe, launcher)
+  android/app/src/main/res/drawable-*/ic_stat_pepoconnect.png
+                                          Android status-bar icon (notifications, foreground
+                                          service): white glyph on transparent, 24 dp
 """
 from __future__ import annotations
 
+import io
 import os
+import struct
 import sys
 
 from PIL import Image, ImageChops, ImageDraw
 
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 OUT = os.path.join(ROOT, "assets", "icon")
+WINDOWS_ICO = os.path.join(ROOT, "windows", "runner", "resources", "app_icon.ico")
+ANDROID_RES = os.path.join(ROOT, "android", "app", "src", "main", "res")
+
+# Sizes Windows asks for: 16/20/24 (title bar, tray at 100-150 %), 32/40/48 (taskbar,
+# Alt-Tab), 64/96/128 (Explorer views), 256 (jumbo). Everything below PNG_FROM is stored
+# as an uncompressed 32-bit DIB, which is what LoadIcon/LoadImage and every shell
+# component understand; only the 256 px image is PNG-compressed, as Windows expects.
+WINDOWS_ICO_SIZES = [16, 20, 24, 32, 40, 48, 64, 96, 128, 256]
+TRAY_ICO_SIZES = [16, 20, 24, 32, 40, 48, 64, 256]
+PNG_FROM = 256
+
+# Android status-bar icon: 24 dp at every density.
+ANDROID_STATUS_ICON = "ic_stat_pepoconnect.png"
+ANDROID_DENSITIES = {"mdpi": 24, "hdpi": 36, "xhdpi": 48, "xxhdpi": 72, "xxxhdpi": 96}
 SS = 4  # supersampling factor
 DESIGN = 512.0
 
@@ -178,10 +201,74 @@ def render_tray(px: int, color) -> Image.Image:
     return layer.resize((px, px), Image.LANCZOS)
 
 
-def save(img: Image.Image, name: str, **kwargs) -> None:
+def dib_entry(frame: Image.Image) -> bytes:
+    """32-bit BGRA DIB (BITMAPINFOHEADER, XOR bitmap, 1-bit AND mask) for an ICO entry."""
+    w, h = frame.size
+    header = struct.pack("<IiiHHIIiiII", 40, w, h * 2, 1, 32, 0, 0, 0, 0, 0, 0)
+    px = frame.load()
+    xor = bytearray(w * h * 4)
+    and_row = ((w + 31) // 32) * 4
+    and_mask = bytearray(and_row * h)
+    i = 0
+    for y in range(h - 1, -1, -1):  # DIBs are stored bottom-up
+        row = (h - 1 - y) * and_row
+        for x in range(w):
+            r, g, b, a = px[x, y]
+            xor[i : i + 4] = (b, g, r, a)
+            i += 4
+            if a == 0:  # AND bit set = transparent (for renderers that ignore alpha)
+                and_mask[row + (x >> 3)] |= 0x80 >> (x & 7)
+    return header + bytes(xor) + bytes(and_mask)
+
+
+def encode_ico(source: Image.Image, sizes: list[int], png_from: int = PNG_FROM) -> bytes:
+    """ICO container: DIB entries below `png_from`, PNG entries from there on."""
+    entries: list[tuple[int, bytes]] = []
+    for size in sizes:
+        frame = source.resize((size, size), Image.LANCZOS).convert("RGBA")
+        if size >= png_from:
+            buf = io.BytesIO()
+            frame.save(buf, format="PNG")
+            data = buf.getvalue()
+        else:
+            data = dib_entry(frame)
+        entries.append((size, data))
+    directory = bytearray(struct.pack("<HHH", 0, 1, len(entries)))
+    offset = 6 + 16 * len(entries)
+    body = bytearray()
+    for size, data in entries:
+        directory += struct.pack(
+            "<BBBBHHII", size % 256, size % 256, 0, 0, 1, 32, len(data), offset + len(body)
+        )
+        body += data
+    return bytes(directory + body)
+
+
+def report(path: str, detail: str) -> None:
+    print(f"  {os.path.relpath(path, ROOT)}  {detail}")
+
+
+def save(img: Image.Image, name: str) -> None:
     path = os.path.join(OUT, name)
-    img.save(path, **kwargs)
-    print(f"  {os.path.relpath(path, ROOT)}  {img.size[0]}x{img.size[1]}")
+    img.save(path)
+    report(path, f"{img.size[0]}x{img.size[1]}")
+
+
+def save_ico(source: Image.Image, path: str, sizes: list[int]) -> None:
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    with open(path, "wb") as f:
+        f.write(encode_ico(source, sizes))
+    report(path, "ico " + "/".join(str(s) for s in sizes))
+
+
+def save_android_status_icons() -> None:
+    for density, px in ANDROID_DENSITIES.items():
+        folder = os.path.join(ANDROID_RES, f"drawable-{density}")
+        os.makedirs(folder, exist_ok=True)
+        path = os.path.join(folder, ANDROID_STATUS_ICON)
+        img = render_tray(px, WHITE)
+        img.save(path)
+        report(path, f"{px}x{px}")
 
 
 def main() -> int:
@@ -197,8 +284,12 @@ def main() -> int:
     save(render_tray(32, WHITE), "tray-32.png")
     save(render_tray(16, BLACK), "tray-16-dark.png")
     save(render_tray(32, BLACK), "tray-32-dark.png")
-    favicon = icon.resize((256, 256), Image.LANCZOS)
-    save(favicon, "favicon.ico", sizes=[(16, 16), (32, 32), (48, 48), (64, 64), (256, 256)])
+    # Windows: the tray icon (tray_manager loads it from the assets) and the app icon
+    # compiled into pepoconnect.exe and stamped on the launcher.
+    save_ico(icon, os.path.join(OUT, "favicon.ico"), TRAY_ICO_SIZES)
+    save_ico(icon, WINDOWS_ICO, WINDOWS_ICO_SIZES)
+    # Android: status-bar icon (Android only uses its alpha channel).
+    save_android_status_icons()
     return 0
 
 

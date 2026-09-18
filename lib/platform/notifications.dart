@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:ui' show Color;
 
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:local_notifier/local_notifier.dart';
@@ -17,6 +18,12 @@ class SystemNotifications {
 
   static const _channelId = 'pepoconnect.events';
 
+  /// Android status-bar icon: `res/drawable-*/ic_stat_pepoconnect.png`, a white
+  /// glyph on transparent rendered by `tool/brand/render_icons.py`. Android
+  /// only keeps the alpha of the small icon and tints it with [_androidAccent].
+  static const _androidSmallIcon = 'ic_stat_pepoconnect';
+  static const _androidAccent = Color(0xFF0A3D8F);
+
   Future<void> init() async {
     if (_ready) return;
     try {
@@ -25,7 +32,7 @@ class SystemNotifications {
       } else if (Platform.isAndroid || Platform.isIOS) {
         await _mobile.initialize(
           settings: const InitializationSettings(
-            android: AndroidInitializationSettings('@mipmap/ic_launcher'),
+            android: AndroidInitializationSettings(_androidSmallIcon),
             iOS: DarwinInitializationSettings(),
           ),
           onDidReceiveNotificationResponse: (r) {
@@ -92,6 +99,8 @@ class SystemNotifications {
               'PepoConnect',
               importance: Importance.defaultImportance,
               priority: Priority.defaultPriority,
+              icon: _androidSmallIcon,
+              color: _androidAccent,
             ),
             iOS: DarwinNotificationDetails(),
           ),

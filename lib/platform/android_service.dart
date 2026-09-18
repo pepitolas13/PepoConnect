@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:ui' show Color;
 
 import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 
@@ -17,6 +18,15 @@ class AndroidService {
 
   static bool get isSupported => Platform.isAndroid;
   static bool _initialized = false;
+
+  /// Status-bar icon of the service notification. Without it the plugin falls
+  /// back to the launcher icon, which Android flattens to a white blob. The
+  /// meta-data in AndroidManifest.xml points at
+  /// `res/drawable-*/ic_stat_pepoconnect.png` (tool/brand/render_icons.py).
+  static const _notificationIcon = NotificationIcon(
+    metaDataName: 'org.pepoconnect.app.NOTIFICATION_ICON',
+    backgroundColor: Color(0xFF0A3D8F),
+  );
 
   static Future<void> init() async {
     if (!isSupported || _initialized) return;
@@ -56,7 +66,7 @@ class AndroidService {
       serviceId: 47473,
       notificationTitle: title,
       notificationText: text,
-      notificationIcon: null,
+      notificationIcon: _notificationIcon,
       callback: pepoServiceCallback,
     );
     return result is ServiceRequestSuccess;

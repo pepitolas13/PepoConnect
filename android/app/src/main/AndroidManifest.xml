@@ -103,6 +103,14 @@
             android:foregroundServiceType="connectedDevice"
             android:stopWithTask="false"/>
 
+        <!-- Status-bar icon of the foreground-service notification (read by
+             flutter_foreground_task through NotificationIcon.metaDataName).
+             Same drawable as flutter_local_notifications; rendered by
+             tool/brand/render_icons.py. -->
+        <meta-data
+            android:name="org.pepoconnect.app.NOTIFICATION_ICON"
+            android:resource="@drawable/ic_stat_pepoconnect"/>
+
         <!-- Don't delete the meta-data below.
              This is used by the Flutter tool to generate GeneratedPluginRegistrant.java -->
         <meta-data

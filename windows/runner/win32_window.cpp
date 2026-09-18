@@ -37,6 +37,29 @@ int Scale(int source, double scale_factor) {
   return static_cast<int>(source * scale_factor);
 }
 
+// Loads IDI_APP_ICON (resources/app_icon.ico) at the requested pixel size.
+// LR_SHARED icons are owned by the system and must not be destroyed.
+HICON LoadAppIcon(int size) {
+  return static_cast<HICON>(LoadImage(GetModuleHandle(nullptr),
+                                      MAKEINTRESOURCE(IDI_APP_ICON), IMAGE_ICON,
+                                      size, size, LR_DEFAULTCOLOR | LR_SHARED));
+}
+
+// Gives the window its own big/small icons at the size the shell wants for
+// |dpi|. The class icon alone is not enough: the taskbar and Alt-Tab ask the
+// window first (WM_GETICON) and, when that returns nothing, may fall back to a
+// cached icon of the executable path, which is how a stale icon survives an
+// update of the exe.
+void ApplyWindowIcons(HWND hwnd, UINT dpi) {
+  // ("small" is a macro in rpcndr.h, hence the longer names.)
+  const int big_size = GetSystemMetricsForDpi(SM_CXICON, dpi);
+  const int small_size = GetSystemMetricsForDpi(SM_CXSMICON, dpi);
+  SendMessage(hwnd, WM_SETICON, ICON_BIG,
+              reinterpret_cast<LPARAM>(LoadAppIcon(big_size)));
+  SendMessage(hwnd, WM_SETICON, ICON_SMALL,
+              reinterpret_cast<LPARAM>(LoadAppIcon(small_size)));
+}
+
 // Dynamically loads the |EnableNonClientDpiScaling| from the User32 module.
 // This API is only needed for PerMonitor V1 awareness mode.
 void EnableFullDpiSupportIfAvailable(HWND hwnd) {
@@ -88,19 +111,20 @@ WindowClassRegistrar* WindowClassRegistrar::instance_ = nullptr;
 
 const wchar_t* WindowClassRegistrar::GetWindowClass() {
   if (!class_registered_) {
-    WNDCLASS window_class{};
+    WNDCLASSEX window_class{};
+    window_class.cbSize = sizeof(WNDCLASSEX);
     window_class.hCursor = LoadCursor(nullptr, IDC_ARROW);
     window_class.lpszClassName = kWindowClassName;
     window_class.style = CS_HREDRAW | CS_VREDRAW;
     window_class.cbClsExtra = 0;
     window_class.cbWndExtra = 0;
     window_class.hInstance = GetModuleHandle(nullptr);
-    window_class.hIcon =
-        LoadIcon(window_class.hInstance, MAKEINTRESOURCE(IDI_APP_ICON));
+    window_class.hIcon = LoadAppIcon(GetSystemMetrics(SM_CXICON));
+    window_class.hIconSm = LoadAppIcon(GetSystemMetrics(SM_CXSMICON));
     window_class.hbrBackground = 0;
     window_class.lpszMenuName = nullptr;
     window_class.lpfnWndProc = Win32Window::WndProc;
-    RegisterClass(&window_class);
+    RegisterClassEx(&window_class);
     class_registered_ = true;
   }
   return kWindowClassName;
@@ -144,6 +168,7 @@ bool Win32Window::Create(const std::wstring& title,
     return false;
   }
 
+  ApplyWindowIcons(window, dpi);
   UpdateTheme(window);
 
   return OnCreate();
@@ -194,6 +219,7 @@ Win32Window::MessageHandler(HWND hwnd,
 
       SetWindowPos(hwnd, nullptr, newRectSize->left, newRectSize->top, newWidth,
                    newHeight, SWP_NOZORDER | SWP_NOACTIVATE);
+      ApplyWindowIcons(hwnd, HIWORD(wparam));
 
       return 0;
     }

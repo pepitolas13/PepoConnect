@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Resources looked up by name from Dart (Resources.getIdentifier), invisible to
+     the resource shrinker (isShrinkResources = true in build.gradle.kts). -->
+<resources xmlns:tools="http://schemas.android.com/tools"
+    tools:keep="@drawable/ic_stat_pepoconnect,@mipmap/ic_launcher" />

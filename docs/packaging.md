@@ -60,6 +60,10 @@ Detalles del crate:
   (`run flutter build windows --release first or set PEPO_BUNDLE_DIR`).
 - Se vuelve a empaquetar solo cuando cambia algo del bundle, `pubspec.yaml`, el icono o
   `PEPO_BUNDLE_DIR` (`rerun-if-changed` / `rerun-if-env-changed`).
+- Tras instalar un bundle nuevo llama a `SHChangeNotify(SHCNE_ASSOCCHANGED)`: la ruta de
+  `app\pepoconnect.exe` no cambia entre versiones y el Explorador cachea los iconos por ruta sin
+  volver a mirar el fichero, así que sin ese aviso la barra de tareas y el menú Inicio seguirían
+  con el icono de la versión anterior (ver "Iconos").
 - Requisitos: Rust stable con toolchain MSVC, Build Tools de C++ (zstd compila su C) y el
   Windows SDK (`rc.exe` para los recursos). `target/` está en `.gitignore`.
 - Perfil release: `opt-level=3`, `lto="fat"`, `codegen-units=1`, `panic="abort"`, `strip=true`.
@@ -158,19 +162,49 @@ vacío al lado.
 
 ## Iconos
 
-`flutter_launcher_icons.yaml` genera Android (legacy + adaptativo con fondo `#0A3D8F` y
-monocromo), iOS (sin alfa, fondo `#0A3D8F`) y Windows (`app_icon.ico` de 256 px, que también
-usa el lanzador) a partir de:
-
-- `assets/icon/icon-1024.png` — icono completo 1024x1024.
-- `assets/icon/icon-foreground.png` — capa frontal del adaptativo (transparente, zona segura central).
-- `assets/icon/icon-mono.png` — icono temático monocromo (Android 13+).
+Todo sale de la misma geometría (`assets/brand/pepoconnect.svg`) en dos pasos:
 
 ```powershell
-dart run flutter_launcher_icons
+python tool/brand/render_icons.py      # Pillow; PNG fuente, .ico de Windows, icono de estado Android
+dart run flutter_launcher_icons        # Android (launcher) e iOS a partir de esos PNG
 ```
 
-Linux: copiar a mano `assets/icon/pepoconnect-256.png` y `pepoconnect-512.png` (ver arriba).
+`render_icons.py` escribe:
+
+- `assets/icon/icon-1024.png` — icono completo 1024x1024 (fuente de iOS y del legacy Android).
+- `assets/icon/icon-foreground.png` — capa frontal del adaptativo (transparente, zona segura central).
+- `assets/icon/icon-mono.png` — icono temático monocromo (Android 13+).
+- `assets/icon/pepoconnect-256.png` y `-512.png` — Linux (bandeja y paquetes, ver arriba).
+- `assets/icon/favicon.ico` — bandeja de Windows (`tray_manager`).
+- `windows/runner/resources/app_icon.ico` — icono de `pepoconnect.exe` (barra de título, barra de
+  tareas, Explorador) y del lanzador. Entradas DIB de 16 a 128 px y PNG solo a 256 px, que es el
+  formato que esperan `LoadIcon`/`LoadImage` y el shell; por eso `windows.generate: false` en
+  `flutter_launcher_icons.yaml` (escribiría un .ico todo PNG).
+- `android/app/src/main/res/drawable-*/ic_stat_pepoconnect.png` — icono de la barra de estado
+  (24 dp, glifo blanco sobre transparente: Android solo usa el alfa). Lo usan las notificaciones
+  de `flutter_local_notifications` (`AndroidInitializationSettings` + `icon`) y el servicio de
+  `flutter_foreground_task` (`NotificationIcon.metaDataName` →
+  `<meta-data android:name="org.pepoconnect.app.NOTIFICATION_ICON">` en el manifest). Sin él
+  Android aplana el launcher a un cuadrado blanco. `res/raw/keep.xml` lo protege del
+  `shrinkResources` porque Dart lo busca por nombre.
+
+`flutter_launcher_icons` genera Android (legacy + adaptativo con fondo `#0A3D8F` y monocromo) e
+iOS (sin alfa, fondo `#0A3D8F`). Ojo: la versión 0.14.4 también toca
+`ios/Runner.xcodeproj/project.pbxproj` y deja `ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = AppIcon`
+(valor inválido; `ASSETCATALOG_COMPILER_APPICON_NAME` ya es `AppIcon`): revierte ese fichero.
+
+Ventana Windows: además del icono de clase (grande y pequeño), `win32_window.cpp` envía
+`WM_SETICON` al DPI del monitor y de nuevo en `WM_DPICHANGED`, de modo que la ventana responde a
+`WM_GETICON` con el icono correcto. Aun así, cuando el proceso tiene AppUserModelID (lo fija
+`local_notifier` para los toasts) la barra de tareas resuelve el icono por la ruta del exe a
+través de la caché del Explorador, que no se invalida al sustituir el fichero. Por eso el
+lanzador vacía esa caché tras cada actualización (`SHChangeNotify(SHCNE_ASSOCCHANGED)`). En una
+build de desarrollo ejecutada desde `build\windows\...` no pasa por el lanzador: si la barra
+enseña el icono antiguo, `ie4uinit.exe -show` o reiniciar `explorer.exe`.
+
+Ventana Linux: `my_application.cc` usa el icono del tema `org.pepoconnect.PepoConnect` cuando
+está instalado (tarball + `install-desktop-entry.sh`, AppImage, Flatpak) y, si no, el PNG de
+`data/flutter_assets/assets/icon/` junto al binario (bundle ejecutado en sitio).
 
 ## Motor rápido (Rust) en cada plataforma
 
