@@ -190,16 +190,24 @@ class GalleryHeader extends StatelessWidget {
             onPressed: onSession,
           );
           if (wide) {
+            // The controls on the right keep their place whatever the tabs or
+            // the summary do: only the leading group flexes.
             return Row(
               children: [
-                Flexible(child: deviceButton),
-                const SizedBox(width: Space.m),
-                tabs,
-                const Spacer(),
-                if (summaryText != null) ...[
-                  Flexible(child: summaryText),
-                  const SizedBox(width: Space.s),
-                ],
+                Expanded(
+                  child: Row(
+                    children: [
+                      Flexible(child: deviceButton),
+                      const SizedBox(width: Space.m),
+                      tabs,
+                      if (summaryText != null) ...[
+                        const SizedBox(width: Space.m),
+                        Flexible(child: summaryText),
+                      ],
+                    ],
+                  ),
+                ),
+                const SizedBox(width: Space.s),
                 refresh,
                 const SizedBox(width: Space.xs),
                 view,

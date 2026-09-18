@@ -30,6 +30,15 @@ class PillTabs extends StatelessWidget {
     final count = tabs.length;
     final selected = index.clamp(0, count - 1);
     final alignX = count <= 1 ? 0.0 : -1 + 2 * selected / (count - 1);
+    final boldWidths = [
+      for (final label in tabs)
+        (TextPainter(
+          text: TextSpan(text: label, style: text.bodyStrong),
+          textDirection: Directionality.of(context),
+          maxLines: 1,
+          textScaler: MediaQuery.textScalerOf(context),
+        )..layout()).width,
+    ];
     return Container(
       height: height,
       padding: const EdgeInsets.all(2),
@@ -78,16 +87,27 @@ class PillTabs extends StatelessWidget {
                         builder: (context, states, _) => Container(
                           alignment: Alignment.center,
                           padding: const EdgeInsets.symmetric(horizontal: Space.l),
-                          child: AnimatedDefaultTextStyle(
-                            duration: motion.fast,
-                            style: (i == selected ? text.bodyStrong : text.body).copyWith(
-                              color: i == selected
-                                  ? colors.textPrimary
-                                  : states.pressed
-                                  ? colors.textTertiary
-                                  : colors.textSecondary,
+                          // Reserve the bold width so the control does not
+                          // grow when the selection moves to another tab.
+                          child: ConstrainedBox(
+                            constraints: BoxConstraints(minWidth: boldWidths[i]),
+                            child: AnimatedDefaultTextStyle(
+                              duration: motion.fast,
+                              textAlign: TextAlign.center,
+                              style: (i == selected ? text.bodyStrong : text.body).copyWith(
+                                color: i == selected
+                                    ? colors.textPrimary
+                                    : states.pressed
+                                    ? colors.textTertiary
+                                    : colors.textSecondary,
+                              ),
+                              child: Text(
+                                tabs[i],
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                textAlign: TextAlign.center,
+                              ),
                             ),
-                            child: Text(tabs[i], maxLines: 1, overflow: TextOverflow.ellipsis),
                           ),
                         ),
                       ),

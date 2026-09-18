@@ -116,6 +116,22 @@ void main() {
     await shot('11_activity');
     await go('Ajustes');
     await shot('12_settings_general');
+    // Pushing the pairing page over the shell: mid-transition frame, then the
+    // settled page (the shell underneath must be gone).
+    await tester.tap(find.text('Añadir dispositivo'));
+    await tester.pump(const Duration(milliseconds: 16));
+    await tester.pump(const Duration(milliseconds: 90));
+    await w.capture(tester, p.join(dir, '12b_transition_mid.png'), settle: false);
+    await settle(tester);
+    await Future<void>.delayed(const Duration(milliseconds: 300));
+    await shot('12c_pairing_pushed');
+    await tester.tap(find.text('Atrás'));
+    await tester.pump(const Duration(milliseconds: 16));
+    await tester.pump(const Duration(milliseconds: 60));
+    await w.capture(tester, p.join(dir, '12d_transition_back_mid.png'), settle: false);
+    await settle(tester);
+    await Future<void>.delayed(const Duration(milliseconds: 300));
+    await shot('12e_settings_after_back');
     await tester.tap(find.text('Notificaciones').last);
     await settle(tester);
     await shot('13_settings_notifications');

@@ -141,9 +141,10 @@ class E2eWorld {
     return f;
   }
 
-  /// Renders the whole app to a PNG file.
-  Future<File> capture(WidgetTester tester, String path) async {
-    await settle(tester);
+  /// Renders the whole app to a PNG file. Pass `settle: false` to grab the
+  /// current frame (for example in the middle of a transition).
+  Future<File> capture(WidgetTester tester, String path, {bool settle = true}) async {
+    if (settle) await settleFrames(tester);
     final boundary = boundaryKey.currentContext!.findRenderObject()! as RenderRepaintBoundary;
     final image = await boundary.toImage(pixelRatio: 1);
     final bytes = await image.toByteData(format: ui.ImageByteFormat.png);
@@ -170,6 +171,9 @@ Future<void> settle(WidgetTester tester) async {
     await tester.pump(const Duration(milliseconds: 50));
   }
 }
+
+/// Same as [settle]; a named alias for members that shadow it.
+Future<void> settleFrames(WidgetTester tester) => settle(tester);
 
 /// Pumps until [finder] matches.
 Future<void> pumpUntilFound(

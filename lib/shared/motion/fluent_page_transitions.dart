@@ -20,25 +20,47 @@ class FluentPageTransitionsBuilder extends PageTransitionsBuilder {
     Widget child,
   ) {
     final motion = Motion.of(context);
-    return fluentTransition(motion, animation, child);
+    return fluentTransition(motion, animation, secondaryAnimation, child);
   }
 }
 
-/// The shared transition. With motion off the curves still resolve to the
-/// end state on the first frame because the route duration is zero.
-Widget fluentTransition(Motion motion, Animation<double> animation, Widget child) {
+/// The shared transition: the incoming page fades in and rises 8 px; the page
+/// underneath fades out (and sinks 4 px) at the same time, so with a
+/// transparent Mica background the two never show through each other. With
+/// motion off the curves still resolve to the end state on the first frame
+/// because the route duration is zero.
+Widget fluentTransition(
+  Motion motion,
+  Animation<double> animation,
+  Animation<double> secondaryAnimation,
+  Widget child,
+) {
+  // Fade-through, like Windows 11: the page below is gone in the first half,
+  // the new one appears from 30 % on (and on the way back the top page
+  // vanishes in the first half while the page below returns).
   final fade = CurvedAnimation(
     parent: animation,
-    curve: Motion.standard,
-    reverseCurve: Motion.exit,
+    curve: const Interval(0.3, 1, curve: Motion.standard),
+    reverseCurve: const Interval(0.5, 1, curve: Motion.exit),
   );
   final slide = Tween<Offset>(begin: const Offset(0, 8), end: Offset.zero).animate(fade);
+  final covered = CurvedAnimation(
+    parent: secondaryAnimation,
+    curve: const Interval(0, 0.5, curve: Motion.exit),
+    reverseCurve: const Interval(0, 0.6, curve: Motion.standard),
+  );
+  final hide = Tween<double>(begin: 1, end: 0).animate(covered);
+  final sink = Tween<Offset>(begin: Offset.zero, end: const Offset(0, -4)).animate(covered);
   return FadeTransition(
     opacity: fade,
-    child: AnimatedBuilder(
-      animation: slide,
-      builder: (context, child) => Transform.translate(offset: slide.value, child: child),
-      child: child,
+    child: FadeTransition(
+      opacity: hide,
+      child: AnimatedBuilder(
+        animation: Listenable.merge([slide, sink]),
+        builder: (context, child) =>
+            Transform.translate(offset: slide.value + sink.value, child: child),
+        child: child,
+      ),
     ),
   );
 }
@@ -112,6 +134,6 @@ class _FluentPageRoute<T> extends PageRoute<T> {
         child,
       );
     }
-    return fluentTransition(Motion.of(context), animation, child);
+    return fluentTransition(Motion.of(context), animation, secondaryAnimation, child);
   }
 }
