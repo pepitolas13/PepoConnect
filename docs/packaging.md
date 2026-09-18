@@ -171,3 +171,17 @@ dart run flutter_launcher_icons
 ```
 
 Linux: copiar a mano `assets/icon/pepoconnect-256.png` y `pepoconnect-512.png` (ver arriba).
+
+## Motor rápido (Rust) en cada plataforma
+
+`packages/pepo_native/rust` se compila durante `flutter build`; hace falta `rustup` en la máquina
+(los targets se instalan solos):
+
+- Windows y Linux: `windows/CMakeLists.txt` y `linux/CMakeLists.txt` del plugin llaman a cargokit
+  (`packages/pepo_native/cargokit`), que deja `pepo_native.dll` / `libpepo_native.so` en el bundle.
+- iOS: el podspec compila una biblioteca estática con cargokit y la enlaza con `-force_load`;
+  Dart la encuentra con `DynamicLibrary.process()`.
+- Android: `packages/pepo_native/android/build.gradle` compila con cargo para cada ABI pedida
+  (`-Ptarget-platform`) usando el clang del NDK que declara Flutter y copia los `.so` como jniLibs
+  (alineados a 16 KB). El plugin Gradle de cargokit no sirve porque usa `libraryVariants`,
+  eliminado en AGP 9.
