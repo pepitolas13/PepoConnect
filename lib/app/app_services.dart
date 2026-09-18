@@ -13,6 +13,7 @@ import '../platform/android_service.dart';
 import '../platform/autostart.dart';
 import '../platform/clipboard_sync.dart';
 import '../platform/desktop_integration.dart';
+import '../platform/media_source_photo_manager.dart';
 import '../platform/notifications.dart';
 import '../platform/open_helper.dart';
 import '../platform/pepo_native.dart';
@@ -43,7 +44,7 @@ final pendingShareProvider = NotifierProvider<PendingShareNotifier, List<String>
 
 /// Glue between the engine, the OS and the UI: system notifications, toasts,
 /// clipboard sync, tray badge, Android foreground service, share intake.
-class AppServices {
+class AppServices with WidgetsBindingObserver {
   AppServices(this.ref, this.router);
 
   final ProviderContainer ref;
@@ -95,7 +96,25 @@ class AppServices {
     }
     if (Autostart.isSupported) unawaited(Autostart.refresh());
     SystemNotifications.instance.onTap = _onNotificationTap;
+    WidgetsBinding.instance.addObserver(this);
     await _updateService(ref.read(devicesProvider));
+  }
+
+  /// Back to the foreground: reconnect, re-read the photo library if the
+  /// permission was granted meanwhile, push the clipboard on mobile.
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state != AppLifecycleState.resumed) return;
+    engine.reconnectAll();
+    final source = engine.ownMediaSource;
+    if (source is MediaSourcePhotoManager && source.permissionMissing) {
+      unawaited(MediaSourcePhotoManager.hasPermission().then((ok) {
+        if (ok) return source.restart();
+      }));
+    }
+    if (!isDesktop && settings.clipboardSharing) {
+      unawaited(_clipboard?.sendNow(onlyIfChanged: true));
+    }
   }
 
   // ---------------------------------------------------------------------------
@@ -308,6 +327,7 @@ class AppServices {
   String _deviceName(String deviceId) => deviceLabel(ref.read(devicesProvider), deviceId);
 
   Future<void> dispose() async {
+    WidgetsBinding.instance.removeObserver(this);
     for (final s in _subs) {
       await s.cancel();
     }
