@@ -15,7 +15,7 @@ jobs:
     uses: ./.github/workflows/ci.yml
     # This workflow builds iOS itself right below.
     with:
-      ios: false
+      skip_ios: true
 
   windows:
     if: github.event_name == 'push' || inputs.windows

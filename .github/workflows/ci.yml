@@ -5,10 +5,10 @@ on:
   pull_request:
   workflow_call:
     inputs:
-      ios:
+      skip_ios:
         type: boolean
-        default: true
-        description: "Compile the iOS app (macOS runner)"
+        default: false
+        description: "Skip the iOS compile job (for callers that build iOS themselves)"
 concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
@@ -51,7 +51,11 @@ jobs:
   # here: there is no macOS in the development setup, so without this a build
   # error would not show up until a release tag.
   ios:
-    if: ${{ inputs.ios == null || inputs.ios }}
+    # Phrased as a skip because Actions casts types to numbers before
+    # comparing, so `inputs.ios == null` is also true for `false` and the
+    # guard never fired. `!null` and `!false` are both true; only an explicit
+    # `skip_ios: true` turns it off.
+    if: ${{ !inputs.skip_ios }}
     runs-on: macos-15
     timeout-minutes: 45
     steps:
