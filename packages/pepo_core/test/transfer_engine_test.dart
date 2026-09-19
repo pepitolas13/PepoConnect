@@ -39,7 +39,10 @@ class Pair {
   final hubStore = MemoryTransferStore();
   final phoneStore = MemoryTransferStore();
 
-  static Future<Pair> create({int chunkSize = 256 * 1024}) async {
+  static Future<Pair> create({
+    int chunkSize = 256 * 1024,
+    Duration progressInterval = const Duration(milliseconds: 100),
+  }) async {
     final pr = Pair._();
     pr.hubId = const CertificateFactory().generate(commonName: 'hub');
     pr.phoneId = const CertificateFactory().generate(commonName: 'phone');
@@ -88,12 +91,14 @@ class Pair {
       store: pr.hubStore,
       destination: (_, _) async => pr.hubDir.path,
       chunkSize: chunkSize,
+      progressInterval: progressInterval,
     );
     pr.phoneEngine = TransferEngine(
       channels: pr.phoneChannels,
       store: pr.phoneStore,
       destination: (_, _) async => pr.phoneDir.path,
       chunkSize: chunkSize,
+      progressInterval: progressInterval,
     );
     // Route control messages to the engines.
     pr.hubControl.messages.listen(
@@ -422,6 +427,10 @@ void main() {
   });
 
   test('abort deletes the partial file on the receiver', () async {
+    // Cancel at a byte threshold, even when the file takes less than the UI's
+    // default 100 ms progress interval to transfer.
+    await pair.dispose();
+    pair = await Pair.create(progressInterval: Duration.zero);
     final src = await writeRandom(pair.phoneDir, 'cancel.bin', 8 * 1024 * 1024, seed: 3);
     final t = await pair.phoneEngine.send(deviceId: pair.hubId.deviceId, path: src.path);
     await pair.hubEngine.events
