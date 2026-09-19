@@ -16,6 +16,7 @@ class MemoryUpdateStore implements UpdateStore {
 
 class TestInstaller extends UpdateInstaller {
   int installs = 0;
+  String? installedVersion;
   bool cancelled = false;
   Completer<UpdateInstallOutcome>? pending;
   Completer<UpdateSupport>? pendingSupport;
@@ -35,6 +36,7 @@ class TestInstaller extends UpdateInstaller {
     required Future<void> Function() beforeRestart,
   }) async {
     installs++;
+    installedVersion = release.latest;
     onProgress(const UpdateProgress(phase: UpdateInstallPhase.downloading, received: 5, total: 10));
     final outcome = await (pending?.future ?? Future.value(UpdateInstallOutcome.installerOpened));
     if (handoffProgress) onProgress(const UpdateProgress(phase: UpdateInstallPhase.installing));
@@ -102,6 +104,44 @@ void main() {
     expect(checks, 2);
     await controller.checkNow();
     expect(checks, 3);
+  });
+
+  test('install refreshes a cached offer from 0.4.1 to 0.4.2 before downloading', () async {
+    fetch = () async => release('0.4.1');
+    var controller = make();
+    await controller.checkNow();
+    controller.dispose();
+    controller = make();
+    addTearDown(controller.dispose);
+    fetch = () async => release('0.4.2');
+    await controller.install();
+    expect(installer.installedVersion, '0.4.2');
+    expect(checks, 2, reason: 'Install bypasses the daily cache gate');
+  });
+
+  test('install never falls back to a stale package if refresh fails', () async {
+    final controller = make();
+    addTearDown(controller.dispose);
+    await controller.checkNow();
+    fetch = () async => throw const FormatException('offline');
+    await controller.install();
+    expect(installer.installs, 0);
+    expect(controller.state.errorCode, 'check');
+  });
+
+  test('duplicate install clicks share refresh and download only once', () async {
+    final controller = make();
+    addTearDown(controller.dispose);
+    await controller.checkNow();
+    final refreshed = Completer<UpdateCheckResult>();
+    fetch = () => refreshed.future;
+    final first = controller.install();
+    final second = controller.install();
+    expect(installer.installs, 0);
+    refreshed.complete(release('0.4.2'));
+    await Future.wait([first, second]);
+    expect(installer.installs, 1);
+    expect(installer.installedVersion, '0.4.2');
   });
 
   test('concurrent manual and automatic checks share one request', () async {
@@ -208,7 +248,7 @@ void main() {
     await controller.install();
     await controller.checkNow();
     expect(installer.installs, 1);
-    expect(checks, 1);
+    expect(checks, 2);
     installer.pending!.complete(UpdateInstallOutcome.permissionRequired);
     await installing;
     expect(controller.state.phase, UpdatePhase.permissionRequired);
@@ -251,6 +291,8 @@ void main() {
     installer.restart = true;
     installer.pending = Completer<UpdateInstallOutcome>();
     final work = controller.install();
+    await Future<void>.delayed(Duration.zero);
+    expect(installer.installs, 1);
     transfers = true;
     installer.pending!.complete(UpdateInstallOutcome.installerOpened);
     await work;
@@ -266,13 +308,14 @@ void main() {
     final work = controller.install();
     installer.pending!.complete(UpdateInstallOutcome.permissionRequired);
     await work;
+    now = now.add(const Duration(days: 1));
     await controller.checkIfDue();
-    expect(checks, 1);
+    expect(checks, 2);
     expect(controller.state.phase, UpdatePhase.permissionRequired);
     controller.cancelDownload();
     expect(controller.state.phase, UpdatePhase.available);
     await controller.checkIfDue();
-    expect(checks, 2);
+    expect(checks, 3);
   });
 
   test('native installer handoff rechecks transfers after the download', () async {
@@ -282,6 +325,8 @@ void main() {
     installer.handoffProgress = true;
     installer.pending = Completer<UpdateInstallOutcome>();
     final work = controller.install();
+    await Future<void>.delayed(Duration.zero);
+    expect(installer.installs, 1);
     transfers = true;
     installer.pending!.complete(UpdateInstallOutcome.installerOpened);
     await work;

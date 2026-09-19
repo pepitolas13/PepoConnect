@@ -304,6 +304,14 @@ class UpdateController extends ChangeNotifier {
   }
 
   Future<void> install() async {
+    if (_disposed || _state.busy || _state.release?.isNewer != true) return;
+    // An offer may have been cached for a day, including across restarts and
+    // failed upgrades. Clicking Install must fetch today's package, not retry
+    // an obsolete installer. Keep Android's already verified permission flow.
+    if (_state.phase != UpdatePhase.permissionRequired && _canInstall()) {
+      await checkNow();
+      if (_disposed || _state.phase != UpdatePhase.available) return;
+    }
     final release = _state.release;
     final support = _state.support;
     if (_disposed || _state.busy || release == null || !release.isNewer) return;

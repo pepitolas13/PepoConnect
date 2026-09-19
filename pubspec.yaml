@@ -1,7 +1,7 @@
 name: pepoconnect
 description: "PepoConnect: fotos y archivos entre el movil y el PC, al instante."
 publish_to: 'none'
-version: 0.4.2+6
+version: 0.4.3+7
 
 environment:
   sdk: ^3.13.3
