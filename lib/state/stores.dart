@@ -179,6 +179,31 @@ class JsonTransferStore implements TransferStore {
   }
 }
 
+/// The phone's auto-send queue in `autosend.json`. Written through (not
+/// just debounced): its whole point is to survive the process dying.
+class JsonAutoSendStore implements AutoSendStore {
+  JsonAutoSendStore(String dataDir) : _file = JsonFile(p.join(dataDir, 'autosend.json'));
+
+  final JsonFile _file;
+
+  @override
+  Future<AutoSendData> load() async {
+    final raw = await _file.read();
+    if (raw is! Map) return AutoSendData.empty;
+    try {
+      return AutoSendData.fromJson(raw.cast<String, dynamic>());
+    } catch (_) {
+      return AutoSendData.empty;
+    }
+  }
+
+  @override
+  Future<void> save(AutoSendData data) async {
+    _file.write(data.toJson());
+    await _file.flush();
+  }
+}
+
 /// Per-device gallery item states in `gallery/<deviceId>.json`:
 /// `{"seenUntil": <ISO-8601>, "items": [...]}`. Files written before the
 /// watermark existed are a bare list and still load.

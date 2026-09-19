@@ -10,13 +10,19 @@ class MobilePermissionState {
     required this.photos,
     required this.notifications,
     required this.batteryUnrestricted,
+    this.photosLimited = false,
   });
 
   final bool photos;
   final bool notifications;
   final bool batteryUnrestricted;
 
-  bool get allGranted => photos && notifications && batteryUnrestricted;
+  /// iOS only: access was granted to a hand-picked selection. It counts as
+  /// [photos] for iOS, but new photos never show up, so automatic sending
+  /// silently does nothing.
+  final bool photosLimited;
+
+  bool get allGranted => photos && !photosLimited && notifications && batteryUnrestricted;
 }
 
 /// Requests and checks Android/iOS permissions (photos, notifications,
@@ -36,6 +42,7 @@ class MobilePermissions {
     }
     return MobilePermissionState(
       photos: await MediaSourcePhotoManager.hasPermission(),
+      photosLimited: await MediaSourcePhotoManager.permissionLimited(),
       notifications: await SystemNotifications.instance.enabled(),
       batteryUnrestricted: Platform.isIOS || await PepoNative.isIgnoringBatteryOptimizations(),
     );
@@ -52,4 +59,8 @@ class MobilePermissions {
     if (!Platform.isAndroid) return;
     await PepoNative.requestIgnoreBatteryOptimizations();
   }
+
+  /// Only the system settings can turn a limited photo selection into full
+  /// access; the in-app picker just adds more photos to the selection.
+  static Future<void> openSystemSettings() => PepoNative.openAppSettings();
 }

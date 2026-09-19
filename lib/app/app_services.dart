@@ -14,7 +14,9 @@ import '../platform/android_service.dart';
 import '../platform/autostart.dart';
 import '../platform/clipboard_sync.dart';
 import '../platform/desktop_integration.dart';
+import '../platform/ios_background.dart';
 import '../platform/media_source_photo_manager.dart';
+import '../platform/mobile_permissions.dart';
 import '../platform/notifications.dart';
 import '../platform/open_helper.dart';
 import '../platform/pepo_native.dart';
@@ -66,6 +68,7 @@ class AppServices with WidgetsBindingObserver {
   ProviderSubscription<TransfersState>? _transfersSub;
   ProviderSubscription<List<DeviceView>>? _devicesSub;
   AppLocalizations? _l10n;
+  Timer? _exportCleanup;
   bool _started = false;
 
   PepoEngine get engine => ref.read(engineProvider);
@@ -95,6 +98,12 @@ class AppServices with WidgetsBindingObserver {
       if (DesktopIntegration.isSupported) {
         DesktopIntegration.instance.setActiveTransfers(next.activeCount);
       }
+      // iOS: hold the process up for as long as something is moving, so a
+      // transfer started right before the app left the screen still lands.
+      if (IosBackground.isSupported) {
+        unawaited(IosBackground.hold(next.active.isNotEmpty));
+      }
+      if (next.active.isEmpty) _scheduleExportCleanup();
     });
     _devicesSub = ref.listen<List<DeviceView>>(devicesProvider, _onDevices);
     final clip = ref.read(clipboardSyncProvider);
@@ -109,13 +118,68 @@ class AppServices with WidgetsBindingObserver {
     if (PepoNative.isSupported) {
       // Quick-settings tile / launcher shortcut hand the clipboard over here.
       PepoNative.onClipboardText = _onNativeClipboard;
+      PepoNative.onBackgroundTask = _onBackgroundTask;
       PepoNative.init();
       await PepoNative.markClipboardReady();
+      await PepoNative.markBackgroundReady();
     }
     if (Autostart.isSupported) unawaited(Autostart.refresh());
     SystemNotifications.instance.onTap = _onNotificationTap;
     WidgetsBinding.instance.addObserver(this);
-    await _updateService(ref.read(devicesProvider));
+    await _applyAutoSend();
+    await _updateBackground(ref.read(devicesProvider));
+  }
+
+  /// Re-applies the phone's "send every new photo" target from the setting.
+  ///
+  /// The engine keeps it in memory only, so without this the switch reads on
+  /// after a restart while nothing is ever sent — which is precisely the case
+  /// that matters once the app is off screen.
+  Future<void> _applyAutoSend({String? previousHubId}) async {
+    final hub = settings.defaultHubId;
+    if (previousHubId != null && previousHubId != hub) {
+      await engine.setAutoSend(previousHubId, false);
+    }
+    if (hub == null) return;
+    await engine.setAutoSend(hub, settings.autoSendPhotos);
+  }
+
+  /// Sending a photo means exporting it out of the gallery to a temporary
+  /// file first, and those copies are never cleaned up while the process
+  /// lives — which, with the background engine, is days. Wipe them once
+  /// nothing is queued or in flight and could still be pointing at one.
+  void _scheduleExportCleanup() {
+    if (!MobilePermissions.isMobile) return;
+    _exportCleanup?.cancel();
+    _exportCleanup = Timer(const Duration(minutes: 2), () {
+      final idle =
+          ref.read(transfersProvider).active.isEmpty &&
+          (engine.mediaServer?.autoSend.isEmpty ?? true);
+      if (!idle) {
+        _scheduleExportCleanup();
+        return;
+      }
+      unawaited(MediaSourcePhotoManager.clearExportedOriginals());
+    });
+  }
+
+  /// iOS handed us a `BGAppRefreshTask` / `BGProcessingTask`: reconnect,
+  /// push whatever is queued and give the task straight back. The budget for
+  /// the next ones depends on not overstaying.
+  Future<void> _onBackgroundTask(String id) async {
+    try {
+      engine.reconnectAll();
+      final deadline = DateTime.now().add(const Duration(seconds: 8));
+      while (DateTime.now().isBefore(deadline) &&
+          !engine.sessions.sessions.any((s) => s.isConnected)) {
+        await Future<void>.delayed(const Duration(milliseconds: 500));
+      }
+      await engine.flushAutoSend().timeout(const Duration(seconds: 12));
+    } catch (_) {
+      // Out of time or nothing reachable: the queue keeps it for next time.
+    } finally {
+      await PepoNative.backgroundTaskDone(id);
+    }
   }
 
   /// Back to the foreground: reconnect, re-read the photo library if the
@@ -124,6 +188,8 @@ class AppServices with WidgetsBindingObserver {
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state != AppLifecycleState.resumed) return;
     engine.reconnectAll();
+    // Back from a kill or a long sleep: anything the queue still owes.
+    unawaited(engine.flushAutoSend());
     // Started behind the Android service: the permission dialog waited for a window.
     unawaited(SystemNotifications.instance.promptOnce());
     final source = engine.ownMediaSource;
@@ -234,12 +300,15 @@ class AppServices with WidgetsBindingObserver {
       unawaited(engine.setDeviceName(name));
     }
     if (prev?.backgroundService != next.backgroundService) {
-      unawaited(_updateService(ref.read(devicesProvider)));
+      unawaited(_updateBackground(ref.read(devicesProvider)));
+    }
+    if (prev?.autoSendPhotos != next.autoSendPhotos || prev?.defaultHubId != next.defaultHubId) {
+      unawaited(_applyAutoSend(previousHubId: prev?.defaultHubId));
     }
   }
 
   void _onDevices(List<DeviceView>? prev, List<DeviceView> next) {
-    unawaited(_updateService(next));
+    unawaited(_updateBackground(next));
     // The shared-clipboard switch can arrive from the peer (device.info);
     // it lands after the connection event, so this is the trigger that
     // works the first time. It also turns the global switch on, which the
@@ -255,10 +324,22 @@ class AppServices with WidgetsBindingObserver {
     _pushClipboard();
   }
 
-  Future<void> _updateService(List<DeviceView> devices) async {
+  /// The background engine: a foreground service on Android, the silent
+  /// keep-alive loop on iOS. One switch, one rule — there is nothing to hold
+  /// the process up for with no device paired.
+  Future<void> _updateBackground(List<DeviceView> devices) async {
+    final wanted = settings.backgroundService && devices.isNotEmpty;
+    if (IosBackground.isSupported) {
+      if (wanted) {
+        await IosBackground.start();
+      } else {
+        await IosBackground.stop();
+      }
+      return;
+    }
     if (!AndroidService.isSupported) return;
     final l = _l10n;
-    if (settings.backgroundService && devices.isNotEmpty) {
+    if (wanted) {
       final connected = devices.where((d) => d.connected).map((d) => d.device.name).toList();
       final idle = l?.mobileServiceIdle ?? 'PepoConnect espera al PC';
       final text = connected.isEmpty
@@ -503,6 +584,7 @@ class AppServices with WidgetsBindingObserver {
 
   Future<void> dispose() async {
     WidgetsBinding.instance.removeObserver(this);
+    _exportCleanup?.cancel();
     for (final s in _subs) {
       await s.cancel();
     }

@@ -1507,6 +1507,38 @@ class AppLocalizationsEs extends AppLocalizations {
   String get setBackgroundServiceBody => 'Mantiene la conexión con el PC';
 
   @override
+  String get setBackgroundServiceBodyIos =>
+      'Mantiene PepoConnect en marcha con la app cerrada para que las fotos salgan solas. Gasta algo de batería.';
+
+  @override
+  String get setBackgroundEngine => 'Estado del segundo plano';
+
+  @override
+  String setBackgroundEngineOn(String uptime) {
+    return 'Activo desde hace $uptime';
+  }
+
+  @override
+  String get setBackgroundEngineStarting => 'Arrancando…';
+
+  @override
+  String get setBackgroundEngineRecovering => 'Recuperándose…';
+
+  @override
+  String get setBackgroundEngineOff => 'Parado';
+
+  @override
+  String get setBackgroundEngineBody =>
+      'Si cierras PepoConnect desde el selector de apps, deja de funcionar hasta que la vuelvas a abrir.';
+
+  @override
+  String get setPermissionPhotosLimited =>
+      'Acceso limitado: PepoConnect solo ve las fotos que elegiste, así que las nuevas no se envían.';
+
+  @override
+  String get setOpenSystemSettings => 'Abrir Ajustes';
+
+  @override
   String get setAutoSendPhotos => 'Enviar fotos nuevas automáticamente';
 
   @override

@@ -9,11 +9,12 @@ import '../discovery/discovery.dart';
 import '../discovery/udp_beacon.dart';
 import '../identity/identity.dart';
 import '../identity/identity_store.dart';
-import '../native/native_bulk.dart';
+import '../media/auto_send_queue.dart';
 import '../media/gallery_client.dart';
 import '../media/media_server.dart';
 import '../media/media_source.dart';
 import '../media/media_source_fs.dart';
+import '../native/native_bulk.dart';
 import '../net/frame.dart';
 import '../net/handshake.dart';
 import '../net/peer_connection.dart';
@@ -68,6 +69,7 @@ class PepoEngine {
     TransferStore? transferStore,
     MediaStateStore? mediaStateStore,
     MediaSource? mediaSource,
+    AutoSendStore? autoSendStore,
     List<Discovery>? discovery,
     DeviceStatus Function()? localStatus,
     OfferPolicy? offerPolicy,
@@ -78,6 +80,8 @@ class PepoEngine {
        _mediaStateStore = mediaStateStore ?? MemoryMediaStateStore(),
        // ignore: prefer_initializing_formals
        _mediaSource = mediaSource,
+       // ignore: prefer_initializing_formals
+       _autoSendStore = autoSendStore,
        // ignore: prefer_initializing_formals
        _discovery = discovery,
        // ignore: prefer_initializing_formals
@@ -93,6 +97,7 @@ class PepoEngine {
   final TransferStore _transferStore;
   final MediaStateStore _mediaStateStore;
   MediaSource? _mediaSource;
+  final AutoSendStore? _autoSendStore;
   final List<Discovery>? _discovery;
   final DeviceStatus Function()? _localStatus;
   final OfferPolicy? _offerPolicy;
@@ -194,6 +199,7 @@ class PepoEngine {
         sessions: sessions,
         transfers: transfers,
         deletePolicy: _deletePolicy,
+        autoSendStore: _autoSendStore,
       );
       sessions.handlers.add(mediaServer!);
       await mediaServer!.start();
@@ -214,6 +220,9 @@ class PepoEngine {
           case DeviceConnectedEvent():
             _emit(DeviceConnectionEvent(deviceId: e.deviceId, connected: true));
             _emit(DevicesChangedEvent());
+            // Whatever piled up while this device was away.
+            final server = mediaServer;
+            if (server != null) unawaited(server.autoSend.drain());
           case DeviceDisconnectedEvent():
             _emit(DeviceConnectionEvent(deviceId: e.deviceId, connected: false, reason: e.reason));
             _emit(DevicesChangedEvent());
@@ -667,16 +676,17 @@ class PepoEngine {
   MediaSource? get ownMediaSource => _mediaSource;
 
   /// Enables/disables automatic sending of new photos to [deviceId].
-  void setAutoSend(String deviceId, bool enabled) {
+  Future<void> setAutoSend(String deviceId, bool enabled) async {
+    await mediaServer?.setAutoSend(deviceId, enabled);
+  }
+
+  /// Picks up whatever this phone owes its hubs and sends what it can: on
+  /// reconnect, on start, and when iOS hands the app a background task.
+  Future<void> flushAutoSend() async {
     final server = mediaServer;
     if (server == null) return;
-    final set = server.autoSendTo ?? <String>{};
-    if (enabled) {
-      set.add(deviceId);
-    } else {
-      set.remove(deviceId);
-    }
-    server.autoSendTo = set;
+    await server.catchUp();
+    await server.autoSend.drain();
   }
 }
 

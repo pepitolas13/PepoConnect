@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:path/path.dart' as p;
 import 'package:pepo_core/src/identity/certificate_factory.dart';
+import 'package:pepo_core/src/media/auto_send_queue.dart';
 import 'package:pepo_core/src/media/gallery_client.dart';
 import 'package:pepo_core/src/media/image_ops.dart';
 import 'package:pepo_core/src/media/media_server.dart';
@@ -19,7 +20,125 @@ Future<File> writeJpeg(Directory dir, String name, {int w = 640, int h = 480, in
   return f;
 }
 
+/// Polls [ready] until it holds or the time is up. The media source reports
+/// a change on its own schedule and the server handles it asynchronously, so
+/// there is nothing single to await.
+Future<void> pumpUntil(
+  bool Function() ready, {
+  Duration timeout = const Duration(seconds: 10),
+}) async {
+  final deadline = DateTime.now().add(timeout);
+  while (!ready() && DateTime.now().isBefore(deadline)) {
+    await Future<void>.delayed(const Duration(milliseconds: 25));
+  }
+}
+
 void main() {
+  group('auto send', () {
+    const hubId = 'HUB00000000000000000000000';
+    late Directory root;
+    late Directory cache;
+    late MediaSourceFs source;
+    late SessionManager sessions;
+    late TransferEngine transfers;
+    late MemoryAutoSendStore store;
+    late MediaServer server;
+
+    Future<MediaServer> buildServer() async {
+      source = MediaSourceFs(
+        roots: [root.path],
+        cacheDir: cache.path,
+        settleTime: const Duration(milliseconds: 150),
+      );
+      sessions = SessionManager(
+        identity: const CertificateFactory().generate(commonName: 'phone'),
+        info: const LocalDeviceInfo(
+          name: 'Phone',
+          platform: DevicePlatform.android,
+          role: DeviceRole.phone,
+          appVersion: 't',
+        ),
+        deviceStore: MemoryDeviceStore(),
+        preferredPort: 0,
+      );
+      transfers = TransferEngine(
+        channels: sessions,
+        store: MemoryTransferStore(),
+        destination: (_, _) async => root.path,
+      );
+      sessions.transfers = transfers;
+      final built = MediaServer(
+        source: source,
+        sessions: sessions,
+        transfers: transfers,
+        autoSendStore: store,
+      );
+      await built.start();
+      return built;
+    }
+
+    setUp(() async {
+      root = await Directory.systemTemp.createTemp('pepo_auto_');
+      cache = await Directory.systemTemp.createTemp('pepo_autoc_');
+      store = MemoryAutoSendStore();
+    });
+
+    tearDown(() async {
+      await server.stop();
+      await transfers.dispose();
+      await sessions.dispose();
+      for (final d in [root, cache]) {
+        try {
+          await d.delete(recursive: true);
+        } catch (_) {}
+      }
+    });
+
+    test('a photo taken with the PC away waits in the queue', () async {
+      server = await buildServer();
+      await server.setAutoSend(hubId, true);
+      expect(server.autoSendTo, {hubId});
+
+      await writeJpeg(root, 'IMG_0100.jpg');
+      await pumpUntil(() => server.autoSend.pendingCount == 1);
+      expect(
+        server.autoSend.pendingCount,
+        1,
+        reason: 'nothing is connected, so it has to be kept for later',
+      );
+    });
+
+    test('the switch off means nothing is queued at all', () async {
+      server = await buildServer();
+      await writeJpeg(root, 'IMG_0100.jpg');
+      final change = source.changes.first;
+      await change.timeout(const Duration(seconds: 10));
+      await Future<void>.delayed(const Duration(milliseconds: 100));
+      expect(server.autoSend.pendingCount, 0);
+    });
+
+    test('catch-up picks up what appeared while the process was down', () async {
+      // The queue remembers the switch was already on and how far it got.
+      final past = DateTime.now().toUtc().subtract(const Duration(hours: 1));
+      await store.save(AutoSendData(enabledSince: past, catchUpAt: past));
+      await writeJpeg(root, 'IMG_0001.jpg');
+      await writeJpeg(root, 'IMG_0002.jpg');
+
+      server = await buildServer();
+      await server.setAutoSend(hubId, true);
+      expect(server.autoSend.enabledSince, past, reason: 'the mark must not move');
+      expect(server.autoSend.pendingCount, 2);
+    });
+
+    test('turning it on now does not push the whole camera roll', () async {
+      await writeJpeg(root, 'IMG_0001.jpg');
+      await writeJpeg(root, 'IMG_0002.jpg');
+      server = await buildServer();
+      await server.setAutoSend(hubId, true);
+      expect(server.autoSend.pendingCount, 0);
+    });
+  });
+
   group('MediaSourceFs', () {
     late Directory root;
     late Directory cache;

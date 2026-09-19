@@ -87,11 +87,6 @@ class SettingsActions {
     _ref.invalidate(localDeviceFactsProvider);
   }
 
-  /// Mobile: forward every new photo to [hubId] (or stop doing so).
-  void setAutoSend(String hubId, bool enabled) {
-    _ref.read(engineProvider).setAutoSend(hubId, enabled);
-  }
-
   /// Every preference back to its default. Paired devices, the window
   /// geometry and the onboarding flag are kept.
   Future<void> resetAll() async {
