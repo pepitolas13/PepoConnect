@@ -213,8 +213,20 @@ vacío al lado.
   El proyecto usa Swift Package Manager para los plugins (no hay `Podfile`).
 - `ios/Runner/Info.plist`: `CFBundleDisplayName` PepoConnect, textos de uso de fototeca (leer y
   guardar), cámara y red local, `NSBonjourServices` (`_pepoconnect._tcp`), `UIBackgroundModes`
-  (`processing`), `UIFileSharingEnabled`, `LSSupportsOpeningDocumentsInPlace`,
-  `ITSAppUsesNonExemptEncryption=false` y el esquema de URL `pepoconnect`.
+  (`audio`, `fetch`, `processing`), `BGTaskSchedulerPermittedIdentifiers`
+  (`org.pepoconnect.app.refresh`, `org.pepoconnect.app.sync`), `UIFileSharingEnabled`,
+  `LSSupportsOpeningDocumentsInPlace`, `ITSAppUsesNonExemptEncryption=false` y el esquema de URL
+  `pepoconnect`. Ninguna de esas claves necesita entitlements, así que sobreviven a la refirma de
+  AltStore o Sideloadly con un Apple ID gratuito. El job `ios` de `ci.yml` comprueba que siguen en
+  el bundle compilado.
+- Segundo plano (`ios/Runner/PepoBackground.swift`): iOS no despierta una app suspendida al hacer
+  una foto —`PHPhotoLibraryChangeObserver` solo entrega a un proceso vivo y las `BGTask` son
+  oportunistas—, así que `KeepAlive` reproduce un bucle de silencio con la sesión de audio en
+  `.playback` + `.mixWithOthers` para que el proceso no llegue a suspenderse. `BackgroundHold`
+  envuelve las transferencias en un `beginBackgroundTask` y `BackgroundTasks` registra las dos
+  `BGTask` como red de seguridad. Todo se controla desde Dart por el canal `org.pepoconnect/native`
+  (`keepAliveStart`, `keepAliveStop`, `backgroundHold`, `backgroundStatus`, `backgroundReady`,
+  `backgroundTaskDone`, y `backgroundTask` en sentido contrario).
 - `ios/ExportOptions.plist`: exportación ad-hoc con firma manual; `packaging/ios/sign-and-export.sh`
   sustituye `TEAM_ID` y `PROFILE_NAME` con los secretos `IOS_TEAM_ID` y el nombre del perfil, y
   ejecuta `flutter build ipa --export-options-plist=ios/ExportOptions.plist`.
@@ -228,6 +240,10 @@ vacío al lado.
 - `linux/runner/my_application.cc`: título `PepoConnect`, tamaño por defecto 1100x700.
 - Scripts en `packaging/linux/`: `make-tarball.sh`, `make-appimage.sh`, `make-flatpak.sh`,
   `bundle-extra-libs.sh` (indicador de bandeja y libnotify), `install-desktop-entry.sh`.
+- Descubrimiento mDNS: `bonsoir_linux` habla con Avahi por el bus **de sistema**, así que el
+  manifiesto Flatpak lleva `--system-talk-name=org.freedesktop.Avahi`. Sin `avahi-daemon` no hay
+  anuncio ni exploración y queda solo el beacon UDP, que en Linux sigue activo; el iPhone, que no
+  puede usar UDP, dejaría de encontrar ese equipo.
 - Iconos: `flutter_launcher_icons` no soporta Linux. Los scripts copian a mano
   `assets/icon/pepoconnect-256.png` y `assets/icon/pepoconnect-512.png` como
   `org.pepoconnect.PepoConnect.png`; genera esos dos PNG junto con el resto.

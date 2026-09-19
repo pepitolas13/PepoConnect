@@ -2553,6 +2553,60 @@ abstract class AppLocalizations {
   /// **'Mantiene la conexión con el PC'**
   String get setBackgroundServiceBody;
 
+  /// No description provided for @setBackgroundServiceBodyIos.
+  ///
+  /// In es, this message translates to:
+  /// **'Mantiene PepoConnect en marcha con la app cerrada para que las fotos salgan solas. Gasta algo de batería.'**
+  String get setBackgroundServiceBodyIos;
+
+  /// No description provided for @setBackgroundEngine.
+  ///
+  /// In es, this message translates to:
+  /// **'Estado del segundo plano'**
+  String get setBackgroundEngine;
+
+  /// No description provided for @setBackgroundEngineOn.
+  ///
+  /// In es, this message translates to:
+  /// **'Activo desde hace {uptime}'**
+  String setBackgroundEngineOn(String uptime);
+
+  /// No description provided for @setBackgroundEngineStarting.
+  ///
+  /// In es, this message translates to:
+  /// **'Arrancando…'**
+  String get setBackgroundEngineStarting;
+
+  /// No description provided for @setBackgroundEngineRecovering.
+  ///
+  /// In es, this message translates to:
+  /// **'Recuperándose…'**
+  String get setBackgroundEngineRecovering;
+
+  /// No description provided for @setBackgroundEngineOff.
+  ///
+  /// In es, this message translates to:
+  /// **'Parado'**
+  String get setBackgroundEngineOff;
+
+  /// No description provided for @setBackgroundEngineBody.
+  ///
+  /// In es, this message translates to:
+  /// **'Si cierras PepoConnect desde el selector de apps, deja de funcionar hasta que la vuelvas a abrir.'**
+  String get setBackgroundEngineBody;
+
+  /// No description provided for @setPermissionPhotosLimited.
+  ///
+  /// In es, this message translates to:
+  /// **'Acceso limitado: PepoConnect solo ve las fotos que elegiste, así que las nuevas no se envían.'**
+  String get setPermissionPhotosLimited;
+
+  /// No description provided for @setOpenSystemSettings.
+  ///
+  /// In es, this message translates to:
+  /// **'Abrir Ajustes'**
+  String get setOpenSystemSettings;
+
   /// No description provided for @setAutoSendPhotos.
   ///
   /// In es, this message translates to:

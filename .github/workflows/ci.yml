@@ -4,6 +4,11 @@ on:
     branches: [main]
   pull_request:
   workflow_call:
+    inputs:
+      ios:
+        type: boolean
+        default: true
+        description: "Compile the iOS app (macOS runner)"
 concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
@@ -41,3 +46,37 @@ jobs:
           dart pub get
           dart analyze --fatal-infos
           dart test --exclude-tags perf
+
+  # The Swift side (the background keep-alive engine) is only ever compiled
+  # here: there is no macOS in the development setup, so without this a build
+  # error would not show up until a release tag.
+  ios:
+    if: ${{ inputs.ios == null || inputs.ios }}
+    runs-on: macos-15
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: "3.47.4"
+          cache: true
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-apple-ios
+      - uses: Swatinem/rust-cache@v2
+        with: { workspaces: packages/pepo_native/rust }
+      - name: Newest Xcode on the runner (plugins use the iOS 18.4+ SDK)
+        run: |
+          sudo xcode-select -s "$(ls -d /Applications/Xcode_*.app | sort -V | tail -n1)"
+          xcodebuild -version
+      - run: flutter pub get
+      - run: flutter build ios --release --no-codesign
+      - name: The background keys have to survive into the bundle
+        run: |
+          set -eu
+          plist=build/ios/iphoneos/Runner.app/Info.plist
+          read_key() { /usr/libexec/PlistBuddy -c "Print :$1" "$plist"; }
+          read_key UIBackgroundModes | grep -q audio
+          read_key BGTaskSchedulerPermittedIdentifiers | grep -q org.pepoconnect.app.sync
+          read_key NSBonjourServices | grep -q _pepoconnect._tcp

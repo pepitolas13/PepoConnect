@@ -8,6 +8,7 @@ import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:pepo_core/pepo_core.dart';
 
+import '../platform/bonjour_discovery.dart';
 import '../state/app_settings.dart';
 import '../state/stores.dart';
 
@@ -137,6 +138,7 @@ Future<PepoEngine> startEngine({
   List<String> mediaRoots = const [],
   OfferPolicy? offerPolicy,
   DeletePolicy? deletePolicy,
+  bool bonjour = true,
 }) async {
   final identity = await defaultDeviceIdentity();
   final pkg = await PackageInfo.fromPlatform();
@@ -166,9 +168,14 @@ Future<PepoEngine> startEngine({
   );
   final engine = PepoEngine(
     config,
+    // The UDP beacon cannot run on iPhone (broadcast needs an entitlement
+    // Apple does not hand out), so mDNS is the only way an iPhone finds a PC
+    // that changed address. Both ends have to announce for that to work.
+    discovery: [if (config.udpDiscovery) UdpBeacon(), if (bonjour) BonjourDiscovery()],
     deviceStore: JsonDeviceStore(paths.dataDir),
     transferStore: JsonTransferStore(paths.dataDir),
     mediaStateStore: JsonMediaStateStore(paths.dataDir),
+    autoSendStore: JsonAutoSendStore(paths.dataDir),
     mediaSource: mediaSource,
     offerPolicy: offerPolicy,
     deletePolicy: deletePolicy,

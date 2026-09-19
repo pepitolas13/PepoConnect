@@ -51,30 +51,34 @@ class MediaSourcePhotoManager extends MediaSource {
   @override
   Stream<MediaChange> get changes => _changes.stream;
 
+  static const _permission = pm.PermissionRequestOption(
+    androidPermission: pm.AndroidPermission(type: pm.RequestType.common, mediaLocation: true),
+    iosAccessLevel: pm.IosAccessLevel.readWrite,
+  );
+
   /// Asks for photo permissions. Returns true when at least limited access
   /// was granted.
   static Future<bool> requestPermission() async {
-    final state = await pm.PhotoManager.requestPermissionExtend(
-      requestOption: const pm.PermissionRequestOption(
-        androidPermission: pm.AndroidPermission(type: pm.RequestType.common, mediaLocation: true),
-        iosAccessLevel: pm.IosAccessLevel.readWrite,
-      ),
-    );
+    final state = await pm.PhotoManager.requestPermissionExtend(requestOption: _permission);
     return state.hasAccess;
   }
 
   /// Current permission state without prompting.
-  static Future<bool> hasPermission() async {
+  static Future<bool> hasPermission() async => (await _state())?.hasAccess ?? false;
+
+  /// True when iOS granted only a hand-picked selection. Photos taken later
+  /// are invisible to the app then, so automatic sending quietly does
+  /// nothing and the only fix is in the system settings.
+  static Future<bool> permissionLimited() async {
+    if (!Platform.isIOS) return false;
+    return await _state() == pm.PermissionState.limited;
+  }
+
+  static Future<pm.PermissionState?> _state() async {
     try {
-      final state = await pm.PhotoManager.getPermissionState(
-        requestOption: const pm.PermissionRequestOption(
-          androidPermission: pm.AndroidPermission(type: pm.RequestType.common, mediaLocation: true),
-          iosAccessLevel: pm.IosAccessLevel.readWrite,
-        ),
-      );
-      return state.hasAccess;
+      return await pm.PhotoManager.getPermissionState(requestOption: _permission);
     } catch (_) {
-      return false;
+      return null;
     }
   }
 
@@ -298,6 +302,19 @@ class MediaSourcePhotoManager extends MediaSource {
     } catch (_) {
       return const [];
     }
+  }
+
+  /// Wipes the copies the platform makes when an original is exported.
+  ///
+  /// [originalPath] cannot hand out a path into the photo library, so every
+  /// photo that gets sent is first written to the app's temporary folder.
+  /// They are never cleaned up while the process lives, and with the
+  /// background engine the process lives for days. Only `photo_manager`'s own
+  /// cache folders are removed, never anything of the user's.
+  static Future<void> clearExportedOriginals() async {
+    try {
+      await pm.PhotoManager.clearFileCache();
+    } catch (_) {}
   }
 
   /// Converts a HEIC/HEIF file to JPEG next to the cache dir, keeping EXIF.

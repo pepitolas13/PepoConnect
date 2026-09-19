@@ -5,7 +5,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:logging/logging.dart';
 import 'package:path/path.dart' as p;
-import 'package:pepo_core/pepo_core.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'app/app.dart';
@@ -30,16 +29,18 @@ Future<void> main(List<String> args) async {
   final settings = SettingsNotifier.load(prefs);
   final paths = await AppPaths.resolve(options);
 
-  MediaSource? mediaSource;
-  if (Platform.isAndroid || Platform.isIOS) {
-    mediaSource = MediaSourcePhotoManager(cacheDir: p.join(paths.cacheDir, 'own'));
-  }
+  final photos = Platform.isAndroid || Platform.isIOS
+      ? MediaSourcePhotoManager(cacheDir: p.join(paths.cacheDir, 'own'))
+      : null;
   final engine = await startEngine(
     settings: settings,
     paths: paths,
     options: options,
-    mediaSource: mediaSource,
+    mediaSource: photos,
   );
+  // The engine only has the slot for HEIC -> JPEG; the conversion itself is
+  // platform code, so it has to be handed over here.
+  if (photos != null) engine.mediaServer?.convertHeicToJpeg = photos.convertHeicToJpeg;
 
   if (DesktopIntegration.isSupported) {
     final b = settings.windowBounds;

@@ -32,7 +32,8 @@ finish-args:
   - --filesystem=xdg-download
   - --filesystem=xdg-pictures
   - --filesystem=xdg-videos
-  - --talk-name=org.freedesktop.Avahi
+  # Avahi lives on the system bus; the session name alone gets us nothing.
+  - --system-talk-name=org.freedesktop.Avahi
   - --talk-name=org.freedesktop.Notifications
   - --talk-name=org.kde.StatusNotifierWatcher
 modules:

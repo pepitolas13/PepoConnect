@@ -38,7 +38,12 @@ sideloading and is not an App Store download.
 ## What you can do
 
 - Browse your phone's gallery from your computer and download original files.
-- See newly taken photos while the devices are connected.
+- See newly taken photos as they happen, with the app closed. On Android a
+  foreground service keeps the engine alive; on iPhone the system audio mode
+  does (an inaudible silent loop that leaves your music alone). Whatever cannot
+  be sent right away — computer asleep, Wi-Fi gone — is kept and sent on
+  reconnect. Closing the app from the iPhone app switcher stops the engine
+  until you open it again.
 - Send files in both directions, resume interrupted transfers and connect
   several devices at once.
 - Share clipboard text. Android background clipboard restrictions still apply;

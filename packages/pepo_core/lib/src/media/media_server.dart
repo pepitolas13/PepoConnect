@@ -10,6 +10,7 @@ import '../protocol/message_types.dart';
 import '../protocol/models.dart';
 import '../transfer/transfer_engine.dart';
 import '../util/bytes.dart';
+import 'auto_send_queue.dart';
 import 'media_source.dart';
 
 final _log = Logger('pepo.media.server');
@@ -28,8 +29,14 @@ class MediaServer implements MessageHandler {
     DeletePolicy? deletePolicy,
     this.thumbPx = 320,
     this.maxThumbBatch = 32,
-    this.autoSendTo,
-  }) : deletePolicy = deletePolicy ?? ((_, _) async => true);
+    AutoSendStore? autoSendStore,
+  }) : deletePolicy = deletePolicy ?? ((_, _) async => true) {
+    autoSend = AutoSendQueue(
+      store: autoSendStore ?? MemoryAutoSendStore(),
+      send: _autoSend,
+      isReachable: (deviceId) => sessions.session(deviceId)?.isConnected ?? false,
+    );
+  }
 
   final MediaSource source;
   final SessionManager sessions;
@@ -38,21 +45,72 @@ class MediaServer implements MessageHandler {
   final int thumbPx;
   final int maxThumbBatch;
 
+  /// New photos waiting to go to the hub. Persisted, so a photo taken while
+  /// the PC was off still arrives once it comes back.
+  late final AutoSendQueue autoSend;
+
   /// Device ids that get every new photo sent automatically (phone-side
-  /// "auto send" setting). Null = none.
-  Set<String>? autoSendTo;
+  /// "auto send" setting).
+  Set<String> get autoSendTo => autoSend.targets;
+
+  /// How far back the catch-up pass is willing to walk. Five pages of 100 is
+  /// a long weekend of photos; past that, the phone was not really syncing.
+  static const _maxCatchUpPages = 5;
 
   StreamSubscription<MediaChange>? _sub;
 
   Future<void> start() async {
     await source.start();
     _sub = source.changes.listen(_onChange);
+    await autoSend.load();
   }
 
   Future<void> stop() async {
     await _sub?.cancel();
     _sub = null;
     await source.stop();
+  }
+
+  /// Enables or disables automatic sending to [deviceId], then picks up
+  /// whatever happened while nobody was watching.
+  Future<void> setAutoSend(String deviceId, bool enabled) async {
+    final next = {...autoSend.targets};
+    if (enabled) {
+      next.add(deviceId);
+    } else {
+      next.remove(deviceId);
+    }
+    await autoSend.setTargets(next);
+    if (enabled) await catchUp();
+    await autoSend.drain();
+  }
+
+  /// Queues everything that appeared while nothing was listening: the
+  /// process was killed, the phone rebooted, the app was closed from the
+  /// switcher. [MediaSource] hands out a fresh snapshot when it starts, so
+  /// without this pass those photos are never reported as new and would sit
+  /// on the phone forever.
+  Future<void> catchUp() async {
+    if (autoSend.targets.isEmpty) return;
+    final since = autoSend.catchUpFrom;
+    if (since == null) return;
+    try {
+      var newest = since;
+      var page = 0;
+      for (var i = 0; i < _maxCatchUpPages; i++) {
+        final result = await source.index(page: page, pageSize: 100, since: since);
+        for (final item in result.items) {
+          await autoSend.add(item.id, takenAt: item.takenAt);
+          if (item.takenAt.isAfter(newest)) newest = item.takenAt;
+        }
+        // Newest first, so an empty page means we are past the watermark.
+        if (result.items.isEmpty || result.nextPage == null) break;
+        page = result.nextPage!;
+      }
+      await autoSend.markCaughtUp(newest);
+    } catch (e) {
+      _log.fine('auto-send catch-up failed: $e');
+    }
   }
 
   Future<void> _onChange(MediaChange change) async {
@@ -73,11 +131,10 @@ class MediaServer implements MessageHandler {
       for (final s in sessions.sessions) {
         if (!s.isConnected) continue;
         s.control?.send(MsgType.mediaNew, data: {'item': item.toJson()}, body: thumb);
-        final auto = autoSendTo;
-        if (auto != null && auto.contains(s.deviceId)) {
-          unawaited(_sendOriginal(s.deviceId, item.id, convert: false));
-        }
       }
+      // Queued rather than sent straight to whoever happens to be connected:
+      // that is what makes it survive a PC that is asleep right now.
+      await autoSend.add(item.id, takenAt: item.takenAt);
     }
   }
 
@@ -133,8 +190,8 @@ class MediaServer implements MessageHandler {
       case MsgType.fileRequest:
         final id = m.str('id');
         final convert = m.optStr('convert') == 'jpeg';
-        final ok = await _sendOriginal(deviceId, id, convert: convert);
-        if (ok) {
+        final result = await _sendOriginal(deviceId, id, convert: convert);
+        if (result == AutoSendResult.sent) {
           conn.respond(m.reqId, MsgType.fileAccept, data: {'id': id});
         } else {
           conn.respondError(m.reqId, ErrorCode.notFound, 'item $id not available');
@@ -153,10 +210,20 @@ class MediaServer implements MessageHandler {
     }
   }
 
-  Future<bool> _sendOriginal(String deviceId, String id, {required bool convert}) async {
+  /// One queued item. The HEIC setting is the one this phone keeps for that
+  /// PC, the same flag its own downloads use.
+  Future<AutoSendResult> _autoSend(String deviceId, String itemId) {
+    final convert = sessions.session(deviceId)?.device.convertHeic ?? false;
+    return _sendOriginal(deviceId, itemId, convert: convert);
+  }
+
+  Future<AutoSendResult> _sendOriginal(String deviceId, String id, {required bool convert}) async {
     final item = await source.item(id);
+    if (item == null) return AutoSendResult.skip;
     final path = await source.originalPath(id);
-    if (item == null || path == null) return false;
+    // The item is there but the original is not readable yet: on iOS that is
+    // an asset still coming down from iCloud, which is worth another try.
+    if (path == null) return AutoSendResult.retry;
     var sendPath = path;
     var name = item.name;
     if (convert && _isHeic(item)) {
@@ -175,10 +242,10 @@ class MediaServer implements MessageHandler {
         mediaKind: item.kind,
         sourceId: id,
       );
-      return true;
+      return AutoSendResult.sent;
     } catch (e) {
       _log.warning('cannot send $id: $e');
-      return false;
+      return AutoSendResult.retry;
     }
   }
 

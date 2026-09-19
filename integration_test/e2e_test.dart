@@ -101,4 +101,39 @@ void main() {
     await settle(tester);
     await pumpUntilFound(tester, find.text('Guion PepoTech.txt'));
   });
+
+  testWidgets('auto-send: photos leave the phone on their own, offline ones too', (tester) async {
+    final w = await E2eWorld.start(tester);
+    await tester.tap(find.text('Añadir móvil'));
+    await settle(tester);
+    final pc = await w.pairThroughQr(tester);
+    await pumpUntilFound(tester, find.text('Emparejado'), timeout: const Duration(seconds: 15));
+    await tester.tap(find.text('Empezar'));
+    await settle(tester);
+
+    // The phone forwards every new photo to this PC, with nobody watching.
+    await w.phone.setAutoSend(pc.deviceId, true);
+
+    final first = await w.takePhoto('IMG_AUTO_0001.jpg', r: 30, g: 200, b: 90);
+    final arrived = await waitForFile(tester, w.hubDownloads, 'IMG_AUTO_0001.jpg');
+    expect(await arrived.length(), await first.length());
+
+    // Taken with the PC away: it has to wait in the queue and go out when
+    // the connection comes back, not be dropped on the floor.
+    await w.phone.sessions.disconnect(pc.deviceId);
+    final offline = await w.takePhoto('IMG_AUTO_0002.jpg', r: 200, g: 40, b: 40);
+    await waitFor(tester, () {
+      final queue = w.phone.mediaServer?.autoSend;
+      return queue != null && queue.pendingCount > 0 ? true : null;
+    }, what: 'the offline photo waiting in the queue');
+
+    w.phone.reconnectAll();
+    final drained = await waitForFile(
+      tester,
+      w.hubDownloads,
+      'IMG_AUTO_0002.jpg',
+      timeout: const Duration(seconds: 60),
+    );
+    expect(await drained.length(), await offline.length());
+  });
 }

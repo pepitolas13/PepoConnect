@@ -68,6 +68,8 @@ class E2eWorld {
         cacheDir: p.join(hubData, 'cache'),
       ),
       options: const LaunchOptions(profile: 'e2e', port: hubPort),
+      // Keep the test off the real network.
+      bonjour: false,
     );
 
     final phone = PepoEngine(

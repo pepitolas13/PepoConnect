@@ -954,6 +954,22 @@
   "setChooseFolder": "Elige dónde guardar los archivos recibidos",
   "setBackgroundService": "Servicio en segundo plano",
   "setBackgroundServiceBody": "Mantiene la conexión con el PC",
+  "setBackgroundServiceBodyIos": "Mantiene PepoConnect en marcha con la app cerrada para que las fotos salgan solas. Gasta algo de batería.",
+  "setBackgroundEngine": "Estado del segundo plano",
+  "setBackgroundEngineOn": "Activo desde hace {uptime}",
+  "@setBackgroundEngineOn": {
+    "placeholders": {
+      "uptime": {
+        "type": "String"
+      }
+    }
+  },
+  "setBackgroundEngineStarting": "Arrancando…",
+  "setBackgroundEngineRecovering": "Recuperándose…",
+  "setBackgroundEngineOff": "Parado",
+  "setBackgroundEngineBody": "Si cierras PepoConnect desde el selector de apps, deja de funcionar hasta que la vuelvas a abrir.",
+  "setPermissionPhotosLimited": "Acceso limitado: PepoConnect solo ve las fotos que elegiste, así que las nuevas no se envían.",
+  "setOpenSystemSettings": "Abrir Ajustes",
   "setAutoSendPhotos": "Enviar fotos nuevas automáticamente",
   "setAutoSendPhotosBody": "Cada foto que hagas llega al PC principal al momento",
   "setDefaultHub": "PC principal",

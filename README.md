@@ -73,10 +73,16 @@ Capturas de la aplicación real.
   dispositivo (`Fotos/`, `Vídeos/`, `Archivos/`) o unificado desde Ajustes.
 - **Emparejamiento por QR** (móvil) o por código de 6 dígitos (PC↔PC), con
   reconexión automática.
-- **Sigue conectado con la app cerrada** (Android): con «Servicio en segundo
-  plano» activado, un servicio en primer plano mantiene vivo el motor aunque
-  cierres la ventana o la quites de recientes, y lo rearranca solo si Android
-  mata el proceso o reinicias el móvil.
+- **Sigue conectado con la app cerrada**: con «Servicio en segundo plano»
+  activado, haces una foto y llega al PC sin abrir PepoConnect. En Android, un
+  servicio en primer plano mantiene vivo el motor aunque cierres la ventana o
+  la quites de recientes, y lo rearranca solo si Android mata el proceso o
+  reinicias el móvil. En iPhone, PepoConnect se mantiene en marcha con el modo
+  de audio del sistema (un bucle de silencio inaudible que no interrumpe tu
+  música); si cierras la app desde el selector de apps o reinicias el iPhone,
+  las fotos pendientes esperan en cola y salen al volver a abrirla. Lo que no
+  se puede enviar en el momento —el PC apagado, la Wi-Fi caída— queda guardado
+  y se envía solo al reconectar.
 - **Portapapeles compartido**: un solo interruptor por pareja de dispositivos
   (se activa en cualquiera de los dos y vale para ambos sentidos). El PC lo
   envía al instante; Android no deja leer el portapapeles en segundo plano,
@@ -177,8 +183,12 @@ Segunda instancia en el mismo PC para probar: `flutter run -d windows --dart-ent
 2. Instálalo con Sideloadly (Windows) o AltStore con tu Apple ID.
 3. Con Apple ID gratuito la app caduca cada 7 días (AltServer la renueva
    sola si está en la misma Wi-Fi) y puedes tener 3 apps así a la vez.
-4. La primera vez, acepta el permiso de "Red local"; en iPhone las fotos
-   llegan al PC mientras PepoConnect está en pantalla.
+4. La primera vez, acepta el permiso de "Red local" y da acceso **completo** a
+   las fotos: con «Acceso limitado» iOS oculta las fotos nuevas y el envío
+   automático se queda sin nada que enviar (Ajustes › Este móvil avisa si pasa).
+5. Para que las fotos salgan con la app cerrada, deja activado «Servicio en
+   segundo plano» en Ajustes › Este móvil. «Estado del segundo plano» dice si
+   el motor está vivo y desde cuándo.
 
 ## Estructura
 

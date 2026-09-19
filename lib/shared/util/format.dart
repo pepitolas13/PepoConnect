@@ -87,6 +87,16 @@ String _time(DateTime local, String locale) {
   }
 }
 
+/// "18 s" / "47 min" / "3 h 12 min": how long something has been going.
+/// The units read the same in Spanish and English, so this needs no
+/// localization.
+String formatShortDuration(Duration d) {
+  if (d.inMinutes < 1) return '${d.inSeconds.clamp(0, 59)} s';
+  if (d.inHours < 1) return '${d.inMinutes} min';
+  final minutes = d.inMinutes.remainder(60);
+  return minutes == 0 ? '${d.inHours} h' : '${d.inHours} h $minutes min';
+}
+
 /// "1:05" / "12:07:30" for video lengths.
 String formatDuration(Duration d) {
   final h = d.inHours;

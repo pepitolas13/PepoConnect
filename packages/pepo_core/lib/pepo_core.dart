@@ -9,6 +9,7 @@ export 'src/engine/pepo_engine.dart';
 export 'src/identity/certificate_factory.dart';
 export 'src/identity/identity.dart';
 export 'src/identity/identity_store.dart';
+export 'src/media/auto_send_queue.dart';
 export 'src/media/gallery_client.dart';
 export 'src/media/image_ops.dart';
 export 'src/media/media_server.dart' show MediaServer, DeletePolicy;

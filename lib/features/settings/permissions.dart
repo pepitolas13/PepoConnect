@@ -44,15 +44,21 @@ class PermissionRows extends ConsumerWidget {
       return const Column(children: [_LoadingRow(), _LoadingRow(), _LoadingRow()]);
     }
     final granted = value ?? _none;
+    // A limited selection reads as "granted" to iOS but hides every photo
+    // taken afterwards, and only the system settings can widen it.
+    final limited = granted.photos && granted.photosLimited;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         PermissionRow(
           icon: FluentIcons.image_multiple_24_regular,
           title: t.setPermissionPhotos,
-          description: t.setPermissionPhotosBody,
-          granted: granted.photos,
-          onAllow: () => _request(ref, MobilePermission.photos),
+          description: limited ? t.setPermissionPhotosLimited : t.setPermissionPhotosBody,
+          granted: granted.photos && !limited,
+          allowLabel: limited ? t.setOpenSystemSettings : null,
+          onAllow: () => limited
+              ? MobilePermissions.openSystemSettings()
+              : _request(ref, MobilePermission.photos),
         ),
         Divider(height: 1, color: context.pepo.divider),
         PermissionRow(
@@ -90,6 +96,7 @@ class PermissionRow extends StatelessWidget {
     required this.description,
     required this.granted,
     required this.onAllow,
+    this.allowLabel,
   });
 
   final IconData icon;
@@ -97,6 +104,9 @@ class PermissionRow extends StatelessWidget {
   final String description;
   final bool granted;
   final VoidCallback onAllow;
+
+  /// Overrides the "Allow" label when the fix is somewhere else.
+  final String? allowLabel;
 
   @override
   Widget build(BuildContext context) {
@@ -118,7 +128,7 @@ class PermissionRow extends StatelessWidget {
                 ],
               ),
             )
-          : FluentButton(label: t.setAllow, onPressed: onAllow),
+          : FluentButton(label: allowLabel ?? t.setAllow, onPressed: onAllow),
     );
   }
 }
