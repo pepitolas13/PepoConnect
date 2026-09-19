@@ -109,7 +109,10 @@ mod tests {
     use super::{preserve_unknown_files, recover_interrupted_install};
     use std::fs;
     use std::path::PathBuf;
+    use std::sync::atomic::{AtomicU64, Ordering};
     use std::time::{SystemTime, UNIX_EPOCH};
+
+    static NEXT_FIXTURE: AtomicU64 = AtomicU64::new(0);
 
     struct Fixture(PathBuf);
     impl Fixture {
@@ -118,8 +121,9 @@ mod tests {
                 .duration_since(UNIX_EPOCH)
                 .unwrap()
                 .as_nanos();
+            let unique = NEXT_FIXTURE.fetch_add(1, Ordering::Relaxed);
             let root = std::env::temp_dir()
-                .join(format!("pepo-preserve-test-{}-{nonce}", std::process::id()));
+                .join(format!("pepo-preserve-test-{}-{nonce}-{unique}", std::process::id()));
             fs::create_dir_all(root.join("old/data")).unwrap();
             fs::create_dir_all(root.join("new/data")).unwrap();
             Self(root)

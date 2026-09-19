@@ -7,7 +7,52 @@ import 'package:pepoconnect/features/updates/update_desktop.dart';
 void main() {
   late Directory temp;
   setUp(() async => temp = await Directory.systemTemp.createTemp('pepo-update-smoke-'));
-  tearDown(() async => temp.delete(recursive: true));
+  tearDown(() async {
+    // Detached helpers publish their result just before exiting. Their cwd now
+    // correctly lives in this fixture, so wait for Windows to release its handle.
+    final deadline = DateTime.now().add(const Duration(seconds: 5));
+    while (true) {
+      try {
+        await temp.delete(recursive: true);
+        break;
+      } on FileSystemException catch (error) {
+        if (error.osError?.errorCode != 32 || DateTime.now().isAfter(deadline)) rethrow;
+        await Future<void>.delayed(const Duration(milliseconds: 50));
+      }
+    }
+  });
+
+  test('Windows helper releases the installation working directory before restart', () async {
+    final app = await Directory(p.join(temp.path, 'app')).create();
+    final destination = await File(p.join(temp.path, 'launcher.bin')).writeAsString('old');
+    final staged = await File(p.join(temp.path, 'new.bin')).writeAsString('new');
+    final previousDirectory = Directory.current;
+    late DesktopHandoff handoff;
+    try {
+      // The real launcher starts Flutter with app/ as its working directory.
+      Directory.current = app;
+      handoff = await DesktopHandoff.prepare(
+        DesktopUpdatePlan(
+          work: await Directory(p.join(temp.path, '.pepoconnect-update-cwd')).create(),
+          destination: destination.path,
+          staged: staged.path,
+          isBundle: false,
+          windows: true,
+          parentPid: 0,
+          launchPath: p.join(temp.path, 'missing.exe'),
+        ),
+      );
+    } finally {
+      Directory.current = previousDirectory;
+    }
+    try {
+      // Exiting Flutter must leave this directory free for the launcher swap.
+      await app.rename(p.join(temp.path, 'app.old'));
+    } finally {
+      await handoff.abort();
+      expect(await handoff.finished.timeout(const Duration(seconds: 10)), 'aborted');
+    }
+  }, skip: !Platform.isWindows);
 
   test('Windows helper replaces file and retains old file until successful startup', () async {
     final destination = await File(p.join(temp.path, 'instalación app.bin')).writeAsString('old');

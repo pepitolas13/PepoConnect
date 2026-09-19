@@ -30,11 +30,17 @@ jobs:
             windows-launcher
             packages/pepo_native/rust
       - run: flutter pub get
+      - name: Windows updater regression tests
+        run: flutter test test/features/updates/update_installer_desktop_test.dart
       - run: flutter build windows --release
+      - run: ./packaging/windows/prepare-bundle.ps1
+      - name: Windows launcher and interrupted update recovery tests
+        run: cargo test --release --manifest-path windows-launcher/Cargo.toml
       - shell: pwsh
         run: |
-          ./packaging/windows/prepare-bundle.ps1
           cargo build --release --manifest-path windows-launcher/Cargo.toml
+          if ($LASTEXITCODE) { throw 'Launcher build failed' }
+          ./tool/test-windows-launcher-update.ps1
           New-Item -ItemType Directory -Force dist | Out-Null
           Copy-Item windows-launcher/target/release/PepoConnect.exe dist/PepoConnect-win-x64.exe
           Compress-Archive -Path build/windows/x64/runner/Release/* -DestinationPath dist/PepoConnect-win-x64-portable.zip

@@ -84,7 +84,7 @@ class DesktopHandoff {
       final bootstrap = await File(p.join(work.path, 'start.ps1')).writeAsString(r'''
 param([string]$Script, [string]$Config)
 $ErrorActionPreference = 'Stop'
-Start-Process -FilePath (Join-Path $PSHOME 'powershell.exe') -WindowStyle Hidden -ArgumentList @('-NoLogo', '-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass', '-File', ('"' + $Script + '"'), '-Config', ('"' + $Config + '"'))
+Start-Process -FilePath (Join-Path $PSHOME 'powershell.exe') -WorkingDirectory (Split-Path -LiteralPath $Config) -WindowStyle Hidden -ArgumentList @('-NoLogo', '-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass', '-File', ('"' + $Script + '"'), '-Config', ('"' + $Config + '"'))
 ''', flush: true);
       final started = await Process.run(
         'powershell.exe',
@@ -105,6 +105,9 @@ Start-Process -FilePath (Join-Path $PSHOME 'powershell.exe') -WindowStyle Hidden
         ],
         environment: desktopUpdateEnvironment(Platform.environment),
         includeParentEnvironment: false,
+        // A helper inheriting app/ keeps a Windows directory handle open even
+        // after Flutter exits, preventing the launcher's directory swap.
+        workingDirectory: work.path,
       ).timeout(const Duration(seconds: 15));
       if (started.exitCode != 0) {
         throw FileSystemException('Unable to start update helper: ${started.stderr}');
@@ -181,6 +184,8 @@ $ErrorActionPreference = 'Stop'
 $cfg = Get-Content -LiteralPath $Config -Raw -Encoding UTF8 | ConvertFrom-Json
 $work = [IO.Path]::GetFullPath($cfg.work)
 if (-not ([IO.Path]::GetFileName($work).StartsWith('.pepoconnect-update-'))) { exit 2 }
+[Environment]::CurrentDirectory = $work
+Set-Location -LiteralPath $work
 $abortPath = Join-Path $work 'abort'
 $healthPath = Join-Path $work 'health'
 $resultPath = Join-Path $work 'result'

@@ -31,6 +31,7 @@ use windows_sys::Win32::UI::WindowsAndMessaging::{
 };
 
 mod preserve;
+mod content_swap;
 
 static BUNDLE: &[u8] = include_bytes!(concat!(env!("OUT_DIR"), "/bundle.tar.zst"));
 const BUNDLE_ID: &str = env!("PEPO_BUNDLE_ID");
@@ -93,6 +94,11 @@ fn run() -> Result<(), Failure> {
     })?;
 
     let app_dir = root.join(APP_DIR);
+    // Only one launcher may recover/install/start a given installation at once.
+    let _install_lock = installation_lock(&root)
+        .map_err(|e| fail("No se ha podido esperar a la otra actualización", e))?;
+    content_swap::recover(&root, &app_dir)
+        .map_err(|e| fail("No se ha podido recuperar la actualización", e))?;
     preserve::recover_interrupted_install(&root, &app_dir)
         .map_err(|e| fail("No se ha podido recuperar la instalación anterior", e))?;
 
@@ -194,6 +200,12 @@ fn swap(root: &Path, app_dir: &Path, staging: &Path) -> Result<(), Failure> {
             .map_err(|e| fail("No se han podido conservar los archivos de la instalación anterior", e))?;
         let old = old_dir(root);
         if let Err(e) = fs::rename(app_dir, &old) {
+            // Old updaters retain app/ as their working directory even after
+            // Flutter exits. Its contents can still be replaced transactionally.
+            if in_use(&e) && !exe_locked(app_dir) {
+                return content_swap::install(root, app_dir, staging)
+                    .map_err(|e| fail("No se ha podido actualizar la instalación", e));
+            }
             return Err(if in_use(&e) || exe_locked(app_dir) {
                 Failure::AlreadyRunning
             } else {
@@ -293,4 +305,48 @@ fn message_box(text: &str, icon: u32) {
 
 fn wide(s: &str) -> Vec<u16> {
     OsStr::new(s).encode_wide().chain(std::iter::once(0)).collect()
+}
+
+fn installation_lock(root: &Path) -> io::Result<fs::File> {
+    use std::os::windows::fs::OpenOptionsExt;
+    let deadline = std::time::Instant::now() + std::time::Duration::from_secs(60);
+    loop {
+        match OpenOptions::new().read(true).write(true).create(true).truncate(false)
+            .share_mode(0).open(root.join(".install-lock")) {
+            Ok(lock) => return Ok(lock),
+            Err(e) if in_use(&e) && std::time::Instant::now() < deadline => {
+                std::thread::sleep(std::time::Duration::from_millis(100));
+            }
+            Err(e) => return Err(e),
+        }
+    }
+}
+
+#[cfg(test)]
+mod update_tests {
+    use super::*;
+
+    #[test]
+    fn upgrades_when_legacy_helper_holds_app_as_working_directory() {
+        use std::os::windows::fs::OpenOptionsExt;
+        let root = env::temp_dir().join(format!("pepo-launcher-cwd-{}", process::id()));
+        fs::create_dir_all(root.join("app")).unwrap();
+        fs::create_dir_all(root.join("staged")).unwrap();
+        fs::write(root.join("app/pepoconnect.exe"), "old").unwrap();
+        fs::write(root.join("app/personal.txt"), "keep").unwrap();
+        fs::write(root.join("staged/pepoconnect.exe"), "new").unwrap();
+        // The same non-delete-sharing directory handle as a Windows cwd,
+        // without changing other concurrently running tests' working directory.
+        let lock = OpenOptions::new().read(true).share_mode(3)
+            .custom_flags(0x02000000).open(root.join("app")).unwrap();
+        let result = swap(&root, &root.join("app"), &root.join("staged"));
+        drop(lock);
+        let success = result.is_ok();
+        let installed = fs::read_to_string(root.join("app/pepoconnect.exe")).unwrap();
+        let personal = fs::read_to_string(root.join("app/personal.txt")).unwrap();
+        fs::remove_dir_all(root).unwrap();
+        assert!(success, "a helper's working directory is not a running application");
+        assert_eq!(installed, "new");
+        assert_eq!(personal, "keep");
+    }
 }
